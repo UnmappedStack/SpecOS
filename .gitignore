@@ -1,3 +1,11 @@
+*.asm
+*.cfg
+*.linker.ld
+*.bin
+*.iso
+*.s
+
+### Next part is gitignore template. Before this is additional stuff that isn't covered. ###
 # Prerequisites
 *.d
 
