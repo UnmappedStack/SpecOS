@@ -3,7 +3,7 @@ An x86 OS kernel from scratch.
 
 > **NOTE**
 > 
-> This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all in one big kernel C file.
+> This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all split between just two C files and a single header file.
 
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful. It currently uses the GRUB bootloader, however I hope to write my own soon.
 
@@ -26,7 +26,7 @@ qemu-system-i386 -cdrom specos.iso
 You'll obviously need Qemu installed.
 
 ## Features:
-* Basic keyboard driver with scanf implementation (backspaces are a little iffy)
+* Basic keyboard driver with scanf implementation
 * Basic test userspace with device shutdown, time/date driver, colours, and an echo command
 
 ## Future features
