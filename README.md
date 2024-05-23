@@ -5,10 +5,6 @@ An x86 OS kernel from scratch.
 > 
 > This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all split between just two C files, a single header file, and a series of Assembly files for the bootloader.
 
-> **ANOTHER NOTE**
->
-> I've been working on a custom bootloader (I was using GRUB before). While it's in development, it currently isn't booting. This should be fixed in a few days.
-
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful. I am making progress on a custom bootloader.
 
 ## Building and running
@@ -23,11 +19,21 @@ chmod +x compile.sh
 ```
 This will generate a an executable disk image that you can run with qemu.
 ### Running
-This is specific to Qemu at the moment. Simply cd into the directory of the built iso, and run:
+### On Qemu
+Simply cd into the directory of the built .bin file, and run:
 ```
 qemu-system-i386 -fda SpecOS.bin
 ```
 You'll obviously need Qemu installed.
+
+### On real hardware
+This is ***not recommended***, and it has ***not been tested***, however you're welcome to give it a shot. In the directory of the .bin file, run:
+
+```
+sudo dd if=SpecOS.bin of=/dev/sdN bs=4M status=progress
+```
+
+With /dev/sdN being the name of your USB. Then in your device's unique BIOS, change the boot order so it will boot from USB before your current OS, and restart with your now-formatted USB plugged in.
 
 ## Features:
 * Basic keyboard driver with scanf implementation
