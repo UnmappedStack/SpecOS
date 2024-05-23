@@ -5,6 +5,10 @@ An x86 OS kernel from scratch.
 > 
 > This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all split between just two C files, a single header file, and a series of Assembly files for the bootloader.
 
+> **ANOTHER NOTE**
+>
+> I've been working on a custom bootloader (I was using GRUB before). While it's in development, it currently isn't booting. This should be fixed in a few days.
+
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful. I am making progress on a custom bootloader.
 
 ## Building and running
