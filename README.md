@@ -3,25 +3,25 @@ An x86 OS kernel from scratch.
 
 > **NOTE**
 > 
-> This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all split between just two C files and a single header file.
+> This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and currently all split between just two C files, a single header file, and a series of Assembly files for the bootloader.
 
-SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful. It currently uses the GRUB bootloader, however I hope to write my own soon.
+SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful. I am making progress on a custom bootloader.
 
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
-Make sure that you have GCC installed, as well as the i686-elf toolkit, and GRUB. This is easy to install with Brew (I even used Brew on Linux). Then simply clone the repo, cd into it, make `compile_all.sh` runnable and run the script:
+Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf toolkit. This is easy to install with Brew (I even used Brew on Linux). Then simply clone the repo, cd into it, make `compile.sh` runnable and run the script:
 ```
 git clone https://github.com/jakeSteinburger/SpecOS.git
 cd SpecOS
-chmod +x compile_all.sh
-./compile_all.sh
+chmod +x compile.sh
+./compile.sh
 ```
-This will generate a folder and an executable disk image that you can run with qemu.
+This will generate a an executable disk image that you can run with qemu.
 ### Running
 This is specific to Qemu at the moment. Simply cd into the directory of the built iso, and run:
 ```
-qemu-system-i386 -cdrom specos.iso
+qemu-system-i386 -fda SpecOS.bin
 ```
 You'll obviously need Qemu installed.
 
