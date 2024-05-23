@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include "terminalWrite.h"
 
+void dummy_test_entrypoint() {
+}
+
 /* Check if the compiler thinks you are targeting the wrong operating system. */
 #if defined(__linux__)
 #error "You are not using a cross-compiler. Please make sure that you use the correct compile_all.sh file in the GitHub repo to compile."
@@ -497,6 +500,19 @@ void test_userspace() {
         } else if (compareDifferentLengths(inp, "help")) {
             terminal_initialize();
             terminal_writestring("COMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
+        } else if (compareDifferentLengths(inp, "hdtest")) {/*
+            terminal_initialize();
+            terminal_writestring("Testing write to sector 50, text \"hello\":\n");
+            uint32_t sect = 50;
+            uint8_t numsect = 1;
+            uint8_t buff[512 * numsect];
+            ata_lba_write(sect, numsect, buff);
+            terminal_writestring("Written. Trying to read...\n");
+            size_t readnum = ata_lba_read(sect, numsect, buff);
+            char *strreadnum;
+            size_t_to_str(readnum, strreadnum);
+            terminal_writestring(strreadnum);
+            terminal_writestring(" sectors successfully read. \n");*/
         }
         else {
             terminal_setcolor(VGA_COLOR_RED);
