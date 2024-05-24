@@ -7,6 +7,12 @@ An x86 OS kernel from scratch.
 
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful.
 
+## Screenshots
+![Device on boot](https://github.com/jakeSteinburger/SpecOS/blob/main/screenshots/bootscreen.png)
+![Usage examples](https://github.com/jakeSteinburger/SpecOS/blob/main/screenshots/examples.png)
+![Power off confirmation screen](https://github.com/jakeSteinburger/SpecOS/blob/main/screenshots/poweroff.png)
+![Help screen](https://github.com/jakeSteinburger/SpecOS/blob/main/screenshots/help.png)
+
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
