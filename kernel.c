@@ -1,7 +1,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "terminalWrite.h"
+#include "drivers/terminalWrite.h"
+#include "drivers/disk.h"
+#include "bouncy.h"
 
 void dummy_test_entrypoint() {
 }
@@ -44,6 +46,29 @@ enum {
       cmos_address = 0x70,
       cmos_data    = 0x71
 };
+
+
+void hide_vga_cursor() {
+    outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+}
+
+void show_vga_cursor() { // This assumes placing it at 0,0 and can be moved seperately
+    outb(0x3D4, 0x0A);
+	outb(0x3D5, (inb(0x3D5) & 0xC0) | 1);
+ 
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | 1);
+}
+
+void update_cursor(int x, int y) {
+	uint16_t pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
 
 unsigned char get_RTC_register(int reg) {
       outb (cmos_address, reg);
@@ -381,6 +406,8 @@ void strcpy(char* dest, const char* src) {
 }
 
 void scanf(char* inp) {
+    show_vga_cursor();
+    update_cursor(terminal_column, terminal_row + 1);
     shifted = false;
     capslock = false;
     inScanf = true;
@@ -394,12 +421,14 @@ void scanf(char* inp) {
     }
     while (inScanf) {
         __asm__("hlt");
+        update_cursor(terminal_column, terminal_row + 1);
         // This next part will done only when the next interrupt is called.
         if (inb(0x60) == 0x1C)
             break;
     }
     terminal_write("\0", 1); // I'm not really sure why, but if I don't write something to the terminal after the device crashes.
     strcpy(inp, wholeInput);
+    hide_vga_cursor();
 }
 
 void isr_keyboard() {
@@ -441,17 +470,16 @@ int compareDifferentLengths(const char *longer, const char *shorter) {
     return 1;
 }
 
-void hide_vga_cursor() {
-    uint16_t port_index = 0x3D4;
-    uint16_t port_data = 0x3D5;
-
-    // Set the cursor's start line to a value greater than its end line
-    outb(port_index, 0x0A);  // Select the cursor start register
-    outb(port_data, 0x20);   // Set the cursor start line to 0x20, effectively hiding it
+char* charToStr(char character) {
+    static char wholeStr[2];
+    wholeStr[0] = character;
+    wholeStr[1] = '\0';
+    return wholeStr;
 }
 
 void test_userspace() {
     terminal_initialize();
+    // Some cool ASCII art that fIGlet totally didn't generate
     terminal_writestring(" ____                   ___  ____\n");
     terminal_writestring("/ ___| _ __   ___  ___ / _ \\/ ___|\n");
     terminal_writestring("\\___ \\| '_ \\ / _ \\/ __| | | \\___ \\\n");
@@ -459,7 +487,11 @@ void test_userspace() {
     terminal_writestring("|____/| .__/ \\___|\\___|\\___/|____/\n");
     terminal_writestring("      |_|\n");
     char inp[100];
-    terminal_writestring("SpecOS shell 2024. Type help for options.\n");
+    terminal_writestring("Kernel compilation date: ");
+    terminal_writestring(__DATE__);
+    terminal_writestring(" at ");
+    terminal_writestring(__TIME__);
+    terminal_writestring("\nSpecOS shell 2024. Type help for options.\n");
     while(1) {
         terminal_setcolor(VGA_COLOR_LIGHT_GREEN);
         terminal_writestring(">> ");
@@ -500,21 +532,25 @@ void test_userspace() {
         } else if (compareDifferentLengths(inp, "help")) {
             terminal_initialize();
             terminal_writestring("COMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
-        } else if (compareDifferentLengths(inp, "hdtest")) {/*
-            terminal_initialize();
-            terminal_writestring("Testing write to sector 50, text \"hello\":\n");
-            uint32_t sect = 50;
-            uint8_t numsect = 1;
-            uint8_t buff[512 * numsect];
-            ata_lba_write(sect, numsect, buff);
-            terminal_writestring("Written. Trying to read...\n");
-            size_t readnum = ata_lba_read(sect, numsect, buff);
-            char *strreadnum;
-            size_t_to_str(readnum, strreadnum);
-            terminal_writestring(strreadnum);
-            terminal_writestring(" sectors successfully read. \n");*/
-        }
-        else {
+        } else if (compareDifferentLengths(inp, "readsect")) { 
+            // NOTE: This is a debug command. It's not in the help list because it's not meant to be used until the feature is complete.
+            terminal_writestring("\nTrying to read from sector 30...\n");
+            char* result = readdisk(30);
+            terminal_writestring("Successful read! Contents:\n");
+            // Print each character in the sector
+            for (int i = 0; i < 512; i++) {
+                terminal_writestring(charToStr(result[i]));
+            }
+            terminal_writestring("\n");
+        } else if (compareDifferentLengths(inp, "writesect")) {
+            // NOTE: Like the previous function, this is a debug command.
+            terminal_writestring("\nTrying to write to sector 30...\n");
+            char buffer[512] = "SUCCESS!";
+            writedisk(30, buffer);
+            terminal_writestring("Successful write! Try reading sector 30 to test.\n");
+        } else if (compareDifferentLengths(inp, "bouncy")) {
+            bouncy();
+        } else {
             terminal_setcolor(VGA_COLOR_RED);
             terminal_writestring("\nCommand not found.\n");
         }
@@ -535,6 +571,30 @@ void init_kernel()
     idt_init();
     terminal_writestring("Initialising IRQs...\n");
     init_IRQ();
+    terminal_writestring("Initialising drive...\n");
+    if (!identifyCompatibility()) {
+        terminal_set_bg(VGA_COLOR_BLACK);
+        terminal_initialize();
+        terminal_setcolor(VGA_COLOR_RED);
+        terminal_writestring("\n\n\n\n\n");
+        char* errStr1 = "BOOT ERROR: Can't initialise drive.";
+        char* errStr2 = "Make sure you have an ATA PIO mode compatible disk.";
+        terminal_column = VGA_WIDTH / 2 - strlen(errStr1) / 2;
+        for (int i = 0; i < strlen(errStr1); i++) {
+           terminal_putchar(errStr1[i]);
+        }
+        terminal_writestring("\n");
+        terminal_column = VGA_WIDTH / 2 - strlen(errStr2) / 2;
+        for (int i = 0; i < strlen(errStr2); i++) {
+            terminal_putchar(errStr2[i]);
+        }
+        terminal_setcolor(VGA_COLOR_DARK_GREY);
+        allow_scroll = false;
+        terminal_row = VGA_HEIGHT - 2;
+        terminal_column = 0;
+        terminal_writestring("IF YOU ARE USING QEMU...\nMake sure you use the -hda option when running.");
+        __asm__("cli; hlt");
+    }
     test_userspace();
     while(1);
 }

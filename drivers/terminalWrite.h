@@ -29,10 +29,18 @@ size_t strlen(const char* str);
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
 
+
+
 extern size_t terminal_row;
 extern size_t terminal_column;
 extern uint8_t terminal_color;
 extern uint16_t* terminal_buffer;
+extern uint8_t bg_colour;
+
+extern bool allow_scroll;
+
+void terminal_set_bg(uint8_t colour);
+
 void terminal_initialize(void);
 
 void terminal_setcolor(uint8_t color);
