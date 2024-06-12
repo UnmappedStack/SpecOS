@@ -1,4 +1,6 @@
 # SpecOS
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddef159bc34148e4a89d2a600e9b61e5)](https://app.codacy.com/gh/jakeSteinburger/SpecOS/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+
 An x86 OS kernel from scratch.
 
 > **NOTE**
