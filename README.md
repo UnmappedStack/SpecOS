@@ -15,14 +15,14 @@ Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf to
 git clone https://github.com/jakeSteinburger/SpecOS.git
 cd SpecOS
 chmod +x compile.sh
-./compile.sh
+bash compile.sh
 ```
 This will generate a an executable disk image that you can run with qemu.
 ### Running
 ### On Qemu
 Simply cd into the directory of the built .bin file, and run:
 ```
-qemu-system-i386 -fda SpecOS.bin
+qemu-system-i386 -hda SpecOS.bin
 ```
 You'll obviously need Qemu installed.
 
@@ -41,6 +41,6 @@ With /dev/sdN being the name of your USB. Then in your device's unique BIOS, cha
 * 28 bit ATA PIO mode driver which can read/write specific sectors (not in help menu yet, as it's a debug feature at the moment.)
 
 ## Future features
-I plan to write an exFAT file system driver, then I hope to write a memory management system with paging (terrifying). Then I'd like to be able to parse and run ELF userland files, implement the C standard library, and maybe, just *maybe* I'll be able to get some networking stack at some point. It's a road to running Doom!
+I plan to write a FAT32 file system driver, then I hope to write a memory management system with paging (terrifying). Then I'd like to be able to parse and run ELF userland files, implement the C standard library, and maybe, just *maybe* I'll be able to get some networking stack at some point. It's a road to running Doom!
 
 Note that a lot of this is unrealistic and probably won't happen - it's a lot easier said that done. But my hopes are high!

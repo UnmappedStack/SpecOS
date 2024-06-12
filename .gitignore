@@ -1,6 +1,6 @@
 *.asm
 *.cfg
-*.linker.ld
+*.ld
 *.bin
 *.iso
 *.s

@@ -55,4 +55,10 @@ void terminal_write(const char* data, size_t size);
 
 void terminal_writestring(const char* data);
 
+void hide_vga_cursor();
+
+void show_vga_cursor();
+
+void update_cursor(int x, int y );
+
 #endif

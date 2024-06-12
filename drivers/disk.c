@@ -5,31 +5,7 @@
 #include <stdint.h>
 #include "disk.h"
 #include "terminalWrite.h"
-
-// I know inb and outb was already defined in the main kernel file, but it's not included here right now.
-// I'll make it a little less messy once I can get it to at least work.
-static inline void outb(uint16_t port, uint8_t val) {
-    __asm__ volatile ( "outb %b0, %w1" : : "a"(val), "Nd"(port) : "memory");
-}
-
-static inline uint8_t inb(uint16_t port) {
-    uint8_t ret;
-    __asm__ volatile ( "inb %w1, %b0"
-                   : "=a"(ret)
-                   : "Nd"(port)
-                   : "memory");
-    return ret;
-}
-
-static inline uint16_t inw(uint16_t port) {
-    uint16_t ret;
-    __asm__ volatile ( "inw %1, %0" : "=a"(ret) : "Nd"(port) : "memory");
-    return ret;
-}
-
-static inline void outw(uint16_t port, uint16_t val) {
-    __asm__ volatile("outw %0, %w1" : : "a"(val), "Nd"(port) : "memory");
-}
+#include "../utils/inx.h"
 
 // IDENTIFY is split into two functions, initiate (run when actually reading/writing disk) and compatibility (run on device startup)
 // Compatibility is used to verify compatibility of the drive and make sure it's an existing ATA PIO drive.

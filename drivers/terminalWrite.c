@@ -3,7 +3,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
+#include "../utils/inx.h"
+#include "../utils/string.h"
 
 /* Hardware text mode color constants. */
 
@@ -15,14 +16,6 @@ static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
 static uint16_t vga_entry(unsigned char uc, uint8_t color) 
 {
     return (uint16_t) uc | (uint16_t) color << 8;
-}
-
-size_t strlen(const char* str) 
-{
-    size_t len = 0;
-    while (str[len])
-        len++;
-    return len;
 }
 
 size_t terminal_row;
@@ -98,4 +91,26 @@ void terminal_writestring(const char* data)
         terminal_write(data, strlen(data));
     }
 }
+
+void hide_vga_cursor() {
+    outb(0x3D4, 0x0A);
+	outb(0x3D5, 0x20);
+}
+
+void show_vga_cursor() { // This assumes placing it at 0,0 and can be moved seperately
+    outb(0x3D4, 0x0A);
+	outb(0x3D5, (inb(0x3D5) & 0xC0) | 1);
+ 
+	outb(0x3D4, 0x0B);
+	outb(0x3D5, (inb(0x3D5) & 0xE0) | 1);
+}
+
+void update_cursor(int x, int y) {
+	uint16_t pos = y * VGA_WIDTH + x;
+	outb(0x3D4, 0x0F);
+	outb(0x3D5, (uint8_t) (pos & 0xFF));
+	outb(0x3D4, 0x0E);
+	outb(0x3D5, (uint8_t) ((pos >> 8) & 0xFF));
+}
+
 
