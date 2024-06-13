@@ -11,6 +11,10 @@ An x86 OS kernel from scratch.
 
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful.
 
+It uses a monolithic kernel, because I like having everything in one place. This may take some inspiration from other operating systems, but it is **not UNIX based**. 
+
+See some of the resources I used for learning, as well as some other OS projects that I think are pretty amazing in [resources.md](https://github.com/jakeSteinburger/SpecOS/blob/main/resources.md). There's also a few unsolicited OS development opinions of mine in there (:
+
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
