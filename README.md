@@ -15,22 +15,26 @@ It uses a monolithic kernel, because I like having everything in one place. This
 
 See some of the resources I used for learning, as well as some other OS projects that I think are pretty amazing in [resources.md](https://github.com/jakeSteinburger/SpecOS/blob/main/resources.md). There's also a few unsolicited OS development opinions of mine in there (:
 
+You may notice that SpecOS now has GRUB files that it didn't have before. This is because a custom bootloader was quite easy before, only needing to load specific sectors, but now that I need to create a FAT image, it becomes much more difficult. For this reason, I have moved away from a custom bootloader and now am using the GRUB bootloader.
+
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
 Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf toolkit. This is easy to install with Brew (I even used Brew on Linux). Then simply clone the repo, cd into it, make `compile.sh` runnable and run the script:
 ```
 git clone https://github.com/jakeSteinburger/SpecOS.git
-cd SpecOS
+cd SpecOS/scripts
 chmod +x compile.sh
 bash compile.sh
 ```
+Note that you must be inside the scripts directory to run the compile script.
+
 This will generate a an executable disk image that you can run with qemu.
 ### Running
 ### On Qemu
 Simply cd into the directory of the built .bin file, and run:
 ```
-qemu-system-i386 -hda SpecOS.bin
+qemu-system-i386 -hda disk.img
 ```
 You'll obviously need Qemu installed.
 
@@ -38,7 +42,7 @@ You'll obviously need Qemu installed.
 This is ***not recommended***, and it has ***not been tested***, however you're welcome to give it a shot. In the directory of the .bin file, run:
 
 ```
-sudo dd if=SpecOS.bin of=/dev/sdN bs=4M status=progress
+sudo dd if=SpecOS/scripts/disk.img of=/dev/sdN bs=4M status=progress
 ```
 
 With /dev/sdN being the name of your USB. Then in your device's unique BIOS, change the boot order so it will boot from USB before your current OS, and restart with your now-formatted USB plugged in.

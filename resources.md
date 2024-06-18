@@ -19,7 +19,7 @@ You came here for the resources, stayed for my opinions. Well, here's a short li
 
 Note that I'm still somewhat a beginner to OS development myself, so take what I say with a grain of salt.
 
-- Don't write your own bootloader. Seriously, just use GRUB. I'm *technically* using a custom bootloader, but it's based on an existing tutorial bootloader (I'm adjusting it to work with the FAT32 file system). Your main goal should be a decent kernel at the beginning. I'm only using a "custom" bootloader because I couldn't get GRUB to work, but that's really my own bad.
+- Don't write your own bootloader. Seriously, just use GRUB. Your main goal should be a decent kernel at the beginning. I was previously using a custom bootloader, but now that I'm using a FAT32 file system, I've switched over to GRUB.
 - Don't use a non-standard language. C, C++, and Rust are fine (even Rust I'm a little iffy about). The issue with languages like Perl are that there's far less people in the OS dev community who will know how to help find issues in your code - and having other people look at your code *really* helps.
 - A good kernel is more important than a good userspace. Userspace definitely matters a lot, but it can only be decent with a great kernel. Write your kernel, perfect it, then start working on a basic userspace.
 - Bad code > no code. Make it work, then when you start thinking about getting other people to join, improve it and refactor. Still though, don't write crappy code from the start, just don't worry about it too much in the beginning stages. Maybe I'm biased though, because my code is messy as all hell.
