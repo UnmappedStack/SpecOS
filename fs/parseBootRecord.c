@@ -2,6 +2,9 @@
 // Copyright (C) 2024 Jake Steinburger under the MIT license.
 // See the github repo for more info.
 
+// WARNING! You are about to see some very hack-y, badly written code. Sorry to anybody trying to contribute to this mess!
+// I'll fix it later, I promise (:
+
 #include "parseBootRecord.h"
 #include "../drivers/disk.h"
 #include "../drivers/terminalWrite.h"
@@ -36,8 +39,7 @@ struct bootRecord readBoot() {
     char* rawBootSect_str = readdisk(2048);
     // Stuff to convert it into a uint8_t[512]
     uint8_t rawBootSect[512];
-    memset(rawBootSect, 0, 512);
-    memcpy(rawBootSect, rawBootSect_str, strlen(rawBootSect_str));
+    memcpy(rawBootSect, rawBootSect_str, 512);
     // Create an object to return and kinda just fill each of them up slowly
     struct bootRecord toReturn;
     struct bootRecord temp;
@@ -49,28 +51,24 @@ struct bootRecord readBoot() {
         temp.OEMName[i] = rawBootSect[3 + i];
     }
     memcpy(toReturn.OEMName, temp.OEMName, sizeof(temp.OEMName));
-    toReturn.bytesPerSect = ((uint16_t)rawBootSect[11] << 8) | rawBootSect[12];
-    if ((((uint16_t)rawBootSect[11] << 8) | rawBootSect[12]) == (uint16_t)0) {
-        terminal_writestring("\nSomething's not right. The boot sector says that each sector is... 0 bytes?\n");
-    }
-    /*
+    toReturn.bytesPerSect = ((uint16_t)rawBootSect[12] << 8) | rawBootSect[11]; 
     toReturn.sectPerClust = rawBootSect[13];
-    toReturn.reservedSectCount = ((uint16_t)rawBootSect[14]) | rawBootSect[15];
+    toReturn.reservedSectCount = ((uint16_t)rawBootSect[15]) | rawBootSect[14];
     toReturn.numFats = rawBootSect[16];
-    toReturn.rootEntryCount = ((uint16_t)rawBootSect[17]) | rawBootSect[18];
-    toReturn.totalSectors16 = ((uint16_t)rawBootSect[19]) | rawBootSect[20];
+    toReturn.rootEntryCount = ((uint16_t)rawBootSect[18]) | rawBootSect[17];
+    toReturn.totalSectors16 = ((uint16_t)rawBootSect[20]) | rawBootSect[19];
     toReturn.media = rawBootSect[21];
-    toReturn.sectPerFat16 = ((uint16_t)rawBootSect[22]) | rawBootSect[23];
-    toReturn.sectPerTrack = ((uint16_t)rawBootSect[24]) | rawBootSect[25];
-    toReturn.numHeads = ((uint16_t)rawBootSect[26]) | rawBootSect[27];
-    toReturn.hiddenSects = combine32bit(rawBootSect[28], rawBootSect[29], rawBootSect[30], rawBootSect[31]);
-    toReturn.totalSectors32 = combine32bit(rawBootSect[32], rawBootSect[33], rawBootSect[34], rawBootSect[35]);
-    toReturn.sectPerFat32 = combine32bit(rawBootSect[36], rawBootSect[37], rawBootSect[38], rawBootSect[39]);
-    toReturn.extFlags = ((uint16_t)rawBootSect[40]) | rawBootSect[41];
-    toReturn.fileSystemVersion = ((uint32_t)rawBootSect[42]) | rawBootSect[43];
-    toReturn.rootCluster = combine32bit(rawBootSect[44], rawBootSect[45], rawBootSect[46], rawBootSect[47]);
-    toReturn.FSInfo = ((uint16_t)rawBootSect[48]) | rawBootSect[49];
-    toReturn.bkBootSect = ((uint16_t)rawBootSect[50]) | rawBootSect[51];
+    toReturn.sectPerFat16 = ((uint16_t)rawBootSect[23]) | rawBootSect[22];
+    toReturn.sectPerTrack = ((uint16_t)rawBootSect[25]) | rawBootSect[24];
+    toReturn.numHeads = ((uint16_t)rawBootSect[27]) | rawBootSect[26];
+    toReturn.hiddenSects = combine32bit(rawBootSect[31], rawBootSect[30], rawBootSect[29], rawBootSect[28]);
+    toReturn.totalSectors32 = combine32bit(rawBootSect[35], rawBootSect[34], rawBootSect[33], rawBootSect[32]);
+    toReturn.sectPerFat32 = combine32bit(rawBootSect[39], rawBootSect[38], rawBootSect[37], rawBootSect[36]);
+    toReturn.extFlags = ((uint16_t)rawBootSect[41]) | rawBootSect[40];
+    toReturn.fileSystemVersion = ((uint32_t)rawBootSect[43]) | rawBootSect[42];
+    toReturn.rootCluster = combine32bit(rawBootSect[47], rawBootSect[46], rawBootSect[45], rawBootSect[44]);
+    toReturn.FSInfo = ((uint16_t)rawBootSect[49]) | rawBootSect[48];
+    toReturn.bkBootSect = ((uint16_t)rawBootSect[51]) | rawBootSect[50];
     for (int i = 0; i < 12; i++) {
         toReturn.reserved[i] = rawBootSect[52 + i];
     }
@@ -88,7 +86,6 @@ struct bootRecord readBoot() {
         toReturn.bootCode[i] = ((uint16_t)rawBootSect[90 + i]) | rawBootSect[91 + i];
     }
     toReturn.bootSig = ((uint16_t)rawBootSect[510]) | rawBootSect[511];
-    */
     return toReturn;
 }
 

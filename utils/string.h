@@ -13,5 +13,6 @@ void size_t_to_str(size_t num, char* buffer);
 void strcpy(char* dest, const char* src);
 int compareDifferentLengths(const char *longer, const char *shorter); 
 char* charToStr(char character);
+void uint16_to_string(uint16_t num, char *str);
 
 #endif

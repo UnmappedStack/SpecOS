@@ -90,7 +90,7 @@ void test_userspace() {
             terminal_writestring("COMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "readsect")) { 
             // NOTE: This is a debug command. It's not in the help list because it's not meant to be used until the feature is complete.
-            terminal_writestring("\nTrying to read from sector 30...\n");
+            terminal_writestring("\nTrying to read from sector 2048...\n");
             char* result = readdisk(2048);
             terminal_writestring("Successful read! Contents:\n");
             // Print each character in the sector
@@ -106,15 +106,16 @@ void test_userspace() {
             terminal_writestring("Successful write! Try reading sector 30 to test.\n");
         } else if (compareDifferentLengths(inp, "bouncy")) {
             bouncy();
-        } else if (compareDifferentLengths(inp, "oemname")) {
+        } else if (compareDifferentLengths(inp, "fstype")) {
             terminal_writestring("\n");
-            terminal_writestring(readBoot().OEMName);
+            terminal_writestring(readBoot().fileSysType);
             terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "bytespersector")) {
+        } else if (compareDifferentLengths(inp, "sectorspercluster")) {
             terminal_writestring("\n");
-            for (uint16_t i = 0; i < readBoot().bytesPerSect; i++) {
-                terminal_writestring("1");
-            }
+            uint16_t bytesPerSect = readBoot().sectPerClust;
+            char buffer[6];
+            uint16_to_string(bytesPerSect, buffer);
+            terminal_writestring(buffer);
             terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);

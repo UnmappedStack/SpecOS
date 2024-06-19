@@ -45,6 +45,32 @@ void reverse(char str[], int length) {
     }
 }
 
+void uint16_to_string(uint16_t num, char *str) {
+    // Define a buffer large enough to hold the maximum uint16_t value in decimal
+    char buffer[6];  // Max length of uint16_t in decimal is 5 digits, plus null terminator
+    // Index to fill the buffer
+    int index = 0;
+    // Special case for zero
+    if (num == 0) {
+        buffer[index++] = '0';
+    } else {
+        // Extract digits from least significant to most significant
+        while (num > 0) {
+            buffer[index++] = '0' + (num % 10);  // Convert digit to character
+            num /= 10;  // Move to the next digit
+        }
+    }
+    // Null-terminate the buffer
+    buffer[index] = '\0';
+    // Reverse the buffer
+    reverse(buffer, index);
+    // Copy the reversed buffer to the output string (str)
+    for (int i = 0; i <= index; ++i) {
+        str[i] = buffer[i];
+    }
+}
+
+
 // Function to convert size_t to string
 void size_t_to_str(size_t num, char* buffer) {
     int i = 0;
@@ -61,6 +87,8 @@ void size_t_to_str(size_t num, char* buffer) {
     buffer[i] = '\0';
     reverse(buffer, i);
 }
+
+
 
 void strcpy(char* dest, const char* src) {
     while (*src != '\0') {

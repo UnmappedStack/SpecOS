@@ -12,9 +12,8 @@
 
 struct bootRecord {
     uint8_t jmpBoot[3];
-    uint8_t useless;
+    uint8_t useless0;
     char OEMName[8];
-    uint8_t useless1;
     uint16_t bytesPerSect;
     uint8_t sectPerClust;
     uint16_t reservedSectCount;
@@ -39,8 +38,11 @@ struct bootRecord {
     uint8_t extBootSig;
     uint32_t volID;
     char volLabel[11];
+    uint8_t useless1;
     char fileSysType[8];
+    uint8_t useless2;
     uint16_t bootCode[420];
+    uint8_t useless3;
     uint16_t bootSig;
 };
 
