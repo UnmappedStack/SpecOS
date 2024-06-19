@@ -1,13 +1,15 @@
 /*
 SpecOS main kernel source, as part of the SpecOS complete kernel.
 This is under the MIT license. See the GitHub repo for more info.
-NOTE: This is an incomplete project (which may never be fully complete). Usage is at your own descretion. This is just a hobby project.
+NOTE: This is an incomplete project (which may never be fully complete). Usage is at your own descretion.
+This is just a hobby project, and not necessarily a good one at that.
 */
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
+#include "fs/parseBootRecord.h"
 #include "drivers/terminalWrite.h"
 #include "drivers/disk.h"
 #include "bouncy.h"
@@ -89,7 +91,7 @@ void test_userspace() {
         } else if (compareDifferentLengths(inp, "readsect")) { 
             // NOTE: This is a debug command. It's not in the help list because it's not meant to be used until the feature is complete.
             terminal_writestring("\nTrying to read from sector 30...\n");
-            char* result = readdisk(30);
+            char* result = readdisk(2048);
             terminal_writestring("Successful read! Contents:\n");
             // Print each character in the sector
             for (int i = 0; i < 512; i++) {
@@ -104,6 +106,16 @@ void test_userspace() {
             terminal_writestring("Successful write! Try reading sector 30 to test.\n");
         } else if (compareDifferentLengths(inp, "bouncy")) {
             bouncy();
+        } else if (compareDifferentLengths(inp, "oemname")) {
+            terminal_writestring("\n");
+            terminal_writestring(readBoot().OEMName);
+            terminal_writestring("\n");
+        } else if (compareDifferentLengths(inp, "bytespersector")) {
+            terminal_writestring("\n");
+            for (uint16_t i = 0; i < readBoot().bytesPerSect; i++) {
+                terminal_writestring("1");
+            }
+            terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);
             terminal_writestring("\nCommand not found.\n");
@@ -149,7 +161,10 @@ void init_kernel() {
         __asm__("cli; hlt");
     }
     test_userspace();
-    while(1);
+    terminal_initialize();
+    terminal_setcolor(VGA_COLOR_RED);
+    terminal_writestring("KERNEL PANIC: All userspace applications halted! Nothing to run. Freezing device.\n");
+    __asm__("cli; hlt");
 }
 
 void kernel_main() {

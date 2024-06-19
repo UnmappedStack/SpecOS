@@ -6,6 +6,7 @@
 #include "disk.h"
 #include "terminalWrite.h"
 #include "../utils/inx.h"
+#include "../utils/string.h"
 
 // IDENTIFY is split into two functions, initiate (run when actually reading/writing disk) and compatibility (run on device startup)
 // Compatibility is used to verify compatibility of the drive and make sure it's an existing ATA PIO drive.
@@ -183,3 +184,16 @@ char* readdisk(int32_t sect) {
 void writedisk(int32_t sect, char* data) {
     accessDisk(sect, true, data);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
