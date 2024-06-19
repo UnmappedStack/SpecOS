@@ -86,9 +86,7 @@ void showErrorTypes() {
             terminal_writestring("\n");
         }
     }
-    if (!errorsFound)
-        terminal_writestring("No disk read errors found.\n");
-}
+} 
 
 // Used to reset ports after read complete
 void wait_400() {

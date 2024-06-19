@@ -14,5 +14,6 @@ void strcpy(char* dest, const char* src);
 int compareDifferentLengths(const char *longer, const char *shorter); 
 char* charToStr(char character);
 void uint16_to_string(uint16_t num, char *str);
+void uint32_to_string(uint32_t num, char *str);
 
 #endif

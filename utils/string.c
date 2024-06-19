@@ -70,6 +70,36 @@ void uint16_to_string(uint16_t num, char *str) {
     }
 }
 
+// Function to convert uint32_t to string
+void uint32_to_string(uint32_t num, char *str) {
+    // Define a buffer large enough to hold the maximum uint32_t value in decimal
+    char buffer[11];  // Max length of uint32_t in decimal is 10 digits, plus null terminator
+
+    // Index to fill the buffer
+    int index = 0;
+
+    // Special case for zero
+    if (num == 0) {
+        buffer[index++] = '0';
+    } else {
+        // Extract digits from least significant to most significant
+        while (num > 0) {
+            buffer[index++] = '0' + (num % 10);  // Convert digit to character
+            num /= 10;  // Move to the next digit
+        }
+    }
+
+    // Null-terminate the buffer
+    buffer[index] = '\0';
+
+    // Reverse the buffer
+    reverse(buffer, index);
+
+    // Copy the reversed buffer to the output string (str)
+    for (int i = 0; i <= index; ++i) {
+        str[i] = buffer[i];
+    }
+}
 
 // Function to convert size_t to string
 void size_t_to_str(size_t num, char* buffer) {

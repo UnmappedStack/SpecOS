@@ -19,6 +19,7 @@ This is just a hobby project, and not necessarily a good one at that.
 #include "sys/idt.h"
 #include "utils/string.h"
 #include "drivers/keyboard.h"
+#include "fs/readClusterChain.h"
 
 void dummy_test_entrypoint() {
 }
@@ -116,6 +117,15 @@ void test_userspace() {
             char buffer[6];
             uint16_to_string(bytesPerSect, buffer);
             terminal_writestring(buffer);
+            terminal_writestring("\n");
+        } else if (compareDifferentLengths(inp, "rootsect")) {
+            terminal_writestring("\n");
+            uint32_t rootSect = getFirstSectorOfCluster(2);
+            char* rootContents = readdisk(rootSect);
+            for (int i = 0; i < 512; i++) {
+                terminal_writestring(charToStr(rootContents[i]));
+            }  
+            terminal_writestring(readdisk(rootSect));
             terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);
