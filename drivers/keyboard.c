@@ -80,6 +80,33 @@ unsigned char convertScancode(unsigned char scancode) {
     return toReturn;
 }
 
+void removeNullChars(char arr[100]) {
+    int i, j;
+    int len = 0; // Variable to keep track of the current length of the string
+    // Calculate the length of the string (excluding null characters)
+    for (len = 0; len < 100; len++) {
+        if (arr[len] == '\0') {
+            break;
+        }
+    }
+    // Traverse the array
+    for (i = 0; i < len; i++) {
+        // If current character is '\0' and not the last character
+        if (arr[i] == '\0') {
+            // Shift all subsequent characters one position to the left
+            for (j = i; j < len; j++) {
+                arr[j] = arr[j + 1];
+            }
+            // Adjust length of the string after shifting characters left
+            len--;
+            // Since we shifted characters left, recheck current index
+            i--;
+        }
+    }
+    // Ensure the last character is '\0' to terminate the string
+    arr[len] = '\0';
+}
+
 void scanf(char* inp) {
     show_vga_cursor();
     update_cursor(terminal_column, terminal_row + 1);
@@ -101,8 +128,9 @@ void scanf(char* inp) {
         if (inb(0x60) == 0x1C)
             break;
     }
-    terminal_write("\0", 1); // I'm not really sure why, but if I don't write something to the terminal after the device crashes.
+    terminal_write("\0", 1); // I'm not really sure why, but if I don't write something to the terminal after the device crashes. 
     strcpy(inp, wholeInput);
+    removeNullChars(inp);
     hide_vga_cursor();
 }
 

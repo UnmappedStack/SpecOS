@@ -20,6 +20,7 @@ This is just a hobby project, and not necessarily a good one at that.
 #include "utils/string.h"
 #include "drivers/keyboard.h"
 #include "fs/readClusterChain.h"
+#include "fs/decodeDirectory.h"
 
 void dummy_test_entrypoint() {
 }
@@ -122,10 +123,15 @@ void test_userspace() {
             terminal_writestring("\n");
             uint32_t rootSect = getFirstSectorOfCluster(2);
             char* rootContents = readdisk(rootSect);
-            for (int i = 0; i < 512; i++) {
-                terminal_writestring(charToStr(rootContents[i]));
-            }  
-            terminal_writestring(readdisk(rootSect));
+            struct directoryEntry buffer[10];
+            parseDirectory(rootContents, buffer);
+            for (int i = 0; i < 8; i++) {
+                terminal_writestring(charToStr(buffer[1].filename[i]));
+            }
+            char* flagBuffer;
+            size_t_to_str(buffer[1].minutesCreated, flagBuffer);
+            terminal_writestring("\nMinute created: ");
+            terminal_writestring(flagBuffer);
             terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);

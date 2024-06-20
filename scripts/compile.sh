@@ -15,10 +15,11 @@ i686-elf-gcc -ffreestanding -c ../sys/idt.c -o ../bin/idt.o
 i686-elf-gcc -ffreestanding -c ../utils/string.c -o ../bin/string.o
 i686-elf-gcc -ffreestanding -c ../drivers/keyboard.c -o ../bin/keyboard.o
 i686-elf-gcc -ffreestanding -c ../fs/parseBootRecord.c -o ../bin/parseBootRecord.o
-i686-elf-gcc -ffreestanding -c ../fs/readClusterChain.c -o ../bin/readClusterChain.c
+i686-elf-gcc -ffreestanding -c ../fs/readClusterChain.c -o ../bin/readClusterChain.o
+i686-elf-gcc -ffreestanding -c ../fs/decodeDirectory.c -o ../bin/decodeDirectory.o
 
 echo "Linking..."
-i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.c ../bin/terminalWrite.o ../bin/bouncy.o ../bin/rtc.o
+i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.o ../bin/decodeDirectory.o ../bin/terminalWrite.o ../bin/bouncy.o ../bin/rtc.o
 
 echo "Compiling multiboot header..."
 nasm -felf32 ../multiboot.asm -o ../bin/multiboot.o
