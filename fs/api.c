@@ -13,7 +13,7 @@
 #include "../utils/string.h"
 
 bool checkAllowed(char toCheck) {
-    char* allowed = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()[]\\{}|;':\"/?.>,<`~";
+    char* allowed = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()[]\\-_=+{}|;':\"?.>,<`~";
     for (int i = 0; i < strlen(allowed); i++) {
         if (allowed[i] == toCheck)
             return true;
@@ -21,13 +21,20 @@ bool checkAllowed(char toCheck) {
     return false;
 };
 
+void makeFilenameUppercase(char buffer[100]) {
+    char* lowerchars = "qwertyuiopasdfghjklzxcvbnm";
+    for (int i = 0; i < 12; i++) {
+        for (int j = 0; j < strlen(lowerchars); j++) {
+            if (buffer[i] == lowerchars[j]) {
+                buffer[i] -= 32;
+            }
+        }
+    }
+}
+
 // Some padding things to make file names work properly
 void padInputToFilename(char inp[11], char result[12]) {
-    terminal_writestring("\nOriginal: ");
-    for (int i = 0; i < 11; i++) {
-        terminal_writestring(charToStr(inp[i]));
-    }
-    terminal_writestring("\n");
+    memset(result, 0, 12);
     // Get each of the actual filename characters and join them.
     int actualFilenameLength = 8;
     for (int i = 0; i < 8; i++) {
@@ -36,11 +43,7 @@ void padInputToFilename(char inp[11], char result[12]) {
             break;
         }
         result[i] = inp[i];
-    } 
-    for (int i = 0; i < 12; i++) {
-        terminal_writestring(charToStr(result[i]));
     }
-    terminal_writestring(" <- plz just say BOOT");
     // Add a dot at the point after and the extension name, IF it has an extension (it won't if there's a folder)
     if (inp[10] != ' ' && inp[10] != '\0') {
         result[actualFilenameLength] = '.';
@@ -60,13 +63,15 @@ void listCurrentDirectory(uint32_t currentDirectoryCluster) {
     parseDirectory(rawContents, DEbuffer);
     // And finally, print it all out!
     terminal_writestring("\n");
+    char readableBuffer[12];
     for (int i = 0; i < 10; i++) {
         if (!DEbuffer[i].isSet)
-            break;
+            continue;
         if (DEbuffer[i].isDirectory)
-            terminal_setcolor(VGA_COLOR_CYAN);    
-        for (int c = 0; c < 11; c++) {
-            terminal_writestring(charToStr(DEbuffer[i].filename[c]));
+            terminal_setcolor(VGA_COLOR_CYAN);
+        padInputToFilename(DEbuffer[i].filename, readableBuffer);
+        for (int c = 0; c < 12; c++) {
+            terminal_writestring(charToStr(readableBuffer[c]));
         }
         terminal_writestring("\n");
         terminal_setcolor(VGA_COLOR_WHITE);
@@ -74,11 +79,11 @@ void listCurrentDirectory(uint32_t currentDirectoryCluster) {
 }
 
 bool filenameCompare(char input[100], char fname[11]) {
+    makeFilenameUppercase(input);
     char buffer[12];
     padInputToFilename(fname, buffer); 
-    terminal_writestring("\n");
     for (int i = 0; i < 12; i++) {
-        if (buffer[i] == '\0')
+        if (input[i] == '\0')
             return true;
         if (input[i] != buffer[i])
             return false;
@@ -86,8 +91,7 @@ bool filenameCompare(char input[100], char fname[11]) {
     return true;
 }
 
-struct cd changeDirectorySingle(char child[100], struct cd prevDir) {
-    allow_scroll = false;
+struct cd changeDirectorySingle(char child[100], struct cd prevDir) { 
     // Get the absolute sector of the cluster given and read it
     uint32_t sect = getFirstSectorOfCluster(prevDir.cluster);
     char* rawContents = readdisk(sect);
@@ -96,21 +100,13 @@ struct cd changeDirectorySingle(char child[100], struct cd prevDir) {
     parseDirectory(rawContents, DEbuffer);
     // For each entry, check if the filename matches
     for (int i = 0; i < 10; i++) {
-        terminal_writestring("Filename ");
-        char* ibuff;
-        size_t_to_str(i, ibuff);
-        terminal_writestring(ibuff);
-        terminal_writestring(": \n");
         if (filenameCompare(child, DEbuffer[i].filename)) {
-            terminal_writestring("\nDirectory changing into: \"");
-            char* buff;
-            size_t_to_str(i, buff);
-            terminal_writestring(buff);
-            terminal_writestring("\"\n");
             // Make sure it's a folder
             if (DEbuffer[i].isDirectory) {
                 struct cd newDir;
                 newDir.cluster = DEbuffer[i].firstCluster;
+                if (newDir.cluster == 0)
+                    newDir.cluster = 2; // This is hardcoded just to fix some issues that can happen when cd'ing to the root dir.
                 return newDir;
             } else {
                 terminal_writestring("\nError: Not a directory.\n");
@@ -123,7 +119,31 @@ struct cd changeDirectorySingle(char child[100], struct cd prevDir) {
 }
 
 
-
+void cat(struct cd prevDir, char child[100]) { 
+    // Get the absolute sector of the cluster given and read it
+    uint32_t sect = getFirstSectorOfCluster(prevDir.cluster);
+    char* rawContents = readdisk(sect);
+    // Decode it into a structure that can be properly interpreted
+    struct directoryEntry DEbuffer[10];
+    parseDirectory(rawContents, DEbuffer);
+    // For each entry, check if the filename matches
+    for (int i = 0; i < 10; i++) {
+        if (filenameCompare(child, DEbuffer[i].filename)) {
+            // Make sure it's not a folder
+            if (!DEbuffer[i].isDirectory) {
+                terminal_writestring("\n");
+                rawContents = readdisk(getFirstSectorOfCluster(DEbuffer[i].firstCluster));
+                for (int c = 0; c < 512; c++)
+                    terminal_writestring(charToStr(rawContents[c]));
+                terminal_writestring("\n");
+                return;
+            } else {
+                terminal_writestring("\nError: Is a directory.\n");
+            }
+        }
+    }
+    terminal_writestring("\nError: No such file or directory.\n");
+}
 
 
 

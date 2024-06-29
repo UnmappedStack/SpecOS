@@ -9,18 +9,12 @@
 #include "../drivers/disk.h"
 #include "../drivers/terminalWrite.h"
 #include "../utils/binop.h"
+#include "../utils/string.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 // A couple functions that I'll later put into a utils file but can't bother doing rn until i get this working
-// Function to zero out an array
-void memset(uint8_t *array, uint8_t value, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-        array[i] = value;
-    }
-}
-
 // Function to copy memory
 void memcpy(uint8_t *dest, const char *src, size_t n) {
     for (size_t i = 0; i < n; i++) {

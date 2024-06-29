@@ -15,4 +15,6 @@ void listCurrentDirectory(uint32_t currentDirectoryCluster);
 
 struct cd changeDirectorySingle(char child[100], struct cd prevDir); 
 
+void cat(struct cd prevDir, char child[100]);
+
 #endif

@@ -52,6 +52,9 @@ echo "Copying kernel files..."
 cp kernel.bin /mnt/specos/boot
 cp grub.cfg /mnt/specos/boot/grub
 
+mkdir /mnt/specos/stuff
+echo "Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!" >> /mnt/specos/stuff/testfile.txt
+
 # Save a copy of the file system for debug
 cp -r /mnt/specos mntcpy
 

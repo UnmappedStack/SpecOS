@@ -111,17 +111,18 @@ void test_userspace() {
             terminal_writestring(buffer);
             terminal_writestring("\n");
         } else if (compareDifferentLengths(inp, "ls")) {
-           listCurrentDirectory(currentDirectory.cluster); 
+            listCurrentDirectory(currentDirectory.cluster); 
         } else if (compareDifferentLengths(inp, "cd")) {
             terminal_writestring("\nArgument: ");
             scanf(inp);
             terminal_writestring("\n");
             currentDirectory = changeDirectorySingle(inp, currentDirectory);
             terminal_writestring("\n");
-            char* buffer;
-            uint32_to_string(currentDirectory.cluster, buffer);
-            terminal_writestring(buffer);
+        } else if (compareDifferentLengths(inp, "cat")) {
+            terminal_writestring("\nArgument: ");
+            scanf(inp);
             terminal_writestring("\n");
+            cat(currentDirectory, inp);
         } else {
             terminal_setcolor(VGA_COLOR_RED);
             terminal_writestring("\nCommand not found.\n");

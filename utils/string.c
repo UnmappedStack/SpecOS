@@ -13,6 +13,13 @@ size_t strlen(const char* str)
     return len;
 }
 
+
+void memset(uint8_t *array, uint8_t value, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        array[i] = value;
+    }
+}
+
 void addCharToString(char *str, char c) {
     // Iterate to find the end of the string
     int i = 0;
