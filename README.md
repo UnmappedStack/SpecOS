@@ -56,7 +56,7 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [X] RTC driver
 - [X] ATA PIO mode hard disk driver (28 bit LBA)
 - [ ] FAT filesystem
-  - [ ] Read (cd, ls, cat)
+  - [X] Read (cd, ls, cat)
   - [ ] Write (mkdir, touch, rm, editfile, cp, mv)
 - [ ] Do better scrolling (it sucks right now)
 - [ ] Memory management
