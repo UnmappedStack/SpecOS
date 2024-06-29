@@ -5,7 +5,6 @@ Operating system development is pretty hard, and I'm probably a below-average de
 I read the f\*cking manual. Here's some resources I used:
 
 - When writing the VGA driver, keyboard driver, PIO hard disk driver, and basically everything else, I made use of the [OSDev wiki](https://wiki.osdev.org). Note that this is definitely *not* a tutorial. It just provides some useful information. 
-- For the bootloader, I made use of [this repository](https://github.com/cfenollosa/os-tutorial), which you'll notice a lot of the code in the bootutils directory directly comes from.
 - For implementing the FAT32 file system (which I'm still in the process of), I just followed the [official Microsoft documentation](https://download.microsoft.com/download/1/6/1/161ba512-40e2-4cc9-843a-923143f3456c/fatgen103.doc). Again, this contains information and is definitely not a tutorial.
 
 > **NOTE:**
