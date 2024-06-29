@@ -111,7 +111,6 @@ void scanf(char* inp) {
     show_vga_cursor();
     update_cursor(terminal_column, terminal_row + 1);
     shifted = false;
-    capslock = false;
     inScanf = true;
     // Reset wholeInput
     int i = 0;

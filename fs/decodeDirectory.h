@@ -6,6 +6,7 @@
 #define DECODEDIRECTORY_H
 
 struct directoryEntry {
+    bool isSet;
     char filename[8];
     char extension[3];
     bool readOnlyFlag;

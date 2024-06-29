@@ -52,6 +52,9 @@ echo "Copying kernel files..."
 cp kernel.bin /mnt/specos/boot
 cp grub.cfg /mnt/specos/boot/grub
 
+# Save a copy of the file system for debug
+cp -r /mnt/specos mntcpy
+
 # unmount it
 echo "Unmounting..."
 umount /mnt/specos

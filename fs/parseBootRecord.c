@@ -8,6 +8,7 @@
 #include "parseBootRecord.h"
 #include "../drivers/disk.h"
 #include "../drivers/terminalWrite.h"
+#include "../utils/binop.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -25,13 +26,6 @@ void memcpy(uint8_t *dest, const char *src, size_t n) {
     for (size_t i = 0; i < n; i++) {
         dest[i] = (uint8_t)src[i];
     }
-}
-
-uint32_t combine32bit(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4) {
-    return ((uint32_t)byte1 << 24) |
-        ((uint32_t)byte2 << 16) |
-        ((uint32_t)byte3 << 8)  |
-        (uint32_t)byte4;
 }
 
 struct bootRecord readBoot() {

@@ -77,8 +77,7 @@ void showErrorTypes() {
         "UNC - Uncorrectable data error.",
         "BBK - Bad Block detected."
     };
-    int error_register = inb(0x1F1);
-    int errorsFound = 0;
+    int error_register = inb(0x1F1); 
     for (int i = 0; i < 8; i++) {
         if (get_bit(error_register, i)) {
             terminal_writestring("ERROR: ");

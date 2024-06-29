@@ -10,6 +10,7 @@
 #include "decodeDirectory.h"
 #include "../drivers/terminalWrite.h"
 #include "../utils/string.h"
+#include "../utils/binop.h"
 
 // A function that really should be in the string.h utils header, but I can't bother doing it properly
 void splitString(const char *input, char output[10][32]) {
@@ -27,12 +28,37 @@ int getBit(unsigned char num, int x) {
     return (num >> x) & 1;
 }
 
+// Used for skipping long file names
+void removeElementIfNeeded(struct directoryEntry array[], int *size, int index) {
+    // Shift elements to the left starting from index
+    for (int i = index; i < *size - 1; ++i) {
+        array[i] = array[i + 1];
+    }
+    (*size)--;  // Decrement size of the array
+}
+
+// Function to process the array and remove elements as needed
+void processArray(struct directoryEntry array[], int *size) {
+    int i = 0;
+    while (i < *size) {
+        if (array[i].filename[0] == '\0') {
+            // If first character is null, remove the element
+            removeElementIfNeeded(array, size, i);
+        } else {
+            i++;  // Move to next element if no removal was done
+        }
+    }
+}
+
 void parseDirectory(char* rawBinary, struct directoryEntry directoryBuffer[10]) {
     // First, divide it into 10 (or less) thingies of 32 bytes
     char rawEntries[10][32];
     splitString(rawBinary, rawEntries);
-    // For each of them, add to directoryBuffer a decoded thingy 
+    // For each of them, add to directoryBuffer a decoded thingy
     for (int i = 0; i < 10; i++) {
+        if (rawEntries[i][11] == 0x0F) // If it's a long file name entry, skip it - not supported yet!
+            continue;
+        directoryBuffer[i].isSet = (rawEntries[i][0] != '\0');
         // Offset 0: File name
         for (int j = 0; j < 8; j++) {
             directoryBuffer[i].filename[j] = rawEntries[i][j];
@@ -54,11 +80,11 @@ void parseDirectory(char* rawBinary, struct directoryEntry directoryBuffer[10]) 
         for (int j = 0; j < 6; ++j) {
             *flagsArray[j] = getBit(flags, j);
         }
-        // Offset 13: Creation time in hundredths of a second.
-        uint16_t timeCreatedWhole = ((uint16_t)rawEntries[i][15] << 8) | rawEntries[i][14];
-        directoryBuffer[i].hourCreated = (getBit(timeCreatedWhole, 4) << 4) | (getBit(timeCreatedWhole, 3) << 3) | (getBit(timeCreatedWhole, 2) << 2) | (getBit(timeCreatedWhole, 1) << 1) | getBit(timeCreatedWhole, 0);
-        directoryBuffer[i].minutesCreated = (timeCreatedWhole >> 5) & 0x3F; 
-    }
+        // Skip a bunch of meta data that I can't get working right now and just find the first cluster
+        directoryBuffer[i].firstCluster = combine32bit(rawEntries[i][21], rawEntries[i][20], rawEntries[i][27], rawEntries[i][26]);
+    } 
+    int listsize = 10;
+    processArray(directoryBuffer, &listsize);
 } 
 
 

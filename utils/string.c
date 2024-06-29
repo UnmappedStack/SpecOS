@@ -1,4 +1,5 @@
 #include "string.h"
+#include "../drivers/terminalWrite.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -67,9 +68,33 @@ void uint16_to_string(uint16_t num, char *str) {
     // Copy the reversed buffer to the output string (str)
     for (int i = 0; i <= index; ++i) {
         str[i] = buffer[i];
-    }
+    } 
 }
 
+int get_num_length(uint32_t num) {
+    int length = 0;
+    do {
+        length++;
+        num /= 10;
+    } while (num > 0);
+    return length;
+}
+
+void uint32_to_string(uint32_t num, char* str) {
+    // Get the length of the number
+    int length = get_num_length(num);
+
+    // Null-terminate the string
+    str[length] = '\0';
+
+    // Fill the buffer with digits in reverse order
+    int index = length - 1;
+    do {
+        str[index--] = '0' + (num % 10);
+        num /= 10;
+    } while (num > 0);
+}
+/*
 // Function to convert uint32_t to string
 void uint32_to_string(uint32_t num, char *str) {
     // Define a buffer large enough to hold the maximum uint32_t value in decimal
@@ -100,7 +125,7 @@ void uint32_to_string(uint32_t num, char *str) {
         str[i] = buffer[i];
     }
 }
-
+*/
 // Function to convert size_t to string
 void size_t_to_str(size_t num, char* buffer) {
     int i = 0;
@@ -131,10 +156,9 @@ void strcpy(char* dest, const char* src) {
 
 int compareDifferentLengths(const char *longer, const char *shorter) {
     size_t num = 0;
-    while (num < strlen(shorter) - 1) {
-        if (longer[num] != shorter[num]) {
+    while (num < strlen(shorter)) {
+        if (longer[num] != shorter[num])
             return 0;
-        }
         num++;
     }
     return 1;
