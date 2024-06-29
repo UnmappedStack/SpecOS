@@ -47,12 +47,44 @@ sudo dd if=SpecOS/scripts/disk.img of=/dev/sdN bs=4M status=progress
 
 With /dev/sdN being the name of your USB. Then in your device's unique BIOS, change the boot order so it will boot from USB before your current OS, and restart with your now-formatted USB plugged in.
 
-## Features:
-* Basic keyboard driver with scanf implementation
-* Basic test userspace with device shutdown, time/date driver, colours, and an echo command
-* 28 bit ATA PIO mode driver which can read/write specific sectors (not in help menu yet, as it's a debug feature at the moment.)
+## Roadmap
+Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, there's a lot I haven't done. Really gives an idea on just how much there is to do.
+- [X] First steps
+  - [X] VGA driver
+  - [X] Interrupt handling
+  - [X] PS/2 Keyboard support
+- [X] RTC driver
+- [X] ATA PIO mode hard disk driver (28 bit LBA)
+- [ ] FAT filesystem
+  - [ ] Read (cd, ls, cat)
+  - [ ] Write (mkdir, touch, rm, editfile, cp, mv)
+- [ ] Do better scrolling (it sucks right now)
+- [ ] Memory management
+  - [ ] Physical memory management (bitmap)
+  - [ ] Virtual memory management
+- [ ] ELF parsing/userspace (apps are a big milestone for me!)
+- [ ] Write libc (maybe port one? I don't really know yet.)
+- [ ] Some sort of NIC driver
+- [ ] Port lwIP for networking (I can't bother writing this myself)
+- [ ] Some ports
+  - [ ] Vim (or some other text editor)
+  - [ ] Python (possibly very difficult)
+- [ ] More drivers for compatibility
+  - [ ] USB (likely *very* hard)
+  - [ ] SSD
+  - [ ] HDMI
+  - [ ] DVI
+  - [ ]  More NIC drivers
+- [ ] GUI
+  - [ ] Window server + plotting pixels
+  - [ ] Text with a custom font
+  - [ ] Mouse driver
+  - [ ] Present another app's frame buffer within the main GUI
+  - [ ] Window management: moving, closing, resizing
+  - [ ] A few GUI apps for settings etc.
+- [ ] ACPI driver (really should be a higher priority...)
+- [ ] Write a basic web browser (possibly very hard, but I was thinking of doing this as a seperate project anyway, so why not combine?)
 
-## Future features
-I plan to write a FAT32 file system driver, then I hope to write a memory management system with paging (terrifying). Then I'd like to be able to parse and run ELF userland files, implement the C standard library, and maybe, just *maybe* I'll be able to get some networking stack at some point. It's a road to running Doom!
+It's a road to running DOOM!
 
-Note that a lot of this is unrealistic and probably won't happen - it's a lot easier said that done. But my hopes are high!
+Note that a lot of this is unrealistic and probably won't happen - it's a lot easier said that done. But my hopes are high (:
