@@ -5,6 +5,8 @@
 #ifndef PMM_H
 #define PMM_H
 
-void initPMM(multiboot_info_t* mbd, uint32_t magic);
+uint32_t initPMM(multiboot_info_t* mbd, uint32_t magic);
+
+void* malloc(int allocSize); 
 
 #endif

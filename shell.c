@@ -21,6 +21,7 @@
 #include "fs/api.h"
 #include "shell.h"
 #include "mem/detect.h"
+#include "mem/pmm.h"
 
 void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();
@@ -125,6 +126,13 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
             scanf(inp);
             terminal_writestring("\n");
             cat(currentDirectory, inp);
+        } else if (compareDifferentLengths(inp, "malloc")) {
+            uint8_t *testThingy = (uint8_t*) malloc(sizeof(uint8_t));
+            char buffer[9];
+            uint32_to_hex_string((uint32_t) testThingy, buffer);
+            terminal_writestring("\nLocation dynamically provided by kernel PMM: 0x");
+            terminal_writestring(buffer);
+            terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);
             terminal_writestring("\nCommand not found.\n");

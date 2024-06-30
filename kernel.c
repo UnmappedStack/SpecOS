@@ -31,6 +31,8 @@ void dummy_test_entrypoint() {
 #error "Must be compiled with an ix86-elf compiler."
 #endif
 
+uint32_t firstPageFrame;
+
 void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();
     hide_vga_cursor();
@@ -44,7 +46,8 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     terminal_writestring("Initialising IRQs...\n");
     init_IRQ();
     terminal_writestring("Initialising physical memory manager...");
-    initPMM(mbd, magic);
+    uint32_t firstPageFrame;
+    firstPageFrame = initPMM(mbd, magic);
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {
         terminal_set_bg(VGA_COLOR_BLACK);

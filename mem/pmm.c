@@ -15,6 +15,7 @@ Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub reposi
 #include "multiboot.h" // Memory detection
 #include "pmm.h"
 #include "../utils/string.h"
+#include "../kernel.h"
 
 struct pageFrame {
     bool free;
@@ -73,7 +74,8 @@ struct initialFrames findInitialFrames(multiboot_info_t* mbd, uint32_t magic) {
 }
 
 // This function is... actually the name is pretty self-explanitory
-void initPMM(multiboot_info_t* mbd, uint32_t magic) {
+// Returns address in the form of an integer of the first free thingymabob.
+uint32_t initPMM(multiboot_info_t* mbd, uint32_t magic) {
     struct initialFrames firstFrames = findInitialFrames(mbd, magic);
     // Make two page frames and place them in physical memory at the correct locations.
     // First points to second, second one points to 0x00 (NULL, cos it's the last one)
@@ -91,4 +93,60 @@ void initPMM(multiboot_info_t* mbd, uint32_t magic) {
     struct pageFrame *p2Location = (struct pageFrame*) firstFrames.postKernel.start;
     *p1Location = p1;
     *p2Location = p2;
+    return firstFrames.preKernel.start;
 }
+
+// Now for the fun stuff! kmalloc & kfree are the kernelspace versions of malloc & free
+// calloc & realloc are userspace things. No need to implement them here.
+
+// alas, first I need a function to split a page frame
+void* splitPF(uint32_t location, uint32_t size) {
+    // Create a new page frame & give it some values
+    struct pageFrame newFrame;
+    newFrame.pfSize = ((struct pageFrame*) location)->pfSize - ((struct pageFrame*) location)->neededSize;
+    newFrame.neededSize = size;
+    newFrame.free = false;
+    newFrame.nextAvaliableFrame = ((struct pageFrame*) location)->nextAvaliableFrame;
+    // Create a new version of the original frame
+    struct pageFrame origFrameNew;
+    origFrameNew.pfSize = ((struct pageFrame*) location)->neededSize;
+    origFrameNew.neededSize = newFrame.pfSize;
+    origFrameNew.nextAvaliableFrame = location + newFrame.pfSize;
+    // Copy the contents of the original page frame
+    for (int d = 0; d < origFrameNew.pfSize - sizeof(struct pageFrame); d++)
+        origFrameNew.contents[d] = ((struct pageFrame*) location)->contents[d];
+    // Put these new page frames into the correct spot in memory
+    struct pageFrame *origFrameLocation = (struct pageFrame*) location;
+    struct pageFrame *newFrameLocation = (struct pageFrame*) origFrameNew.nextAvaliableFrame;
+    *origFrameLocation = origFrameNew;
+    *newFrameLocation = newFrame;
+    // Return a pointer to the new frame
+    return ((void*) newFrameLocation) + sizeof(struct pageFrame);
+}
+
+void* malloc(int allocSize) {
+    // Try find a page frame that's larger than/equal to it's required size + the new memory thingy's size
+    // If it can't find any, report an out of memory error. 
+    uint32_t toCheck = firstPageFrame;
+    char buffer[9];
+    while (1) {
+        uint32_to_hex_string(((struct pageFrame*) toCheck)->pfSize, buffer);
+        terminal_writestring("\n0x");
+        terminal_writestring(buffer);
+        if (((struct pageFrame*) toCheck)->pfSize >= (((struct pageFrame*) toCheck)->pfSize + allocSize))
+            return splitPF(toCheck, allocSize);
+        else {
+            if (!((struct pageFrame*) toCheck)->nextAvaliableFrame)
+                break;
+            toCheck = ((struct pageFrame*) toCheck)->nextAvaliableFrame; 
+        }
+    }
+    // If it got here, it couldn't find any avaliable memory.
+    terminal_setcolor(VGA_COLOR_RED);
+    terminal_writestring("\nNo avaliable memory (PMM). Halting device.");
+    __asm__ ("cli; hlt");
+    // To please the compiler, return a pointer to an arbitrary point. 
+    // This doesn't matter, cos the device is already frozen as memory couldn't be found.
+    return (void*) 0x00;
+}
+ 
