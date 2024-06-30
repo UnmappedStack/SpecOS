@@ -78,9 +78,8 @@ void test_userspace() {
             terminal_writestring("\n");
         } else if (compareDifferentLengths(inp, "clear")) {
             terminal_initialize();
-        } else if (compareDifferentLengths(inp, "help")) {
-            terminal_initialize();
-            terminal_writestring("COMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
+        } else if (compareDifferentLengths(inp, "help")) { 
+            terminal_writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "readsect")) { 
             // NOTE: This is a debug command. It's not in the help list because it's not meant to be used until the feature is complete.
             terminal_writestring("\nTrying to read from sector 2048...\n");

@@ -55,14 +55,18 @@ void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
 
 void terminal_writestring(const char* data);
 
+void scrollTerminal();
+
 void terminal_putchar(char c) 
 {
     terminal_color = vga_entry_color(terminal_color, bg_colour);
     terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
     if (++terminal_column == VGA_WIDTH) {
         terminal_column = 0;
-        if (++terminal_row == VGA_HEIGHT)
-	    terminal_row = 0;
+        terminal_row++;
+         while (terminal_row >= VGA_HEIGHT - 2 && allow_scroll)
+            scrollTerminal();
+
     } 
 }
 
@@ -72,24 +76,37 @@ void terminal_write(const char* data, size_t size)
         if (data[i] == '\n') {
             terminal_row++;
             terminal_column = 0;
+            while (terminal_row >= VGA_HEIGHT - 2 && allow_scroll)
+                scrollTerminal();
         } else {
             if (data[i] == '\x7F')
                 terminal_putchar((char)219);
             else
                 terminal_putchar(data[i]);
         }
-    }
+    } 
 }
 
 bool allow_scroll = true;
 
+void scrollTerminal() {
+    size_t index;
+    for (int l = 1; l < terminal_row; l++){
+        for (int c = 0; c < VGA_WIDTH; c++) {
+            index = l * VGA_WIDTH + c;
+            terminal_putentryat(terminal_buffer[index], terminal_buffer[index] >> 8, c, l - 1);
+        }
+    }
+    // Clear last line used
+    for (int c = 0; c < VGA_WIDTH; c++) {
+        terminal_putentryat(' ', VGA_COLOR_BLACK, c, terminal_row - 1);
+    }
+    terminal_row--;
+}
+
 void terminal_writestring(const char* data) 
 {
     terminal_write(data, strlen(data)); 
-    if (terminal_row >= (VGA_HEIGHT / 3 * 2) && allow_scroll) {
-        terminal_initialize();
-        terminal_write(data, strlen(data));
-    }
 }
 
 void hide_vga_cursor() {
