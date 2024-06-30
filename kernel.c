@@ -15,6 +15,8 @@ This is just a hobby project, and not necessarily a good one at that.
 #include "shell.h"
 #include "drivers/disk.h"
 #include "utils/string.h"
+#include "mem/detect.h"
+#include "mem/pmm.h"
 
 void dummy_test_entrypoint() {
 }
@@ -29,7 +31,7 @@ void dummy_test_entrypoint() {
 #error "Must be compiled with an ix86-elf compiler."
 #endif
 
-void init_kernel() {
+void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();
     hide_vga_cursor();
     terminal_setcolor(VGA_COLOR_LIGHT_GREY);
@@ -41,6 +43,8 @@ void init_kernel() {
     idt_init();
     terminal_writestring("Initialising IRQs...\n");
     init_IRQ();
+    terminal_writestring("Initialising physical memory manager...");
+    initPMM(mbd, magic);
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {
         terminal_set_bg(VGA_COLOR_BLACK);
@@ -65,13 +69,13 @@ void init_kernel() {
         terminal_writestring("IF YOU ARE USING QEMU...\nMake sure you use the -hda option when running.");
         __asm__("cli; hlt");
     } 
-    test_userspace();
+    test_userspace(mbd, magic);
     terminal_initialize();
     terminal_setcolor(VGA_COLOR_RED);
     terminal_writestring("KERNEL PANIC: All userspace applications halted!\nNothing to run. Freezing device.\n");
     __asm__("cli; hlt");
 }
 
-void kernel_main() {
-    init_kernel();
+void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
+    init_kernel(mbd, magic);
 }

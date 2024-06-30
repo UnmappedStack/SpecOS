@@ -20,8 +20,9 @@
 #include "fs/decodeDirectory.h"
 #include "fs/api.h"
 #include "shell.h"
+#include "mem/detect.h"
 
-void test_userspace() {
+void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();
     // Some cool ASCII art that fIGlet totally didn't generate
     terminal_writestring(" ____                   ___  ____\n");
@@ -45,14 +46,16 @@ void test_userspace() {
         terminal_writestring(">> ");
         terminal_setcolor(VGA_COLOR_WHITE);
         scanf(inp);
-        if (compareDifferentLengths(inp, "echo") != 0) {
+        if (compareDifferentLengths(inp, "echo")) {
             terminal_writestring("\nArgument: ");
             scanf(inp);
             terminal_writestring("\n");
             terminal_setcolor(VGA_COLOR_LIGHT_GREY);
             terminal_writestring(inp);
             terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "timedate") != 0) {
+        } else if (compareDifferentLengths(inp, "memmap")) {
+            detectMemmap(mbd, magic); 
+        } else if (compareDifferentLengths(inp, "timedate")) {
             terminal_writestring("\nTime: ");
             terminal_writestring(wholeTime());
             terminal_writestring("\nDate: ");

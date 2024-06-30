@@ -1,1 +1,0 @@
-Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!

@@ -78,6 +78,37 @@ void uint16_to_string(uint16_t num, char *str) {
     } 
 }
 
+void uint32_to_hex_string(uint32_t num, char *str) {
+    // Define a buffer large enough to hold the maximum uint32_t value in hex
+    char buffer[9];  // Max length of uint32_t in hex is 8 digits, plus null terminator
+    // Index to fill the buffer
+    int index = 0;
+    
+    // Special case for zero
+    if (num == 0) {
+        buffer[index++] = '0';
+    } else {
+        // Extract hex digits from least significant to most significant
+        while (num > 0) {
+            uint8_t digit = num & 0xF;  // Get the least significant 4 bits (a hex digit)
+            if (digit < 10) {
+                buffer[index++] = '0' + digit;  // Convert digit to character
+            } else {
+                buffer[index++] = 'A' + (digit - 10);  // Convert digit to character
+            }
+            num >>= 4;  // Shift right by 4 bits to get the next hex digit
+        }
+    }
+    // Null-terminate the buffer
+    buffer[index] = '\0';
+    // Reverse the buffer
+    reverse(buffer, index);
+    // Copy the reversed buffer to the output string (str)
+    for (int i = 0; i <= index; ++i) {
+        str[i] = buffer[i];
+    }
+}
+
 int get_num_length(uint32_t num) {
     int length = 0;
     do {

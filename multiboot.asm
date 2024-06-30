@@ -70,8 +70,12 @@ _start:
 	; aligned above and we've since pushed a multiple of 16 bytes to the
 	; stack since (pushed 0 bytes so far) and the alignment is thus
 	; preserved and the call is well defined.
-        ; note, that if you are building on Windows, C functions may have "_" prefix in assembly: _kernel_main
-	extern kernel_main
+    ; note, that if you are building on Windows, C functions may have "_" prefix in assembly: _kernel_main
+	; Push GRUB mem map onto the stack for usage later in memory management (to be used in mem/detect.c)
+    push eax
+    push ebx
+    ; Call the kernel
+    extern kernel_main
 	call kernel_main
 
 	; If the system has nothing more to do, put the computer into an
