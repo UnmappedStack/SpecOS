@@ -46,7 +46,6 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     terminal_writestring("Initialising IRQs...\n");
     init_IRQ();
     terminal_writestring("Initialising physical memory manager...");
-    uint32_t firstPageFrame;
     firstPageFrame = initPMM(mbd, magic);
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {

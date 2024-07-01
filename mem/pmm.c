@@ -110,11 +110,19 @@ void* splitPF(uint32_t location, uint32_t size) {
     // Create a new version of the original frame
     struct pageFrame origFrameNew;
     origFrameNew.pfSize = ((struct pageFrame*) location)->neededSize;
-    origFrameNew.neededSize = newFrame.pfSize;
-    origFrameNew.nextAvaliableFrame = location + newFrame.pfSize;
+    origFrameNew.neededSize = origFrameNew.pfSize;
+    origFrameNew.nextAvaliableFrame = location + origFrameNew.pfSize;
+    terminal_writestring("\nCopying original page frame contents to new one...");
     // Copy the contents of the original page frame
-    for (int d = 0; d < origFrameNew.pfSize - sizeof(struct pageFrame); d++)
+    uint32_t max;
+    if (origFrameNew.neededSize == 0)
+        max = 0;
+    else
+        max = origFrameNew.neededSize - sizeof(struct pageFrame);
+    for (int d = 0; d < max; d++) {
         origFrameNew.contents[d] = ((struct pageFrame*) location)->contents[d];
+    }
+    terminal_writestring("\nDone.");
     // Put these new page frames into the correct spot in memory
     struct pageFrame *origFrameLocation = (struct pageFrame*) location;
     struct pageFrame *newFrameLocation = (struct pageFrame*) origFrameNew.nextAvaliableFrame;
@@ -124,16 +132,24 @@ void* splitPF(uint32_t location, uint32_t size) {
     return ((void*) newFrameLocation) + sizeof(struct pageFrame);
 }
 
-void* malloc(int allocSize) {
+void* kmalloc(int allocSize) {
     // Try find a page frame that's larger than/equal to it's required size + the new memory thingy's size
     // If it can't find any, report an out of memory error. 
     uint32_t toCheck = firstPageFrame;
+    char buffer0[9];
     char buffer[9];
+    char buffer3[9];
     while (1) {
         uint32_to_hex_string(((struct pageFrame*) toCheck)->pfSize, buffer);
-        terminal_writestring("\n0x");
+        terminal_writestring("\nSize: 0x");
         terminal_writestring(buffer);
-        if (((struct pageFrame*) toCheck)->pfSize >= (((struct pageFrame*) toCheck)->pfSize + allocSize))
+        uint32_to_hex_string(toCheck, buffer0);
+        terminal_writestring("\nAddress: 0x");
+        terminal_writestring(buffer0);
+        uint32_to_hex_string(((struct pageFrame*) toCheck)->neededSize, buffer3);
+        terminal_writestring("\nRequired size: 0x");
+        terminal_writestring(buffer3);
+        if (((struct pageFrame*) toCheck)->pfSize >= (((struct pageFrame*) toCheck)->neededSize + allocSize))
             return splitPF(toCheck, allocSize);
         else {
             if (!((struct pageFrame*) toCheck)->nextAvaliableFrame)

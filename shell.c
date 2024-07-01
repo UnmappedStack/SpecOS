@@ -126,8 +126,8 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
             scanf(inp);
             terminal_writestring("\n");
             cat(currentDirectory, inp);
-        } else if (compareDifferentLengths(inp, "malloc")) {
-            uint8_t *testThingy = (uint8_t*) malloc(sizeof(uint8_t));
+        } else if (compareDifferentLengths(inp, "kmalloc")) {
+            uint16_t *testThingy = (uint16_t*) kmalloc(sizeof(uint16_t));
             char buffer[9];
             uint32_to_hex_string((uint32_t) testThingy, buffer);
             terminal_writestring("\nLocation dynamically provided by kernel PMM: 0x");
