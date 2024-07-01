@@ -9,4 +9,6 @@ uint32_t initPMM(multiboot_info_t* mbd, uint32_t magic);
 
 void* kmalloc(int allocSize); 
 
+void kfree(void* location);
+
 #endif

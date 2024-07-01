@@ -22,7 +22,7 @@ struct pageFrame {
     uint32_t nextAvaliableFrame;
     uint32_t pfSize;
     uint32_t neededSize;
-    uint8_t contents[0];
+    _Alignas(16) uint8_t contents[0];
 };
 
 struct memSect {
@@ -86,7 +86,7 @@ uint32_t initPMM(multiboot_info_t* mbd, uint32_t magic) {
     p2.nextAvaliableFrame = 0x00;
     p1.pfSize = firstFrames.preKernel.end - firstFrames.preKernel.start;
     p2.pfSize = firstFrames.postKernel.end - firstFrames.postKernel.start;
-    p1.neededSize = p2.neededSize = 0;
+    p1.neededSize = p2.neededSize = sizeof(struct pageFrame);
     // The contents isn't set yet.
     // Now place these at the appropriate place in memory
     struct pageFrame *p1Location = (struct pageFrame*) firstFrames.preKernel.start;
@@ -112,7 +112,6 @@ void* splitPF(uint32_t location, uint32_t size) {
     origFrameNew.pfSize = ((struct pageFrame*) location)->neededSize;
     origFrameNew.neededSize = origFrameNew.pfSize;
     origFrameNew.nextAvaliableFrame = location + origFrameNew.pfSize;
-    terminal_writestring("\nCopying original page frame contents to new one...");
     // Copy the contents of the original page frame
     uint32_t max;
     if (origFrameNew.neededSize == 0)
@@ -122,10 +121,9 @@ void* splitPF(uint32_t location, uint32_t size) {
     for (int d = 0; d < max; d++) {
         origFrameNew.contents[d] = ((struct pageFrame*) location)->contents[d];
     }
-    terminal_writestring("\nDone.");
     // Put these new page frames into the correct spot in memory
     struct pageFrame *origFrameLocation = (struct pageFrame*) location;
-    struct pageFrame *newFrameLocation = (struct pageFrame*) origFrameNew.nextAvaliableFrame;
+    struct pageFrame *newFrameLocation = (struct pageFrame*) origFrameNew.nextAvaliableFrame; 
     *origFrameLocation = origFrameNew;
     *newFrameLocation = newFrame;
     // Return a pointer to the new frame
@@ -133,6 +131,7 @@ void* splitPF(uint32_t location, uint32_t size) {
 }
 
 void* kmalloc(int allocSize) {
+    allocSize += sizeof(struct pageFrame);
     // Try find a page frame that's larger than/equal to it's required size + the new memory thingy's size
     // If it can't find any, report an out of memory error. 
     uint32_t toCheck = firstPageFrame;
@@ -140,15 +139,6 @@ void* kmalloc(int allocSize) {
     char buffer[9];
     char buffer3[9];
     while (1) {
-        uint32_to_hex_string(((struct pageFrame*) toCheck)->pfSize, buffer);
-        terminal_writestring("\nSize: 0x");
-        terminal_writestring(buffer);
-        uint32_to_hex_string(toCheck, buffer0);
-        terminal_writestring("\nAddress: 0x");
-        terminal_writestring(buffer0);
-        uint32_to_hex_string(((struct pageFrame*) toCheck)->neededSize, buffer3);
-        terminal_writestring("\nRequired size: 0x");
-        terminal_writestring(buffer3);
         if (((struct pageFrame*) toCheck)->pfSize >= (((struct pageFrame*) toCheck)->neededSize + allocSize))
             return splitPF(toCheck, allocSize);
         else {
@@ -164,5 +154,10 @@ void* kmalloc(int allocSize) {
     // To please the compiler, return a pointer to an arbitrary point. 
     // This doesn't matter, cos the device is already frozen as memory couldn't be found.
     return (void*) 0x00;
+}
+
+void free(void* location) {
+    ((struct pageFrame*) location)->free = true;
+    ((struct pageFrame*) location)->neededSize = sizeof(struct pageFrame);
 }
  

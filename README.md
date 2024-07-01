@@ -62,7 +62,7 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
   - [ ] Write (mkdir, touch, rm, editfile, cp, mv)
 - [ ] Do better scrolling (it sucks right now)
 - [ ] Memory management
-  - [ ] Physical memory management (bitmap)
+  - [X] Physical memory management (pooling allocator)
   - [ ] Virtual memory management
 - [ ] ELF parsing/userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
