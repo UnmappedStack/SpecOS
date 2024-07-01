@@ -60,7 +60,7 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [ ] FAT filesystem
   - [X] Read (cd, ls, cat)
   - [ ] Write (mkdir, touch, rm, editfile, cp, mv)
-- [ ] Do better scrolling (it sucks right now)
+- [X] Do better scrolling (it sucks right now)
 - [ ] Memory management
   - [X] Physical memory management (pooling allocator)
   - [ ] Virtual memory management
