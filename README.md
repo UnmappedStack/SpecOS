@@ -63,7 +63,8 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [X] Do better scrolling (it sucks right now)
 - [ ] Memory management
   - [X] Physical memory management (pooling allocator)
-  - [ ] Virtual memory management
+  - [X] Virtual memory management (paging)
+  - [ ] Implement a heap (dynamic userspace stuff)
 - [ ] ELF parsing/userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
 - [ ] Some sort of NIC driver

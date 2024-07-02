@@ -25,7 +25,6 @@ void* splitPF(uint32_t location, uint32_t size) {
     origFrameNew.nextAvaliableFrame = location + origFrameNew.pfSize;
     // Copy the contents of the original page frame
     if (!((struct kmallocNode*) location)->free) {
-        terminal_writestring("|");
         uint32_t max;
         if (origFrameNew.neededSize == 0)
             max = 0;

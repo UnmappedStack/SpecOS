@@ -46,16 +46,42 @@ void isr_divide_by_zero() {
     __asm__("cli; hlt");
 }
 
+void isr_invalid_opcode() {
+    terminal_setcolor(VGA_COLOR_RED);
+    terminal_writestring("EXCEPTION: Invalid opcode\n");
+    __asm__("cli; hlt");
+}
+
+void isr_page_fault() {
+    terminal_setcolor(VGA_COLOR_RED);
+    terminal_writestring("EXCEPTION: Page fault\n");
+    __asm__("cli; hlt");
+}
+
 void isr_stub_divide_by_zero() {
     // Push error code and call the actual ISR
     asm volatile("push $0");
     asm volatile("jmp isr_divide_by_zero");
 }
 
+void isr_stub_invalid_opcode() {
+    // Push error code and call the actual ISR
+    asm volatile("push $0");
+    asm volatile("jmp isr_invalid_opcode");
+}
+
+void isr_stub_page_fault() {
+    // Push error code and call the actual ISR
+    asm volatile("push $0");
+    asm volatile("jmp isr_page_fault");
+}
+
 void idt_init() {
     idtr.limit = sizeof(idt) - 1;
     idtr.base = (uint32_t)&idt;
     idt_set_descriptor(0, isr_divide_by_zero, 0x8E);
+    idt_set_descriptor(6, isr_invalid_opcode, 0x8E);
+    idt_set_descriptor(14, isr_page_fault, 0x8E);
     __asm__("lidt %0" : : "m"(idtr));
 }
 

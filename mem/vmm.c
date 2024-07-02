@@ -29,23 +29,32 @@ void loadpd(uint32_t pd[1024]) {
 }
 
 void enablePaging() {
+    terminal_writestring("\nTrying to enable paging...");
     __asm__ __volatile__ ("mov %%cr0, %%eax; or $0x80000000, %%eax; mov %%eax, %%cr0"
         : : : "eax");
+    terminal_writestring("\nPaging enabled.");
 }
 
 void initPaging() {
+    terminal_setcolor(VGA_COLOR_CYAN);
+    terminal_writestring("\nInitiating page directory...");
     // Init pd 
     for(int i = 0; i < 1024; i++)
         page_directory[i] = 0x00000002; // Supervisor, write enabled, not present
     // Init pt
     // fill all 1024 entries in the table, mapping 4 megabytes
     // this currently just maps it all to the same point in physical memory. This is just for testing.
+    terminal_writestring("\nInitiating page table...");
     for(unsigned int i = 0; i < 1024; i++) {
         // As the address is page aligned, it will always leave 12 bits zeroed.
         // Those bits are used by the attributes
-        first_page_table[i] = ((int) kmalloc(4) * 0x1000) | 3; // attributes: supervisor level, read/write, present.
+        first_page_table[i] = (i * 0x1000) | 3; // attributes: supervisor level, read/write, present.
     }
+    terminal_writestring("\nLoading page table into page directory...");
     page_directory[0] = ((unsigned int)first_page_table) | 3;
+    terminal_writestring("\nLoading page directory into cr3...");
     loadpd(page_directory);
+    terminal_writestring("\nEnabling paging...");
     enablePaging();
+    terminal_writestring("\nPaging enabled! It's ring 3 time (:");
 }
