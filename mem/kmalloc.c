@@ -24,13 +24,15 @@ void* splitPF(uint32_t location, uint32_t size) {
     origFrameNew.neededSize = origFrameNew.pfSize;
     origFrameNew.nextAvaliableFrame = location + origFrameNew.pfSize;
     // Copy the contents of the original page frame
-    uint32_t max;
-    if (origFrameNew.neededSize == 0)
-        max = 0;
-    else
-        max = origFrameNew.neededSize - sizeof(struct kmallocNode);
-    for (int d = 0; d < max; d++) {
-        origFrameNew.contents[d] = ((struct kmallocNode*) location)->contents[d];
+    if (!((struct kmallocNode*) location)->free) {
+        terminal_writestring("|");
+        uint32_t max;
+        if (origFrameNew.neededSize == 0)
+            max = 0;
+        else
+            max = origFrameNew.neededSize - sizeof(struct kmallocNode);
+        for (int d = 0; d < max; d++)
+            origFrameNew.contents[d] = ((struct kmallocNode*) location)->contents[d];
     }
     // Put these new page frames into the correct spot in memory
     struct kmallocNode *origFrameLocation = (struct kmallocNode*) location;
