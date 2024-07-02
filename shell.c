@@ -22,6 +22,7 @@
 #include "shell.h"
 #include "mem/detect.h"
 #include "mem/pmm.h"
+#include "mem/kmalloc.h"
 
 void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();

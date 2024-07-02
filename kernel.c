@@ -35,6 +35,7 @@ void dummy_test_entrypoint() {
 uint32_t firstPageFrame;
 
 void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
+    __asm__ ("cli");
     terminal_initialize();
     hide_vga_cursor();
     terminal_setcolor(VGA_COLOR_LIGHT_GREY);
@@ -46,9 +47,9 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     idt_init();
     terminal_writestring("Initialising IRQs...\n");
     init_IRQ();
-    terminal_writestring("Initialising physical memory manager...");
+    terminal_writestring("Initialising physical memory manager...\n");
     firstPageFrame = initPMM(mbd, magic);
-    terminal_writestring("Initialising virtual memory manager...");
+    terminal_writestring("Initialising virtual memory manager...\n");
     initPaging();
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {
