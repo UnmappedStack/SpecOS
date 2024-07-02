@@ -17,6 +17,7 @@ This is just a hobby project, and not necessarily a good one at that.
 #include "utils/string.h"
 #include "mem/detect.h"
 #include "mem/pmm.h"
+#include "mem/vmm.h"
 
 void dummy_test_entrypoint() {
 }
@@ -47,6 +48,8 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     init_IRQ();
     terminal_writestring("Initialising physical memory manager...");
     firstPageFrame = initPMM(mbd, magic);
+    terminal_writestring("Initialising virtual memory manager...");
+    initPaging();
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {
         terminal_set_bg(VGA_COLOR_BLACK);

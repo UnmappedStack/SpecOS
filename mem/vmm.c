@@ -17,10 +17,12 @@ Note that this is a non-pse, non-pae pager thingy-ma-bob. Obviously it uses pagi
 #include "pmm.h"
 #include "vmm.h"
 
+uint32_t page_directory[1024] __attribute__((aligned(4096)));
+
 void loadpd(uint32_t pd[1024]) {
     // Maybe not a great way to do this, but... inline asm time!
-    __asm__ __volatile__ ("mov 8(%0), %%eax; mov %%eax, %%cr3"
-        : : "r" (pd) : "eax");
+    __asm__ __volatile__ ("mov %0, %%cr3"
+        : : "r" (pd));
 }
 
 void enablePaging() {
@@ -29,8 +31,7 @@ void enablePaging() {
 }
 
 void initPaging() {
-    // Init pd
-    uint32_t page_directory[1024] __attribute__((aligned(4096))); 
+    // Init pd 
     for(int i = 0; i < 1024; i++)
         page_directory[i] = 0x00000002; // Supervisor, write enabled, not present
     // Init pt
