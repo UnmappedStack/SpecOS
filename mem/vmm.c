@@ -33,7 +33,7 @@ void enablePaging() {
 void initPaging() {
     // Init pd 
     for(int i = 0; i < 1024; i++)
-        page_directory[i] = 0x00000002; // Supervisor, write enabled, not present
+        page_directory[i] = (int) kmalloc(1) | 0x00000002; // Supervisor, write enabled, not present
     // Init pt
     uint32_t first_page_table[1024] __attribute__((aligned(4096)));
     // fill all 1024 entries in the table, mapping 4 megabytes
