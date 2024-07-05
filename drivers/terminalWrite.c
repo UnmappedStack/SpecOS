@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "../utils/inx.h"
 #include "../utils/string.h"
+#include "serial.h"
 
 /* Hardware text mode color constants. */
 
@@ -59,6 +60,7 @@ void scrollTerminal();
 
 void terminal_putchar(char c) 
 {
+    outCharSerial(c);
     terminal_color = vga_entry_color(terminal_color, bg_colour);
     terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
     if (++terminal_column == VGA_WIDTH) {
@@ -74,6 +76,7 @@ void terminal_write(const char* data, size_t size)
 {
     for (size_t i = 0; i < size; i++) {    
         if (data[i] == '\n') {
+            serial_writestring("\n");
             terminal_row++;
             terminal_column = 0;
             while (terminal_row >= VGA_HEIGHT - 2 && allow_scroll)
@@ -105,7 +108,7 @@ void scrollTerminal() {
 }
 
 void terminal_writestring(const char* data) 
-{
+{ 
     terminal_write(data, strlen(data)); 
 }
 

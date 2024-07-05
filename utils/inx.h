@@ -1,3 +1,6 @@
+#include <stddef.h>
+#include <stdint.h>
+
 #ifndef INX_H
 #define INX_H
 

@@ -18,6 +18,7 @@ This is just a hobby project, and not necessarily a good one at that.
 #include "mem/detect.h"
 #include "mem/pmm.h"
 #include "mem/vmm.h"
+#include "drivers/serial.h"
 
 void dummy_test_entrypoint() {
 }
@@ -40,6 +41,7 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     hide_vga_cursor();
     terminal_setcolor(VGA_COLOR_LIGHT_GREY);
     terminal_writestring("Successful boot!\n");
+    serial_writestring("Hello world from serial!\nNew lines are supported by default (:");
     terminal_writestring("\n\n");
     terminal_writestring("Initialising GDT...\n");
     init_gdt();

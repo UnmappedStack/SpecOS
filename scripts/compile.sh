@@ -24,9 +24,10 @@ i686-elf-gcc -ffreestanding -Wall -c ../mem/detect.c -o ../bin/detect.o
 i686-elf-gcc -ffreestanding -Wall -c ../mem/pmm.c -o ../bin/pmm.o
 i686-elf-gcc -ffreestanding -Wall -c ../mem/vmm.c -o ../bin/vmm.o
 i686-elf-gcc -ffreestanding -Wall -c ../mem/kmalloc.c -o ../bin/kmalloc.o
+i686-elf-gcc -ffreestanding -Wall -c ../drivers/serial.c -o ../bin/serial.o
 
 echo "Linking..."
-i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/detect.o ../bin/pmm.o ../bin/kmalloc.o ../bin/vmm.o ../bin/binop.o ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.o ../bin/decodeDirectory.o ../bin/terminalWrite.o ../bin/fsapi.o ../bin/bouncy.o ../bin/rtc.o ../bin/shell.o
+i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/serial.o ../bin/detect.o ../bin/pmm.o ../bin/kmalloc.o ../bin/vmm.o ../bin/binop.o ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.o ../bin/decodeDirectory.o ../bin/terminalWrite.o ../bin/fsapi.o ../bin/bouncy.o ../bin/rtc.o ../bin/shell.o
 
 echo "Compiling multiboot header..."
 nasm -felf32 ../multiboot.asm -o ../bin/multiboot.o
