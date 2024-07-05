@@ -55,6 +55,8 @@ cp grub.cfg /mnt/specos/boot/grub
 mkdir /mnt/specos/stuff
 echo "Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!" >> /mnt/specos/stuff/testfile.txt
 
+cp "test.txt" /mnt/specos/stuff
+
 # unmount it
 echo "Unmounting..."
 umount /mnt/specos

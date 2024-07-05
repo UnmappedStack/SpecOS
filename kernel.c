@@ -50,7 +50,7 @@ void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
     terminal_writestring("Initialising physical memory manager...\n");
     firstPageFrame = initPMM(mbd, magic);
     terminal_writestring("Initialising virtual memory manager...\n");
-    initPaging();
+    initPaging(0, 1024);
     terminal_writestring("Initialising drive...\n");
     if (!identifyCompatibility()) {
         terminal_set_bg(VGA_COLOR_BLACK);

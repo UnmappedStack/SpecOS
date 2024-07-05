@@ -35,7 +35,19 @@ void enablePaging() {
     terminal_writestring("\nPaging enabled.");
 }
 
-void initPaging() {
+/*
+To set up kernelspace paging, run:
+```
+initPaging(0, 1024);
+```
+To set the whole thing, right from the start.
+For a userspace application's paging to run, use:
+```
+initPaging(0x400000, NUM_PAGEFRAMES);
+```
+Note that NUM_PAGEFRAMES should be specified in the ELF header.
+*/
+void initPaging(int startFrom, int numFrames) {
     terminal_setcolor(VGA_COLOR_CYAN);
     terminal_writestring("\nInitiating page directory...");
     // Init pd 
@@ -45,11 +57,14 @@ void initPaging() {
     // fill all 1024 entries in the table, mapping 4 megabytes
     // this currently just maps it all to the same point in physical memory. This is just for testing.
     terminal_writestring("\nInitiating page table...");
-    for(unsigned int i = 0; i < 1024; i++) {
+    for (unsigned int i = startFrom; i < numFrames + startFrom; i++) {
         // As the address is page aligned, it will always leave 12 bits zeroed.
         // Those bits are used by the attributes
-        first_page_table[i] = (i * 0x1000) | 3; // attributes: supervisor level, read/write, present.
+        first_page_table[i] = (((startFrom == 0) ? (i * 0x1000) : ((int) kmalloc(1024)))) | 3; // attributes: supervisor level, read/write, present.
     }
+    // And the non-allocated ones
+    for (unsigned int i = numFrames; i < 1024 + startFrom; i++)
+        first_page_table[i] = 0x00; // no attributes, it hasn't been allocated yet.
     terminal_writestring("\nLoading page table into page directory...");
     page_directory[0] = ((unsigned int)first_page_table) | 3;
     terminal_writestring("\nLoading page directory into cr3...");
