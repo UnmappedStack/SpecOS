@@ -10,7 +10,7 @@
 *.o
 *.ko
 *.obj
-*.elf
+# But WHY would I remove .elf??? It's for test purposes for now.
 
 # Linker output
 *.ilk

@@ -76,12 +76,17 @@ void isr_stub_page_fault() {
     asm volatile("jmp isr_page_fault");
 }
 
+void test_helloworld_syscall() {
+    terminal_writestring("\nHello, world!\n");
+}
+
 void idt_init() {
     idtr.limit = sizeof(idt) - 1;
     idtr.base = (uint32_t)&idt;
     idt_set_descriptor(0, isr_divide_by_zero, 0x8E);
     idt_set_descriptor(6, isr_invalid_opcode, 0x8E);
     idt_set_descriptor(14, isr_page_fault, 0x8E);
+    idt_set_descriptor(0x80, test_helloworld_syscall, 0x8E);
     __asm__("lidt %0" : : "m"(idtr));
 }
 
