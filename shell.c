@@ -125,6 +125,7 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
             terminal_writestring("\nArgument: ");
             scanf(inp);
             cat(currentDirectory, inp);
+            terminal_writestring("\n");
         } else if (compareDifferentLengths(inp, "kmalloc")) {
             uint16_t *testThingy = (uint16_t*) kmalloc(sizeof(uint16_t));
             char buffer[9];

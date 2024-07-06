@@ -47,9 +47,6 @@ void* kmalloc(int allocSize) {
     // Try find a page frame that's larger than/equal to it's required size + the new memory thingy's size
     // If it can't find any, report an out of memory error. 
     uint32_t toCheck = firstPageFrame;
-    char buffer0[9];
-    char buffer[9];
-    char buffer3[9];
     while (1) {
         if (((struct kmallocNode*) toCheck)->pfSize >= (((struct kmallocNode*) toCheck)->neededSize + allocSize))
             return splitPF(toCheck, allocSize);

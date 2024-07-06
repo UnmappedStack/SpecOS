@@ -132,11 +132,14 @@ void cat(struct cd prevDir, char child[100]) {
             // Make sure it's not a folder
             if (!DEbuffer[i].isDirectory) {
                 terminal_writestring("\n");
-                rawContents = readdisk(getFirstSectorOfCluster(DEbuffer[i].firstCluster));
-                for (int c = 0; c < 512; c++)
-                    terminal_writestring(charToStr(rawContents[c]));
-                terminal_writestring("\n");
-                return;
+                char* fileContents;
+                readFile(DEbuffer[i].firstCluster, fileContents);
+                int n = 0;
+                while (1) {
+                    terminal_writestring(charToStr(fileContents[n]));
+                    if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4)
+                        return;
+                }
             } else {
                 terminal_writestring("\nError: Is a directory.\n");
             }

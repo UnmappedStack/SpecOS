@@ -4,5 +4,7 @@
 #define READCLUSTERCHAIN_H
 
 uint32_t getFirstSectorOfCluster(int clust);
+
+void readFile(int firstClust, char* buffer);
  
 #endif
