@@ -1,7 +1,6 @@
 # SpecOS
 ![Commit activity](https://img.shields.io/github/commit-activity/m/jakeSteinburger/SpecOS/main)
-![Lines of code](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fghloc.vercel.app%2Fapi%2FjakeSteinburger%2FSpecOS%2Fbadge%3Ffilter%3D.c%2C.asm%2C.h%2C.sh&query=%24.message&label=lines%20of%20code&color=red)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddef159bc34148e4a89d2a600e9b61e5)](https://app.codacy.com/gh/jakeSteinburger/SpecOS/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddef159bc34148e4a89d2a600e9b61e5)](https://app.codacy.com/gh/jakeSteinburger/SpecOS/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub top language](https://img.shields.io/github/languages/top/jakeSteinburger/SpecOS?logo=c&label=)
 [![GitHub license](https://img.shields.io/github/license/jakeSteinburger/SpecOS)](https://github.com/jakeSteinburger/SpecOS/blob/main/LICENSE)
 
@@ -27,7 +26,7 @@ Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf to
 git clone https://github.com/jakeSteinburger/SpecOS.git
 cd SpecOS/scripts
 chmod +x compile.sh
-bash compile.sh
+./compile.sh
 ```
 Note that you must be inside the scripts directory to run the compile script.
 
@@ -36,7 +35,7 @@ This will generate a an executable disk image that you can run with qemu.
 ### On Qemu
 Simply cd into the directory of the built .bin file, and run:
 ```
-qemu-system-i386 -hda disk.img
+qemu-system-i386 disk.img
 ```
 You'll obviously need Qemu installed.
 
@@ -60,12 +59,13 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [ ] FAT filesystem
   - [X] Read (cd, ls, cat)
   - [ ] Write (mkdir, touch, rm, editfile, cp, mv)
-- [X] Do better scrolling (it sucks right now)
+- [X] Do better scrolling
 - [ ] Memory management
   - [X] Physical memory management (pooling allocator)
   - [X] Virtual memory management (paging)
   - [ ] Implement a heap (dynamic userspace stuff)
-- [ ] ELF parsing/userspace (apps are a big milestone for me!)
+- [X] ELF parsing
+- [ ] Jump to userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
 - [ ] Some sort of NIC driver
 - [ ] Port lwIP for networking (I can't bother writing this myself)
