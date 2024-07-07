@@ -13,6 +13,12 @@ if test -f "disk.img"; then
     rm disk.img
 fi
 
+if test -f "/mnt/specos"; then
+    rm -rf /mnt/specos
+fi
+
+mkdir /mnt/specos
+
 # Make an empty img file with a bunch of zeros (512 byte sectors), about 70 Megabytes large (should be enough for now)
 echo "Creating empty disk image file..."
 dd if=/dev/zero of=disk.img bs=512 count=131072

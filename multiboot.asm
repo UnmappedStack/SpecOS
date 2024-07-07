@@ -72,6 +72,9 @@ _start:
 	; preserved and the call is well defined.
     ; note, that if you are building on Windows, C functions may have "_" prefix in assembly: _kernel_main
 	; Push GRUB mem map onto the stack for usage later in memory management (to be used in mem/detect.c)
+    ; But wait! Getting rid of the boilerplate barebones code, now I gotta get into real mode, turn on VGA graphics mode, and come back
+    ;;; Enter real mode ;;;
+    
     push eax
     push ebx
     ; Call the kernel
@@ -89,6 +92,7 @@ _start:
 	; 3) Jump to the hlt instruction if it ever wakes up due to a
 	;    non-maskable interrupt occurring or due to system management mode.
 	cli
+
 .hang:	hlt
 	jmp .hang
 .end:
