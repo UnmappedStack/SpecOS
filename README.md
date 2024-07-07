@@ -1,6 +1,6 @@
 # SpecOS
 ![Commit activity](https://img.shields.io/github/commit-activity/m/jakeSteinburger/SpecOS/main)
-![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddef159bc34148e4a89d2a600e9b61e5)](https://app.codacy.com/gh/jakeSteinburger/SpecOS/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/ddef159bc34148e4a89d2a600e9b61e5)](https://app.codacy.com/gh/jakeSteinburger/SpecOS/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![GitHub top language](https://img.shields.io/github/languages/top/jakeSteinburger/SpecOS?logo=c&label=)
 [![GitHub license](https://img.shields.io/github/license/jakeSteinburger/SpecOS)](https://github.com/jakeSteinburger/SpecOS/blob/main/LICENSE)
 
