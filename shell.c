@@ -23,6 +23,7 @@
 #include "mem/detect.h"
 #include "mem/pmm.h"
 #include "mem/kmalloc.h"
+#include "userspace/parseElf.h"
 
 void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
     terminal_initialize();
@@ -124,7 +125,7 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
         } else if (compareDifferentLengths(inp, "cat")) {
             terminal_writestring("\nArgument: ");
             scanf(inp);
-            cat(currentDirectory, inp);
+            cat(currentDirectory, inp, true);
             terminal_writestring("\n");
         } else if (compareDifferentLengths(inp, "kmalloc")) {
             uint16_t *testThingy = (uint16_t*) kmalloc(sizeof(uint16_t));
@@ -133,9 +134,25 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
             terminal_writestring("\nLocation dynamically provided by kernel PMM: 0x");
             terminal_writestring(buffer);
             terminal_writestring("\n");
+        } else if (compareDifferentLengths(inp, "elf")) {
+            terminal_writestring("\nArgument: ");
+            scanf(inp);
+            char* fileContents = cat(currentDirectory, inp, false);
+            struct elfHeader header = parseElf(fileContents);
+            char* buffer;
+            size_t_to_str(header.endianness, buffer);
+            terminal_writestring("Endianness: ");
+            terminal_writestring(buffer);
+            terminal_writestring("\n");
         } else {
             terminal_setcolor(VGA_COLOR_RED);
             terminal_writestring("\nCommand not found.\n");
         }
     }
 }
+
+
+
+
+
+

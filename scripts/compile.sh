@@ -25,15 +25,16 @@ i686-elf-gcc -ffreestanding -Wall -c ../mem/pmm.c -o ../bin/pmm.o
 i686-elf-gcc -ffreestanding -Wall -c ../mem/vmm.c -o ../bin/vmm.o
 i686-elf-gcc -ffreestanding -Wall -c ../mem/kmalloc.c -o ../bin/kmalloc.o
 i686-elf-gcc -ffreestanding -Wall -c ../drivers/serial.c -o ../bin/serial.o
+i686-elf-gcc -ffreestanding -Wall -c ../userspace/parseElf.c -o ../bin/parseElf.o
 
 echo "Linking..."
-i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/serial.o ../bin/detect.o ../bin/pmm.o ../bin/kmalloc.o ../bin/vmm.o ../bin/binop.o ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.o ../bin/decodeDirectory.o ../bin/terminalWrite.o ../bin/fsapi.o ../bin/bouncy.o ../bin/rtc.o ../bin/shell.o
+i686-elf-ld -r -o ../bin/kernelout.o -Ttext 0x1000 ../bin/parseElf.o ../bin/serial.o ../bin/detect.o ../bin/pmm.o ../bin/kmalloc.o ../bin/vmm.o ../bin/binop.o ../bin/string.o ../bin/inx.o ../bin/gdt.o ../bin/idt.o ../bin/keyboard.o ../bin/kernel.o ../bin/disk.o ../bin/parseBootRecord.o ../bin/readClusterChain.o ../bin/decodeDirectory.o ../bin/terminalWrite.o ../bin/fsapi.o ../bin/bouncy.o ../bin/rtc.o ../bin/shell.o
 
 echo "Compiling multiboot header..."
 nasm -felf32 ../multiboot.asm -o ../bin/multiboot.o
 
 echo "Linking... (again, this time kernel with the multiboot header)"
-i686-elf-gcc -T ../linker.ld -o kernel.bin -ffreestanding -O2 -nostdlib ../bin/multiboot.o ../bin/kernelout.o -lgcc
+i686-elf-gcc -T ../linker.ld -o ../bin/kernel.bin -ffreestanding -O2 -nostdlib ../bin/multiboot.o ../bin/kernelout.o -lgcc
 
 echo "Creating virtual FAT image with a loopback device..."
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"

@@ -1,0 +1,1756 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=900, initial-scale=1'>
+    <title>testapp.elf</title>
+    <style>
+      html {
+        font-family: monospace;
+      }
+      #headertable {
+        width: 100%;
+      }
+      #rightmenu {
+        vertical-align: top;
+        text-align: right;
+        float: right;
+      }
+      #credits {
+        color: #ddd;
+        text-decoration: none;
+        margin-bottom: 0.5em;
+        display: block;
+      }
+      #credits:hover {
+        color: #000;
+      }
+      #arrow_opacity_range {
+        width: 8em;
+      }
+      .right_hidden {
+        text-align: left;
+        display: none;
+      }
+      .textbutton {
+        color: #222;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        margin-bottom: 0.5em;
+      }
+      .textbutton::before {
+        content: "[";
+      }
+      .textbutton::after {
+        content: "]";
+      }
+      .textbutton:hover {
+        color: #922;
+      }
+      .textbutton:active {
+        color: #d11;
+      }
+      .textbutton:hover::before {
+        color: #222;
+      }
+      .textbutton:hover::after {
+        color: #222;
+      }
+      label, input {
+        vertical-align: middle;
+      }
+      .legend_rect {
+        float: left;
+        margin-right: 0.4em;
+        width: 3em;
+        height: 1.5em;
+        border: 1px solid rgba(0, 0, 0, .2);
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      #help > p {
+        margin-top: 0;
+        margin-bottom: 0.5em;
+        width: 29em;
+      }
+      #help > ul {
+        margin-top: 0;
+      }
+      #help > p + p {
+        margin-top: 1em;
+      }
+      li {
+        clear: left;
+        height: 2em;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      .number {
+        text-decoration: underline dotted #888;
+      }
+      #desc {
+        width: 250px;
+      }
+      .infotables {
+        padding: 0;
+        display: block;
+      }
+      .conceal {
+        display: none;
+        border: 1px solid #000;
+        max-width: 600px;
+        margin-bottom: 1em;
+      }
+      .conceal div {
+        word-break: break-word;
+      }
+      .indirect .phdr_itable::after {
+        content: " (references this segment)";
+      }
+      .indirect .shdr_itable::after {
+        content: " (references this section)";
+      }
+      .phdr_itable::before {
+        content: "Program header";
+      }
+      .shdr_itable::before {
+        content: "Section header";
+      }
+      .phdr_itable {
+        text-align: left;
+      }
+      .shdr_itable {
+        text-align: left;
+      }
+      .segment_itable::before {
+        content: "Segment";
+      }
+      .section_itable::before {
+        content: "Section";
+      }
+      .segment_itable {
+        text-align: left;
+      }
+      .section_itable {
+        text-align: left;
+      }
+      #offsets {
+        display: inline-block;
+        text-align: right;
+        white-space: pre;
+      }
+      #bytes {
+        border: 1px solid;
+        display: inline-block;
+        word-break: break-word;
+        /* 16 bytes * (2 chars per byte + 1 space) - 1 final space */
+        width: 47ch;
+        white-space: pre;
+      }
+      #ascii {
+        border: 1px solid;
+        display: inline-block;
+        width: 16ch;
+        white-space: pre;
+      }
+      #vmap {
+        border: 1px solid;
+        display: inline-block;
+        width: 47ch;
+        vertical-align: top;
+        position: sticky;
+        top: 8px;
+      }
+      #sticky_table {
+        display: inline-block;
+        vertical-align: top;
+        position: sticky;
+        top: 8px;
+      }
+      #desc, .itable {
+        vertical-align: top;
+      }
+      .hover:hover {
+        background-color: #ee9;
+      }
+
+      .ident {
+        background-color: #e99;
+      }
+      /* highlight fields */
+      .ident:hover > span {
+        background-color: #ebb;
+      }
+      /* Duplicate of .hover:hover with more specifity. Used for elements like `#magic', for whom
+       * rule `.ident:hover > span' would override rule `.hover:hover' */
+      .ident:hover > span:hover {
+        background-color: #ee9;
+      }
+
+      /* same for .ehdr, but we also don't want to highlight .ident */
+      .ehdr {
+        background-color: #99e;
+      }
+      .ehdr:hover > span:not(.ident) {
+        background-color: #bbe;
+      }
+      .ehdr:hover > span:not(.ident):hover {
+        background-color: #ee9;
+      }
+
+      .phdr {
+        background-color: #eb9;
+      }
+      .phdr:hover > span {
+        background-color: #ed9;
+      }
+      .phdr:hover > span:hover {
+        background-color: #ef9;
+      }
+
+      .shdr {
+        background-color: #9be;
+      }
+      .shdr:hover > span {
+        background-color: #9de;
+      }
+      .shdr:hover > span:hover {
+        background-color: #9fe;
+      }
+
+      .segment {
+        background-color: #f99;
+      }
+      .section {
+        background-color: #f9f;
+      }
+      /* there are only sections inside segments due to code */
+      .segment > .section, .segm_sect_legend {
+        background: repeating-linear-gradient(
+          -45deg,
+          #f99,
+          #f99 10px,
+          #f9f 10px,
+          #f9f 20px
+        );
+      }
+      /* another duplicate of .hover:hover with more specifity */
+      .segment > .section:hover {
+        background: initial;
+        background-color: #ee9;
+      }
+
+      .segment > .segment_subrange:hover {
+        background: initial;
+        background-color: #f59;
+      }
+
+      svg {
+        position: absolute;
+        left: 0;
+        right: 0;
+        pointer-events: none;
+        overflow: visible;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width='100%' height='100%'>
+      <defs>
+        <marker id='arrowhead' viewBox='0 0 10 10' refX='10' refY='5' markerWidth='10' markerHeight='10' orient='auto'>
+          <path d='M 0 0 L 10 5 L 0 10 z' />
+        </marker>
+      </defs>
+      <g id='arrows' stroke='black' stroke-width='1' marker-end='url(#arrowhead)'></g>
+    </svg>
+    <div id='rightmenu'>
+      <a id='credits' href='https://github.com/ruslashev/elfcat'>generated with elfcat 0.1.8</a>
+      <button class='textbutton' id='settings_toggle'>Settings</button>
+      <button class='textbutton' id='help_toggle'>Help</button>
+      <div class='right_hidden' id='settings'>
+        <label for='arrow_opacity_range'>Arrow opacity:</label>
+        <input type='range' id='arrow_opacity_range' min='0' max='100' value='100'>
+      </div>
+      <div class='right_hidden' id='help'>
+        <p>The leftmost column shows offsets within the file. The middle column is the file dump. It has ELF structs, sections and segments highlighted. Some fields that reference areas in the file are clickable and connected with arrows. The rightmost column shows printable ASCII characters corresponding to the file bytes.</p>
+        <p>Legend</p>
+        <ul>
+          <li><span class='legend_rect ident'></span>ELF Identification</li>
+          <li><span class='legend_rect ehdr'></span>ELF Header</li>
+          <li><span class='legend_rect phdr'></span>Program Header</li>
+          <li><span class='legend_rect shdr'></span>Section Header</li>
+          <li><span class='legend_rect segment'></span>Segment</li>
+          <li><span class='legend_rect section'></span>Section</li>
+          <li><span class='legend_rect segm_sect_legend'></span>Segment &amp; Section overlap</li>
+        </ul>
+      </div>
+    </div>
+    <table>
+      <tr class='fileinfo_file_name'> <td>File name:</td> <td>testapp.elf</td> </tr>
+      <tr class='fileinfo_file_size'> <td>File size:</td> <td>4.4 KiB (4500 B)</td> </tr>
+      <tr class='fileinfo_class'> <td>Object class:</td> <td>32-bit</td> </tr>
+      <tr class='fileinfo_data'> <td>Data encoding:</td> <td>Little endian</td> </tr>
+      <tr class='fileinfo_abi'> <td>ABI:</td> <td>SysV</td> </tr>
+      <tr class='fileinfo_e_type'> <td>Type:</td> <td>Executable file (EXEC)</td> </tr>
+      <tr class='fileinfo_e_machine'> <td>Architecture:</td> <td>x86</td> </tr>
+      <tr class='fileinfo_e_entry'> <td>Entrypoint:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+      <tr class='fileinfo_ph'> <td>Program headers:</td> <td><span title='0x1' class='number fileinfo_e_phnum'>1</span> * <span title='0x20' class='number fileinfo_e_phentsize'>32</span> @ <span title='0x34' class='number fileinfo_e_phoff'>52</span></td> </tr>
+      <tr class='fileinfo_sh'> <td>Section headers:</td> <td><span title='0x6' class='number fileinfo_e_shnum'>6</span> * <span title='0x28' class='number fileinfo_e_shentsize'>40</span> @ <span title='0x10a4' class='number fileinfo_e_shoff'>4260</span></td> </tr>
+    </table>
+    <div id='offsets'>0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+a0
+b0
+c0
+d0
+e0
+f0
+100
+110
+120
+130
+140
+150
+160
+170
+180
+190
+1a0
+1b0
+1c0
+1d0
+1e0
+1f0
+200
+210
+220
+230
+240
+250
+260
+270
+280
+290
+2a0
+2b0
+2c0
+2d0
+2e0
+2f0
+300
+310
+320
+330
+340
+350
+360
+370
+380
+390
+3a0
+3b0
+3c0
+3d0
+3e0
+3f0
+400
+410
+420
+430
+440
+450
+460
+470
+480
+490
+4a0
+4b0
+4c0
+4d0
+4e0
+4f0
+500
+510
+520
+530
+540
+550
+560
+570
+580
+590
+5a0
+5b0
+5c0
+5d0
+5e0
+5f0
+600
+610
+620
+630
+640
+650
+660
+670
+680
+690
+6a0
+6b0
+6c0
+6d0
+6e0
+6f0
+700
+710
+720
+730
+740
+750
+760
+770
+780
+790
+7a0
+7b0
+7c0
+7d0
+7e0
+7f0
+800
+810
+820
+830
+840
+850
+860
+870
+880
+890
+8a0
+8b0
+8c0
+8d0
+8e0
+8f0
+900
+910
+920
+930
+940
+950
+960
+970
+980
+990
+9a0
+9b0
+9c0
+9d0
+9e0
+9f0
+a00
+a10
+a20
+a30
+a40
+a50
+a60
+a70
+a80
+a90
+aa0
+ab0
+ac0
+ad0
+ae0
+af0
+b00
+b10
+b20
+b30
+b40
+b50
+b60
+b70
+b80
+b90
+ba0
+bb0
+bc0
+bd0
+be0
+bf0
+c00
+c10
+c20
+c30
+c40
+c50
+c60
+c70
+c80
+c90
+ca0
+cb0
+cc0
+cd0
+ce0
+cf0
+d00
+d10
+d20
+d30
+d40
+d50
+d60
+d70
+d80
+d90
+da0
+db0
+dc0
+dd0
+de0
+df0
+e00
+e10
+e20
+e30
+e40
+e50
+e60
+e70
+e80
+e90
+ea0
+eb0
+ec0
+ed0
+ee0
+ef0
+f00
+f10
+f20
+f30
+f40
+f50
+f60
+f70
+f80
+f90
+fa0
+fb0
+fc0
+fd0
+fe0
+ff0
+1000
+1010
+1020
+1030
+1040
+1050
+1060
+1070
+1080
+1090
+10a0
+10b0
+10c0
+10d0
+10e0
+10f0
+1100
+1110
+1120
+1130
+1140
+1150
+1160
+1170
+1180
+1190</div>
+    <div id='bytes'><span class='ehdr'><span class='ident'><span class='magic'>7f &nbsp;E &nbsp;L &nbsp;F</span> <span class='class'>01</span> <span class='data'>01</span> <span class='ver'>01</span> <span class='abi'>00</span> <span class='abi_ver'>00</span> <span class='pad'>00 00 00 00 00 00 00</span></span>
+<span class='e_type'>02 00</span> <span class='e_machine'>03 00</span> <span class='e_version'>01 00 00 00</span> <span class='e_entry'>00 00 00 00</span> <span class='e_phoff'>34 00 00 00</span>
+<span class='e_shoff'>a4 10 00 00</span> <span class='e_flags'>00 00 00 00</span> <span class='e_ehsize'>34 00</span> <span class='e_phentsize'>20 00</span> <span class='e_phnum'>01 00</span> <span class='e_shentsize'>28 00</span>
+<span class='e_shnum'>06 00</span> <span class='e_shstrndx'>05 00</span></span> <span class='bin_phdr0 phdr'><span class='p_type'>01 00 00 00</span> <span class='p_offset'>00 10 00 00</span> <span class='p_vaddr'>00 00 00 00</span>
+<span class='p_paddr'>00 00 00 00</span> <span class='p_filesz'>03 00 00 00</span> <span class='p_memsz'>03 00 00 00</span> <span class='p_flags'>05 00 00 00</span>
+<span class='p_align'>00 10 00 00</span></span> 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+<span class='bin_segment0 segment'><span class='bin_section1 section hover'>cd 80 c3</span></span> <span class='bin_section2 section hover'>47 43 43 3a 20 28 47 4e 55 29 20 31 34
+2e 31 2e 30 00</span> 00 00 00 <span class='bin_section3 section hover'>00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00
+00 00 00 00 04 00 f1 ff 0b 00 00 00 00 00 00 00
+00 00 00 00 10 00 00 00 12 00 00 00 00 00 00 00
+03 00 00 00 12 00 01 00</span> <span class='bin_section4 section hover'>00 74 65 73 74 61 70 70
+2e 63 00 5f 73 74 61 72 74 00 6d 61 69 6e 00</span> <span class='bin_section5 section hover'>00
+2e 73 79 6d 74 61 62 00 2e 73 74 72 74 61 62 00
+2e 73 68 73 74 72 74 61 62 00 2e 74 65 78 74 2e
+73 74 61 72 74 75 70 00 2e 63 6f 6d 6d 65 6e 74
+00</span> 00 00 00 <span class='bin_shdr0 shdr'><span class='sh_name'>00 00 00 00</span> <span class='sh_type'>00 00 00 00</span> <span class='sh_flags'>00 00 00 00</span>
+<span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>00 00 00 00</span> <span class='sh_size'>00 00 00 00</span> <span class='sh_link'>00 00 00 00</span>
+<span class='sh_info'>00 00 00 00</span> <span class='sh_addralign'>00 00 00 00</span> <span class='sh_entsize'>00 00 00 00</span></span> <span class='bin_shdr1 shdr'><span class='sh_name'>1b 00 00 00</span>
+<span class='sh_type'>01 00 00 00</span> <span class='sh_flags'>06 00 00 00</span> <span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>00 10 00 00</span>
+<span class='sh_size'>03 00 00 00</span> <span class='sh_link'>00 00 00 00</span> <span class='sh_info'>00 00 00 00</span> <span class='sh_addralign'>10 00 00 00</span>
+<span class='sh_entsize'>00 00 00 00</span></span> <span class='bin_shdr2 shdr'><span class='sh_name'>29 00 00 00</span> <span class='sh_type'>01 00 00 00</span> <span class='sh_flags'>30 00 00 00</span>
+<span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>03 10 00 00</span> <span class='sh_size'>12 00 00 00</span> <span class='sh_link'>00 00 00 00</span>
+<span class='sh_info'>00 00 00 00</span> <span class='sh_addralign'>01 00 00 00</span> <span class='sh_entsize'>01 00 00 00</span></span> <span class='bin_shdr3 shdr'><span class='sh_name'>01 00 00 00</span>
+<span class='sh_type'>02 00 00 00</span> <span class='sh_flags'>00 00 00 00</span> <span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>18 10 00 00</span>
+<span class='sh_size'>40 00 00 00</span> <span class='sh_link'>04 00 00 00</span> <span class='sh_info'>02 00 00 00</span> <span class='sh_addralign'>04 00 00 00</span>
+<span class='sh_entsize'>10 00 00 00</span></span> <span class='bin_shdr4 shdr'><span class='sh_name'>09 00 00 00</span> <span class='sh_type'>03 00 00 00</span> <span class='sh_flags'>00 00 00 00</span>
+<span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>58 10 00 00</span> <span class='sh_size'>17 00 00 00</span> <span class='sh_link'>00 00 00 00</span>
+<span class='sh_info'>00 00 00 00</span> <span class='sh_addralign'>01 00 00 00</span> <span class='sh_entsize'>00 00 00 00</span></span> <span class='bin_shdr5 shdr'><span class='sh_name'>11 00 00 00</span>
+<span class='sh_type'>03 00 00 00</span> <span class='sh_flags'>00 00 00 00</span> <span class='sh_addr'>00 00 00 00</span> <span class='sh_offset'>6f 10 00 00</span>
+<span class='sh_size'>32 00 00 00</span> <span class='sh_link'>00 00 00 00</span> <span class='sh_info'>00 00 00 00</span> <span class='sh_addralign'>01 00 00 00</span>
+<span class='sh_entsize'>00 00 00 00</span></span></div>
+    <div id='ascii'>.ELF............
+............4...
+........4.....(.
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+...GCC:.(GNU).14
+.1.0............
+................
+................
+................
+.........testapp
+.c._start.main..
+.symtab..strtab.
+.shstrtab..text.
+startup..comment
+................
+................
+................
+................
+................
+....).......0...
+................
+................
+................
+@...............
+................
+....X...........
+................
+............o...
+2...............
+....</div>
+    <table id='sticky_table' cellspacing='0'>
+      <tr>
+        <td id='desc'></td>
+        <td class='infotables'>
+          <table class='conceal itable' id='info_phdr0'>
+          <th colspan='2' class='phdr_itable'></th>
+            <tr> <td>Type:</td> <td>LOAD</td> </tr>
+            <tr> <td>Flags:</td> <td>RX</td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4096'>0x1000</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Size in memory:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='4096'>0x1000</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr0'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>0</td> </tr>
+            <tr> <td>Name:</td> <td></td> </tr>
+            <tr> <td>Type:</td> <td>NULL</td> </tr>
+            <tr> <td>Flags:</td> <td>0</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>0</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr1'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>1</td> </tr>
+            <tr> <td>Name:</td> <td>.text.startup</td> </tr>
+            <tr> <td>Type:</td> <td>PROGBITS</td> </tr>
+            <tr> <td>Flags:</td> <td>AX</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4096'>0x1000</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>0</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='16'>0x10</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr2'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>2</td> </tr>
+            <tr> <td>Name:</td> <td>.comment</td> </tr>
+            <tr> <td>Type:</td> <td>PROGBITS</td> </tr>
+            <tr> <td>Flags:</td> <td>0</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4099'>0x1003</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x12'>18</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>0</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='1'>0x1</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x1'>1</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr3'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>3</td> </tr>
+            <tr> <td>Name:</td> <td>.symtab</td> </tr>
+            <tr> <td>Type:</td> <td>SYMTAB</td> </tr>
+            <tr> <td>Flags:</td> <td>0</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4120'>0x1018</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x40'>64</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>4</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x4'>4</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='4'>0x4</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x10'>16</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr4'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>4</td> </tr>
+            <tr> <td>Name:</td> <td>.strtab</td> </tr>
+            <tr> <td>Type:</td> <td>STRTAB</td> </tr>
+            <tr> <td>Flags:</td> <td>0</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4184'>0x1058</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x17'>23</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>0</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='1'>0x1</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_shdr5'>
+          <th colspan='2' class='shdr_itable'></th>
+            <tr> <td>Index:</td> <td>5</td> </tr>
+            <tr> <td>Name:</td> <td>.shstrtab</td> </tr>
+            <tr> <td>Type:</td> <td>STRTAB</td> </tr>
+            <tr> <td>Flags:</td> <td>0</td> </tr>
+            <tr> <td>Vaddr in memory:</td> <td><span class='number' title='0'>0x0</span></td> </tr>
+            <tr> <td>Offset in file:</td> <td><span class='number' title='4207'>0x106f</span></td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x32'>50</span></td> </tr>
+            <tr> <td>Linked section:</td> <td>0</td> </tr>
+            <tr> <td>Extra info:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+            <tr> <td>Alignment:</td> <td><span class='number' title='1'>0x1</span></td> </tr>
+            <tr> <td>Size of entries:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+          </table>
+        </td>
+        <td class='infotables'>
+          <table class='conceal itable' id='info_segment0'>
+          <th colspan='2' class='segment_itable'></th>
+            <tr> <td>Type:</td> <td>LOAD</td> </tr>
+            <tr> <td>Size in file:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+            <tr> <td>Size in memory:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_section0'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>NULL</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x0'>0</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_section1'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>PROGBITS</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x3'>3</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_section2'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>PROGBITS</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x12'>18</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_section3'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>SYMTAB</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x40'>64</span></td> </tr>
+          </table>
+          <table class='conceal itable' id='info_section4'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>STRTAB</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x17'>23</span></td> </tr>
+            <tr><td><br></td></tr>
+            <tr>
+              <td></td>
+              <td>
+                <div>
+                  testapp.c
+                  _start
+                  main
+                </div>
+              </td>
+            </tr>
+          </table>
+          <table class='conceal itable' id='info_section5'>
+          <th colspan='2' class='section_itable'></th>
+            <tr> <td>Type:</td> <td>STRTAB</td> </tr>
+            <tr> <td>Size:</td> <td><span class='number' title='0x32'>50</span></td> </tr>
+            <tr><td><br></td></tr>
+            <tr>
+              <td></td>
+              <td>
+                <div>
+                  .symtab
+                  .strtab
+                  .shstrtab
+                  .text.startup
+                  .comment
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <script type='text/javascript'>
+      let color = "#ee9";
+
+      function addPairHighlighting(elem, depElem) {
+          elem.addEventListener("mouseenter", function(event) {
+              event.target.style.backgroundColor = color;
+              depElem.style.backgroundColor = color;
+          }, false);
+
+          elem.addEventListener("mouseleave", function(event) {
+              event.target.style.backgroundColor = "";
+              depElem.style.backgroundColor = "";
+          }, false);
+      }
+
+      function highlightClasses(primaryClass, secondaryClass) {
+          let primaryElems = document.getElementsByClassName(primaryClass);
+          let secondaryElems = document.getElementsByClassName(secondaryClass);
+
+          if (primaryElems.length === 0 || secondaryElems.length === 0) {
+              return;
+          }
+
+          let primaryElem = primaryElems[0];
+          let secondaryElem = secondaryElems[0];
+
+          addPairHighlighting(primaryElem, secondaryElem);
+          addPairHighlighting(secondaryElem, primaryElem);
+      }
+
+      highlightClasses('fileinfo_class', 'class')
+      highlightClasses('fileinfo_data', 'data')
+      highlightClasses('fileinfo_abi', 'abi')
+      highlightClasses('fileinfo_abi_ver', 'abi_ver')
+      highlightClasses('fileinfo_e_type', 'e_type')
+      highlightClasses('fileinfo_e_machine', 'e_machine')
+      highlightClasses('fileinfo_e_entry', 'e_entry')
+      highlightClasses('fileinfo_e_phoff', 'e_phoff')
+      highlightClasses('fileinfo_e_shoff', 'e_shoff')
+      highlightClasses('fileinfo_e_flags', 'e_flags')
+      highlightClasses('fileinfo_e_ehsize', 'e_ehsize')
+      highlightClasses('fileinfo_e_phentsize', 'e_phentsize')
+      highlightClasses('fileinfo_e_phnum', 'e_phnum')
+      highlightClasses('fileinfo_e_shentsize', 'e_shentsize')
+      highlightClasses('fileinfo_e_shnum', 'e_shnum')
+      highlightClasses('fileinfo_e_shstrndx', 'e_shstrndx')
+    </script>
+    <script type='text/javascript'>
+      let label = document.getElementById('desc')
+      let descriptions = {
+          ehdr:         "ELF file header (ehdr)",
+          ident:        "Identifier (e_ident)",
+          magic:        "Magic (EI_MAG0 .. EI_MAG3)",
+          class:        "Object file class (EI_CLASS)",
+          data:         "Data encoding (EI_DATA)",
+          ver:          "File version, should be 1 (EI_VERSION)",
+          abi:          "ABI (EI_OSABI)",
+          abi_ver:      "ABI version, should be 0 for SysV (EI_ABIVERSION)",
+          pad:          "Identifier padding",
+          e_type:       "Object file type (e_type)",
+          e_machine:    "Object file type (e_machine)",
+          e_version:    "File version, should be 1 (e_version)",
+          e_entry:      "Entrypoint vaddr (e_entry)",
+          e_phoff:      "Offset in file to program header table (e_phoff)",
+          e_shoff:      "Offset in file to section header table (e_shoff)",
+          e_flags:      "Processor-specific flags (e_flags)",
+          e_ehsize:     "Size of ELF file header (e_ehsize)",
+          e_phentsize:  "Size of a program header table entry (e_phentsize)",
+          e_phnum:      "Number of program header table entries (e_phnum)",
+          e_shentsize:  "Size of a section header table entry (e_shentsize)",
+          e_shnum:      "Number of section header table entries (e_shnum)",
+          e_shstrndx:   "What section is a string table (e_shstrndx)",
+          phdr:         "Program header",
+          p_type:       "Segment type (p_type)",
+          p_flags:      "Segment flags (p_flags)",
+          p_offset:     "Offset in file (p_offset)",
+          p_vaddr:      "Virtual address in memory (p_vaddr)",
+          p_paddr:      "Reserved for physical address in memory (p_paddr)",
+          p_filesz:     "Size of segment in file (p_filesz)",
+          p_memsz:      "Size of segment in memory (p_memsz)",
+          p_align:      "Alignment (p_align)",
+          segment:      "Segment",
+          shdr:         "Section header",
+          sh_name:      "Offset to the section name string table containing this section name (sh_name)",
+          sh_type:      "Section type (sh_type)",
+          sh_flags:     "Section flags (sh_flags)",
+          sh_addr:      "Virtual address in memory. Should be 0 if not put into memory (sh_addr)",
+          sh_offset:    "Offset in file (sh_offset)",
+          sh_size:      "Section size. Also size in file unless type is SHT_NOBITS (sh_size)",
+          sh_link:      "Section index of an associated section (sh_link)",
+          sh_info:      "Additional information about section (sh_info)",
+          sh_addralign: "Address alignment of the section (sh_addralign)",
+          sh_entsize:   "Size of each entry if section has table of fixed-size entries (sh_entsize)",
+          section:      "Section",
+          section_in_segment: "Section in segment",
+      }
+      let separator = "<br>&#x2193<br>";
+
+      function stripFileInfoPrefix(str) {
+          return str.replace("fileinfo_", "");
+      }
+
+      function stripInfoPrefix(str) {
+          return str.replace("info_", "");
+      }
+
+      function stripBinPrefix(str) {
+          return str.replace("bin_", "");
+      }
+
+      function getDesc(cl) {
+          if (cl === "") {
+              return null;
+          }
+
+          if (descriptions[cl] !== undefined) {
+              return descriptions[cl];
+          }
+
+          if (descriptions[stripFileInfoPrefix(cl)] !== undefined) {
+              return descriptions[stripFileInfoPrefix(cl)];
+          }
+
+          if (descriptions[stripInfoPrefix(cl)] !== undefined) {
+              return descriptions[stripInfoPrefix(cl)];
+          }
+
+          if (descriptions[stripBinPrefix(cl)] !== undefined) {
+              return descriptions[stripBinPrefix(cl)];
+          }
+
+          return null;
+      }
+
+      function iterateParents(el) {
+          let txt = "";
+          let keywords = [];
+
+          do {
+              let classList = el.classList;
+              if (classList !== undefined) {
+                  for (let i = 0; i < classList.length; ++i) {
+                      keywords.push(classList[i]);
+                  }
+              }
+
+              el = el.parentNode;
+          } while (el !== null && el.tagName !== "HTML")
+
+          // fix all occurences where segments and sections overlap.
+          // once again we are relying on programming by which sections are always inside segments.
+          // also, this is O(n^2) ugly.
+          let i = 1;
+          while (i < keywords.length) {
+              if (keywords[i] !== 'segment') {
+                  ++i;
+                  continue;
+              }
+
+              let have_section_before = false;
+              let j = 0;
+              for (; j < i; ++j) {
+                  if (keywords[j] == 'section') {
+                      have_section_before = true;
+                      break;
+                  }
+              }
+
+              if (have_section_before) {
+                  keywords[i] = 'section_in_segment';
+                  keywords.splice(j, 1);
+              } else {
+                  ++i;
+              }
+          }
+
+          for (let i = 0; i < keywords.length; ++i) {
+              let keyword = keywords[i];
+              let desc = getDesc(keyword);
+
+              if (desc !== null) {
+                  if (txt === "") {
+                      txt = desc;
+                  } else {
+                      txt = desc + separator + txt;
+                  }
+              }
+          }
+
+          return txt;
+      }
+
+      document.addEventListener("mouseover", function (e) {
+          let event = e || window.event;
+
+          let target = event.target || event.srcElement;
+
+          if (!target.classList.contains('legend_rect')) {
+              document.getElementById('desc').innerHTML = iterateParents(target);
+          }
+      }, false);
+    </script>
+    <script type='text/javascript'>
+      let prevShownTables = [];
+
+      function getFirstClass(el) {
+          let cls = el.classList[0];
+
+          if (cls === undefined) {
+              return "";
+          } else {
+              return cls;
+          }
+      }
+
+      function listOfParents(el) {
+          let list = [getFirstClass(el)];
+
+          while (el.tagName !== "HTML") {
+              el = el.parentNode;
+
+              list.unshift(getFirstClass(el));
+          }
+
+          return list;
+      }
+
+      function hidePreviousTables() {
+          for (let i = 0; i < prevShownTables.length; ++i) {
+              prevShownTables[i].style.display = "none";
+              prevShownTables[i].classList.remove("indirect");
+          }
+      }
+
+      function showIfMatches(cl, prefix, newPrefix, indirect = false) {
+          if (!cl.startsWith(prefix)) {
+              return;
+          }
+
+          let tableId = cl.replace(prefix, newPrefix);
+          let table = document.getElementById(tableId);
+
+          if (table === null) {
+              return;
+          }
+
+          table.style.display = "block";
+
+          if (indirect) {
+              table.classList.add("indirect");
+          } else {
+              table.classList.remove("indirect");
+          }
+
+          prevShownTables.push(table);
+      }
+
+      document.addEventListener("mouseover", function (e) {
+          let event = e || window.event;
+          let target = event.target || event.srcElement;
+          let parents = listOfParents(target);
+          let cleared = false;
+          const prefix = 'bin_';
+
+          for (let i = 0; i < parents.length; i++) {
+              let cl = parents[i];
+
+              if (!cl.startsWith(prefix)) {
+                  continue;
+              }
+
+              if (!cleared) {
+                  cleared = true;
+                  hidePreviousTables();
+              }
+
+              showIfMatches(cl, prefix, "info_");
+              showIfMatches(cl, "bin_segment", "info_phdr", true);
+              showIfMatches(cl, "bin_section", "info_shdr", true);
+          }
+      }, false);
+    </script>
+    <script type='text/javascript'>
+      let fileLen = 4500
+      function populateOffsets(columns) {
+          let rows = Math.ceil(fileLen / columns);
+          let elements = "";
+          let offset = 0;
+
+          for (let i = 0; i < rows; ++i) {
+              elements += offset.toString(16) + "</br>\n";
+              offset += columns;
+          }
+
+          document.getElementById('offsets').innerHTML = elements;
+      }
+    </script>
+    <script type='text/javascript'>
+      const arrows = document.getElementById('arrows');
+      let connections = [];
+      let batchElems = '';
+
+      function getAbsPosition(elem) {
+          let x = 0, y = 0;
+
+          do {
+              x += elem.offsetLeft || 0;
+              y += elem.offsetTop || 0;
+
+              elem = elem.offsetParent;
+          } while (elem);
+
+          return {
+              x: x,
+              y: y
+          };
+      }
+
+      function getBoundingBoxSizes(elem) {
+          let rect = elem.getBoundingClientRect();
+
+          return {
+              w: rect.width || elem.offsetWidth,
+              h: rect.height || elem.offsetHeight
+          };
+      }
+
+      function addSvgArrow(elem1, elem2) {
+          let off1 = getAbsPosition(elem1);
+          let off2 = getAbsPosition(elem2);
+
+          let bb1 = getBoundingBoxSizes(elem1);
+
+          let x1 = off1.x + bb1.w / 2;
+          let y1 = off1.y;
+
+          let x2 = off2.x;
+          let y2 = off2.y;
+
+          batchElems += '<line x1="' + x1 + '" y1="' + y1 + '" '
+                            + 'x2="' + x2 + '" y2="' + y2 + '"/>';
+      }
+
+      function jumpToElem(elem) {
+          elem.scrollIntoView();
+      }
+
+      function setJumpCallback(elemFrom, elemTo) {
+          elemFrom.addEventListener("click", function(e) {
+              jumpToElem(elemTo);
+          }, true);
+      }
+
+      function connect(sel1, sel2) {
+          let elem1 = document.querySelector(sel1);
+          let elem2 = document.querySelector(sel2);
+
+          if (elem1 === null || elem2 === null) {
+              return;
+          }
+
+          connections.push([elem1, elem2]);
+
+          addSvgArrow(elem1, elem2);
+
+          setJumpCallback(elem1, elem2);
+          setJumpCallback(elem2, elem1);
+      }
+
+      function clearArrows() {
+          batchElems = '';
+
+          arrows.innerHTML = '';
+      }
+
+      function pushArrowElems() {
+          arrows.innerHTML = batchElems;
+      }
+
+      function redrawArrows() {
+          clearArrows();
+
+          for (let i = 0; i < connections.length; ++i) {
+              let conn = connections[i];
+
+              addSvgArrow(conn[0], conn[1]);
+          }
+
+          pushArrowElems();
+      }
+
+      window.onresize = function() {
+          redrawArrows();
+      }
+
+      connect('.e_phoff', '.bin_phdr0');
+      connect('.e_shoff', '.bin_shdr0');
+      connect('.bin_phdr0 > .p_offset', '.bin_segment0');
+      connect('.bin_shdr0 > .sh_offset', '.bin_section0');
+      connect('.bin_shdr1 > .sh_offset', '.bin_section1');
+      connect('.bin_shdr2 > .sh_offset', '.bin_section2');
+      connect('.bin_shdr3 > .sh_offset', '.bin_section3');
+      connect('.bin_shdr3 > .sh_link', '.bin_shdr4');
+      connect('.bin_shdr4 > .sh_offset', '.bin_section4');
+      connect('.bin_shdr5 > .sh_offset', '.bin_section5');
+      pushArrowElems();
+    </script>
+    <script type='text/javascript'>
+      const settings = document.getElementById('settings');
+      const help = document.getElementById('help');
+      const arrow_input = document.getElementById('arrow_opacity_range');
+      /* const arrows is reused from arrows.js */
+
+      function toggleVisibility(elem) {
+          if (elem.style.display === "none" || elem.style.display === "") {
+              elem.style.display = "block";
+          } else {
+              elem.style.display = "none";
+          }
+      }
+
+      document.getElementById('settings_toggle').onclick = function() {
+          toggleVisibility(settings);
+
+          help.style.display = "none";
+      }
+
+      document.getElementById('help_toggle').onclick = function() {
+          toggleVisibility(help);
+
+          settings.style.display = "none";
+      }
+
+      function setArrowOpacity(e) {
+          arrows.style.opacity = e.target.valueAsNumber / 100;
+      }
+
+      arrow_input.addEventListener('change', setArrowOpacity);
+      arrow_input.addEventListener('input', setArrowOpacity);
+    </script>
+  </body>
+</html>

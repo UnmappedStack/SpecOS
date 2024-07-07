@@ -49,7 +49,7 @@ sudo grub-install --root-directory=/mnt/specos --target=i386-pc --no-floppy --mo
 
 # Add the kernel (this assumes that the kernel bin image and the grub config file are in the cd & ../bin)
 echo "Copying kernel files..."
-cp kernel.bin /mnt/specos/boot
+cp ../bin/kernel.bin /mnt/specos/boot
 cp ../fscopy/grub.cfg /mnt/specos/boot/grub
 
 mkdir /mnt/specos/stuff

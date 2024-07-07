@@ -119,7 +119,7 @@ struct cd changeDirectorySingle(char child[100], struct cd prevDir) {
 }
 
 
-void cat(struct cd prevDir, char child[100]) { 
+char* cat(struct cd prevDir, char child[100], bool doEcho) { 
     // Get the absolute sector of the cluster given and read it
     uint32_t sect = getFirstSectorOfCluster(prevDir.cluster);
     char* rawContents = readdisk(sect);
@@ -136,9 +136,10 @@ void cat(struct cd prevDir, char child[100]) {
                 readFile(DEbuffer[i].firstCluster, fileContents);
                 int n = 0;
                 while (1) {
-                    terminal_writestring(charToStr(fileContents[n]));
+                    if (doEcho)
+                        terminal_writestring(charToStr(fileContents[n]));
                     if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4)
-                        return;
+                        return fileContents;
                 }
             } else {
                 terminal_writestring("\nError: Is a directory.\n");
