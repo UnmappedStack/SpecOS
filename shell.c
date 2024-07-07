@@ -140,8 +140,8 @@ void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
             char* fileContents = cat(currentDirectory, inp, false);
             struct elfHeader header = parseElf(fileContents);
             char* buffer;
-            size_t_to_str(header.endianness, buffer);
-            terminal_writestring("Endianness: ");
+            size_t_to_str(header.isValid, buffer);
+            terminal_writestring("Is valid?: ");
             terminal_writestring(buffer);
             terminal_writestring("\n");
         } else {
