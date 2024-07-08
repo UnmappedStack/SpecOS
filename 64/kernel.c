@@ -6,12 +6,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "limine.h"
+
 #include "drivers/include/serial.h"
+#include "drivers/include/vga.h"
 
 void _start() {
     // Just send output to a serial port to test
     init_serial();
     outCharSerial('(');
     outCharSerial(';');
+    initVGA();
+    drawPix(2,2,0xffffff);
     for (;;);
 }
