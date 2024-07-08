@@ -2,6 +2,11 @@
 *.iso
 *.img
 
+# stuff specifically for 64 bit version
+obj/*
+iso_root/*
+limine/*
+
 ### Next part is gitignore template. Before this is additional stuff that isn't covered. ###
 # Prerequisites
 *.d
