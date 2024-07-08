@@ -7,6 +7,8 @@
 #include <stdbool.h>
 
 #include "../limine.h"
+#include "../misc/font.h"
+#include "include/serial.h"
 
 #include "include/vga.h"
 
@@ -41,5 +43,59 @@ void drawPix(int x, int y, int colour) {
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     volatile uint32_t *fb_ptr = framebuffer->address;
     // uhh hopefully this'll work but tbh I have no idea.
-    fb_ptr[(framebuffer->pitch * y) + x * 4] = colour;
+    fb_ptr[y * (framebuffer->pitch / 4) + x] = colour;
 }
+
+int chX = 5;
+int chY = 5;
+
+void drawChar(int xOffset, int yOffset, int colour, char ch) {
+    int firstByteIdx = ch * 8;
+    bool doDrawBuffer;
+    int colourBuffer;
+    for (int by = 0; by < 8; by++) { 
+        for (int bi = 0; bi < 8; bi++) {
+            doDrawBuffer = (fontdata_8x8[firstByteIdx + by] >> (7 - bi)) & 1;
+            colourBuffer = doDrawBuffer * colour;
+            drawPix(xOffset + bi, yOffset + by, colourBuffer);
+        }
+    }
+    // and then I just gotta hope it works (:
+}
+
+void writeChar(char ch, int colour) {
+    drawChar(chX, chY, colour, ch);
+    chX += 10;
+}
+
+int strlen(char* str) {
+    int i = 0;
+    while (1) {
+        if (str[i] == '\0')
+            return i;
+        i++;
+    }
+}
+
+void writestring(char* str) {
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == '\n') {
+            chY += 10;
+            chX = 5;
+            continue;
+        }
+        writeChar(str[i], 0xFFFFFF);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

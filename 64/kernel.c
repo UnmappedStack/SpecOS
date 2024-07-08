@@ -17,6 +17,7 @@ void _start() {
     outCharSerial('(');
     outCharSerial(';');
     initVGA();
-    drawPix(2,2,0xffffff);
+    writestring("Graphics mode string writing works!"); 
+    writestring("\nYay!");
     for (;;);
 }
