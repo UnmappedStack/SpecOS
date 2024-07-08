@@ -61,6 +61,7 @@ void initGDT() {
     setGate(1, 0x9A, 0xC); // kernel mode code segment
     setGate(2, 0x92, 0xC); // kernel mode data segment
     // TODO: Add usermode segments (only when I actually try jump to userspace)
+    loadGDT();
 }
 
 
