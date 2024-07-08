@@ -29,6 +29,9 @@ static volatile LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".requests_end_marker")))
 static volatile LIMINE_REQUESTS_END_MARKER;
 
+int screenWidth;
+int screenHeight;
+
 void initVGA() {
     // I swear, this had better be the right version!
     if (LIMINE_BASE_REVISION_SUPPORTED == false)
@@ -37,6 +40,9 @@ void initVGA() {
     if (framebuffer_request.response == NULL
      || framebuffer_request.response->framebuffer_count < 1)
         __asm__("cli; hlt");
+    struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+    screenWidth = framebuffer->width;
+    screenHeight = framebuffer->height;
 }
 
 void drawPix(int x, int y, int colour) {
@@ -77,12 +83,31 @@ int strlen(char* str) {
     }
 }
 
+void newline() {
+    chY += 10;
+    chX = 5;
+}
+
+void clearScreen() {
+    for (int i = 0; i < screenWidth; i++) {
+        for (int y = 0; y < screenHeight; y++)
+           drawPix(i, y, 0x0); 
+    }
+}
+
 void writestring(char* str) {
+    // Not rlly doing proper scrolling for now. If it's too big, clear the screen
+    if (chY >= (screenHeight / 3) * 2)
+        clearScreen();
     for (int i = 0; i < strlen(str); i++) {
+        /* obvs this makes newline if it reaches a newline char, BUT it also
+         * makes a new line if chX + 8 (aka. the end of the next char to be drawn) is more than screenWidth.
+         */
         if (str[i] == '\n') {
-            chY += 10;
-            chX = 5;
+            newline();
             continue;
+        } else if (chX > ((screenWidth / 3) * 2)) {
+            newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy
         }
         writeChar(str[i], 0xFFFFFF);
     }

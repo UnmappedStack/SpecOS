@@ -17,7 +17,7 @@ void _start() {
     outCharSerial('(');
     outCharSerial(';');
     initVGA();
-    writestring("Graphics mode string writing works!"); 
-    writestring("\nYay!");
+    writestring("That's right, SpecOS's new graphics mode can now:\n - Draw text\n - Clear the screen\n - Scroll (very badly, it currently just clears the screen whenever it gets too full)");
+    writestring("Tbh I'm now fucking sick of VGA graphics, time to work on a 64 bit version of a\nGDT and IDT :)");
     for (;;);
 }

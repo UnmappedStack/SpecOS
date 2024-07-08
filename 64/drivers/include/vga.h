@@ -18,4 +18,6 @@ void writeChar(char ch, int colour);
  
 void writestring(char* str); 
 
+void clearScreen();
+
 #endif
