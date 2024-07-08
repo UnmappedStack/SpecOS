@@ -34,3 +34,6 @@ xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
 
 # Install Limine stage 1 and 2 for legacy BIOS boot.
 ./limine/limine bios-install image.iso
+
+# delete old stuff
+rm -rf iso_root limine obj
