@@ -10,6 +10,7 @@
 
 #include "drivers/include/serial.h"
 #include "drivers/include/vga.h"
+#include "sys/include/gdt.h"
 
 void _start() {
     // Just send output to a serial port to test
@@ -17,7 +18,8 @@ void _start() {
     outCharSerial('(');
     outCharSerial(';');
     initVGA();
-    writestring("That's right, SpecOS's new graphics mode can now:\n - Draw text\n - Clear the screen\n - Scroll (very badly, it currently just clears the screen whenever it gets too full)");
-    writestring("Tbh I'm now fucking sick of VGA graphics, time to work on a 64 bit version of a\nGDT and IDT :)");
+    writestring("Trying to initialise GDT...\n");
+    initGDT();
+    writestring("GDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     for (;;);
 }
