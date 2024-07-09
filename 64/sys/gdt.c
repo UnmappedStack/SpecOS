@@ -16,7 +16,7 @@
 struct GDTEntry {
     uint16_t limit1;
     uint16_t base1;
-    uint16_t base2;
+    uint8_t base2;
     uint8_t accessByte;
     uint8_t limit2 : 4;
     uint8_t flags : 4;
@@ -29,6 +29,8 @@ struct GDTPtr {
     uint16_t size;
     uint64_t offset;
 } __attribute__((packed));
+
+struct GDTPtr ptr;
 
 // yeah I didn't know what to call this function lol so it's kinda weird
 // But, why does it not have a base & limit parameter? well this is 64 bit long mode, sooo... it's ignored.
@@ -56,7 +58,6 @@ __attribute__((noinline))
 void loadGDT() {
     // Make a GDTPtr thingy-ma-bob
     writestring("\nSetting GDT pointer...");
-    struct GDTPtr ptr;
     ptr.size = (sizeof(struct GDTEntry) * 5) - 1;
     ptr.offset = (uint64_t) &GDT;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
@@ -75,8 +76,7 @@ void loadGDT() {
                   mov %%ax, %%es; \
                   mov %%ax, %%fs; \
                   mov %%ax, %%gs; \
-                  mov %%ax, %%ss; \
-                  ret" : : : "eax", "rax");
+                  mov %%ax, %%ss" : : : "eax", "rax");
     // anyway now let's just hope I don't get a gpf.
 }
 
