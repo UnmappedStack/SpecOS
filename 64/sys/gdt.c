@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include "include/gdt.h"
+#include "../drivers/include/vga.h"
 
 // define some shit
 
@@ -22,7 +23,7 @@ struct GDTEntry {
     uint8_t base3;
 } __attribute__((packed));
 
-struct GDTEntry GDT[3];
+struct GDTEntry GDT[5];
 
 struct GDTPtr {
     uint16_t size;
@@ -32,36 +33,43 @@ struct GDTPtr {
 // yeah I didn't know what to call this function lol so it's kinda weird
 // But, why does it not have a base & limit parameter? well this is 64 bit long mode, sooo... it's ignored.
 // It'll just be set to 0.
-struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags) {
+struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags, uint32_t limit) {
     struct GDTEntry toReturn;
     // set stuff that's ignored to 0
-    toReturn.limit1 = toReturn.limit2 = toReturn.base1 = toReturn.base2 = toReturn.base3 = 0;
+    toReturn.base1 = toReturn.base2 = toReturn.base3 = 0;
+    // split the limit into two parts and set it's values
+    // I know technically I don't have to because it's ignored but whatever.
+    toReturn.limit1 = limit & 0xFFFF; // first 16 bits
+    toReturn.limit2 = (limit >> 16) & 0xF; // next 4 bits
     // the rest gets set pretty trivially
     toReturn.accessByte = accessByte;
     toReturn.flags = flags;
     return toReturn;
 }
 
-void setGate(int gateID, uint8_t accessByte, uint8_t flags) {
-    GDT[gateID] = putEntryTogether(accessByte, flags);
+void setGate(int gateID, uint8_t accessByte, uint8_t flags, uint32_t limit) {
+    GDT[gateID] = putEntryTogether(accessByte, flags, limit);
 }
 
 // this expects that the global gdt var has already been set
 __attribute__((noinline))
 void loadGDT() {
     // Make a GDTPtr thingy-ma-bob
+    writestring("\nSetting GDT pointer...");
     struct GDTPtr ptr;
-    ptr.size = (sizeof(struct GDTEntry) * 3) - 1;
+    ptr.size = (sizeof(struct GDTEntry) * 5) - 1;
     ptr.offset = (uint64_t) &GDT;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
+    writestring("\nLoading new GDT...");
     asm volatile("lgdt (%0)" : : "r" (&ptr));
     // random comment but it feels weird making a pointer to a pointer.
     // now reload it
+    writestring("\nReloading GDT...");
     asm volatile("push $0x08; \
                   lea .reload_CS(%%rip), %%rax; \
                   push %%rax; \
                   retfq; \
-                  .reload_CS:; \
+                  .reload_CS: \
                   mov $0x10, %%ax; \
                   mov %%ax, %%ds; \
                   mov %%ax, %%es; \
@@ -73,10 +81,12 @@ void loadGDT() {
 }
 
 void initGDT() {
-    setGate(0, 0, 0); // first one's gotta be null
-    setGate(1, 0x9A, 0xC); // kernel mode code segment
-    setGate(2, 0x92, 0xC); // kernel mode data segment
-    // TODO: Add usermode segments (only when I actually try jump to userspace)
+    writestring("\nSetting GDT gates...");
+    setGate(0, 0, 0, 0); // first one's gotta be null
+    setGate(1, 0x9A, 0xA, 0xFFFFF); // kernel mode code segment
+    setGate(2, 0x92, 0xC, 0xFFFFF); // kernel mode data segment
+    setGate(3, 0xFA, 0xA, 0xFFFFF); // user mode code segment
+    setGate(4, 0xF2, 0xC, 0xFFFFF); // user mode data segment
     loadGDT();
 }
 
