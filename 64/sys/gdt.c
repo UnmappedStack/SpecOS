@@ -1,5 +1,7 @@
 /* 64 bit long mode GDT for the SpecOS kernel project.
  * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more info.
+ * NOTE: This will only work when compiled with GCC due to the use of __attribute__((noinline))
+ * You'll have to change some stuff to work with other compilers. Beware!
  */
 
 #include <stdint.h>
@@ -45,14 +47,28 @@ void setGate(int gateID, uint8_t accessByte, uint8_t flags) {
 }
 
 // this expects that the global gdt var has already been set
+__attribute__((noinline))
 void loadGDT() {
     // Make a GDTPtr thingy-ma-bob
     struct GDTPtr ptr;
     ptr.size = (sizeof(struct GDTEntry) * 3) - 1;
     ptr.offset = (uint64_t) &GDT;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
-    asm("lgdt (%0)" : : "r" (&ptr));
+    asm volatile("lgdt (%0)" : : "r" (&ptr));
     // random comment but it feels weird making a pointer to a pointer.
+    // now reload it
+    asm volatile("push $0x08; \
+                  lea .reload_CS(%%rip), %%rax; \
+                  push %%rax; \
+                  retfq; \
+                  .reload_CS:; \
+                  mov $0x10, %%ax; \
+                  mov %%ax, %%ds; \
+                  mov %%ax, %%es; \
+                  mov %%ax, %%fs; \
+                  mov %%ax, %%gs; \
+                  mov %%ax, %%ss; \
+                  ret" : : : "eax", "rax");
     // anyway now let's just hope I don't get a gpf.
 }
 
