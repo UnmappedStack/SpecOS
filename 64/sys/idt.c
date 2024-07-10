@@ -41,9 +41,9 @@ void initIRQ();
 // just a test exception handler to see it works fine
 __attribute__((interrupt))
 void handleKeyboard(void*) {
-    writestring("\n\nKey pressed! :D");
-    outb(0xa0, 0x20); // Acknowledge interrupt from slave PIC
-    initIRQ();
+    writestring("\nKey pressed! :D");
+    inb(0x60);
+    outb(0x20, 0x20); // Acknowledge interrupt from slave PIC 
 }
 
 

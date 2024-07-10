@@ -93,6 +93,8 @@ void clearScreen() {
         for (int y = 0; y < screenHeight; y++)
            drawPix(i, y, 0x0); 
     }
+    chX = 5;
+    chY = 5;
 }
 
 void writestring(char* str) {
