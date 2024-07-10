@@ -14,6 +14,7 @@ struct IDTEntry {
     uint16_t offset1;
     uint16_t segmentSelector;
     uint8_t ist : 3;
+    uint8_t reserved0 : 5;
     uint8_t gateType : 4;
     uint8_t empty : 1;
     uint8_t dpl : 2;
@@ -35,9 +36,9 @@ struct idtr IDTPtr;
 // and the thingies to make it do stuff
 
 // just a test exception handler to see it works fine
-void handleExcept() {
+__attribute__((interrupt))
+void handleExcept(void*) {
     writestring("\n\nInterrupt successfully called! :D");
-    asm volatile("cli; hlt");
 }
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
@@ -59,7 +60,8 @@ void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t d
 
 void initIDT() {
     writestring("\nSetting IDT descriptors...");
-    idtSetDescriptor(0x80, &handleExcept, (uint8_t)0x0b1110, (uint8_t)0x0b00); // attributes for an interrupt gate
+    // exception: 
+    idtSetDescriptor(0x80, &handleExcept, (uint8_t)0xE, (uint8_t)0); // attributes for an exception gate
     writestring("\nCreating IDTR (that IDT pointer thingy)...");
     IDTPtr.offset = (uintptr_t)&idt[0];
     IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
