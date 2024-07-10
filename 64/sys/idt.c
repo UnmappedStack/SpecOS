@@ -8,6 +8,7 @@
 
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
+#include "../utils/include/io.h"
 
 // make it know what stuff is (today isn't a good day when it comes to wording for comments lol)
 struct IDTEntry {
@@ -37,8 +38,8 @@ struct idtr IDTPtr;
 
 // just a test exception handler to see it works fine
 __attribute__((interrupt))
-void handleExcept(void*) {
-    writestring("\n\nInterrupt successfully called! :D");
+void handleKeyboard(void*) {
+    writestring("\n\nKey pressed! :D");
 }
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
@@ -58,10 +59,40 @@ void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t d
     thisEntry->present = 1;
 }
 
+// define more stuff for PIC (hardware, yay!)
+
+void remapPIC() {
+    // ICW1: Start initialization of PIC
+    outb(0x20, 0x11); // Master PIC
+    outb(0xA0, 0x11); // Slave PIC
+
+    // ICW2: Set interrupt vector offsets
+    outb(0x21, 0x20); // Master PIC vector offset
+    outb(0xA1, 0x28); // Slave PIC vector offset
+
+    // ICW3: Tell Master PIC there is a slave PIC at IRQ2 (0000 0100)
+    outb(0x21, 0x04);
+    // Tell Slave PIC its cascade identity (0000 0010)
+    outb(0xA1, 0x02);
+
+    // ICW4: Set PIC to x86 mode
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+
+    // Mask interrupts on both PICs
+    outb(0x21, 0xFF);
+    outb(0xA1, 0xFF);
+}
+
+void initIRQ() {
+    remapPIC();
+    idtSetDescriptor(33, &handleKeyboard, 14, 0); // map keyboard irq
+    outb(0x21, ~(1 << 1)); // unmask keyboard IRQ
+}
+
 void initIDT() {
     writestring("\nSetting IDT descriptors...");
-    // exception: 
-    idtSetDescriptor(0x80, &handleExcept, (uint8_t)0xE, (uint8_t)0); // attributes for an exception gate
+    initIRQ();
     writestring("\nCreating IDTR (that IDT pointer thingy)...");
     IDTPtr.offset = (uintptr_t)&idt[0];
     IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;

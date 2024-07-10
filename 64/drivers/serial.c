@@ -7,22 +7,9 @@
 #include <stdint.h>
 
 #include "include/serial.h"
+#include "../utils/include/io.h"
 
 #define PORT 0x3f8          // COM1
-
-static inline void outb(uint16_t port, uint8_t val) {
-    __asm__ volatile ( "outb %b0, %w1" : : "a"(val), "Nd"(port) : "memory");
-}
-
-static inline uint8_t inb(uint16_t port)
-{
-    uint8_t ret;
-    __asm__ volatile ( "inb %w1, %b0"
-                   : "=a"(ret)
-                   : "Nd"(port)
-                   : "memory");
-    return ret;
-}
 
 int init_serial() {
    outb(PORT + 1, 0x00);    // Disable all interrupts
