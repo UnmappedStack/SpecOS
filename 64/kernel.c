@@ -25,7 +25,5 @@ void _start() {
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
     writestring("\nOkaayyyy, there wasn't a fault. Test to see if calling an interrupt will do stuff...");
-    asm("int $0x80");
-    asm("int $0x80");
     for (;;);
 }

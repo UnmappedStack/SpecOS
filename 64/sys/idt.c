@@ -36,11 +36,16 @@ struct idtr IDTPtr;
 
 // and the thingies to make it do stuff
 
+void initIRQ();
+
 // just a test exception handler to see it works fine
 __attribute__((interrupt))
 void handleKeyboard(void*) {
     writestring("\n\nKey pressed! :D");
+    outb(0xa0, 0x20); // Acknowledge interrupt from slave PIC
+    initIRQ();
 }
+
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
 void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t dpl) {
@@ -88,18 +93,18 @@ void initIRQ() {
     remapPIC();
     idtSetDescriptor(33, &handleKeyboard, 14, 0); // map keyboard irq
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ
+    asm("sti");
 }
 
 void initIDT() {
-    writestring("\nSetting IDT descriptors...");
-    initIRQ();
+    writestring("\nSetting IDT descriptors..."); 
     writestring("\nCreating IDTR (that IDT pointer thingy)...");
     IDTPtr.offset = (uintptr_t)&idt[0];
     IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
     writestring("\nLoading IDTR into the register thingy...");
     asm volatile("lidt %0" : : "m"(IDTPtr));
-    writestring("\nEnabling interrupts... (aka. moment of truth)");
-    asm volatile("sti");
+    writestring("Setting up IRQ hardware thingy...");
+    initIRQ();
 }
 
 
