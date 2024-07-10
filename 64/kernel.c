@@ -11,6 +11,7 @@
 #include "drivers/include/serial.h"
 #include "drivers/include/vga.h"
 #include "sys/include/gdt.h"
+#include "sys/include/idt.h"
 
 void _start() {
     // Just send output to a serial port to test
@@ -20,6 +21,10 @@ void _start() {
     initVGA();
     writestring("Trying to initialise GDT...\n");
     initGDT();
-    writestring("GDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
+    writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
+    writestring("\nTrying to initialise IDT & everything related...");
+    initIDT();
+    writestring("\nOkaayyyy, there wasn't a fault. Test to see if calling an interrupt will do stuff...");
+    asm("int $0x80");
     for (;;);
 }
