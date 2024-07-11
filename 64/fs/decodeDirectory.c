@@ -55,8 +55,10 @@ void parseDirectory(char* rawBinary, struct directoryEntry directoryBuffer[10]) 
     splitString(rawBinary, rawEntries);
     // For each of them, add to directoryBuffer a decoded thingy
     for (int i = 0; i < 10; i++) {
-        if (rawEntries[i][11] == 0x0F) // If it's a long file name entry, skip it - not supported yet!
+        if (rawEntries[i][11] == 0x0F) { // If it's a long file name entry, skip it - not supported yet!
+            directoryBuffer[i].isSet = 0;
             continue;
+        }
         directoryBuffer[i].isSet = (rawEntries[i][0] != '\0');
         // Offset 0: File name
         for (int j = 0; j < 8; j++) {

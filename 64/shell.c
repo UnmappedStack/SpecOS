@@ -18,6 +18,7 @@
 
 void test_userspace() {
     clearScreen();
+    colourOut = 0x878a87;
     // Some cool ASCII art that fIGlet totally didn't generate
     writestring(" ____                   ___  ____\n");
     writestring("/ ___| _ __   ___  ___ / _ \\/ ___|\n");
@@ -31,6 +32,7 @@ void test_userspace() {
     writestring(" at ");
     writestring(__TIME__);
     writestring("\nSpecOS shell 2024. Type help for options.\n");
+    colourOut = 0xFFFFFF;
     // Set the current directory to the root (and create the current directory object)
     struct cd currentDirectory;
     currentDirectory.path[0] = '/';

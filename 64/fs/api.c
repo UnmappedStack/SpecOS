@@ -131,15 +131,21 @@ char* cat(struct cd prevDir, char child[100], bool doEcho) {
         if (filenameCompare(child, DEbuffer[i].filename)) {
             // Make sure it's not a folder
             if (!DEbuffer[i].isDirectory) {
-                writestring("\n");
-                char* fileContents;
+                writestring("\nFound a file with a matching name\n");
+                char fileContents[2000];
                 readFile(DEbuffer[i].firstCluster, fileContents);
                 int n = 0;
                 while (1) {
                     if (doEcho)
                         writestring(charToStr(fileContents[n]));
-                    if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4)
+                    if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4) {
+                        char* toReturnFileContents;
+                        toReturnFileContents[n + 2] = 4;
+                        // copy it
+                        for (int i = 0; i < n + 1; i++)
+                            toReturnFileContents[i] = fileContents[i];
                         return fileContents;
+                    }
                 }
             } else {
                 writestring("\nError: Is a directory.\n");

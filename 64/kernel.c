@@ -27,6 +27,6 @@ void _start() {
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    //test_userspace();
+    test_userspace();
     for (;;);
 }
