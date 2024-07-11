@@ -12,6 +12,8 @@ An x86 OS kernel from scratch.
 
 SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful.
 
+A 64 bit version of SpecOS (x86-64) is in development, and will soon be the main version of SpecOS.
+
 It uses a monolithic kernel, because I like having everything in one place. This may take some inspiration from other operating systems, but it is **not UNIX based**. 
 
 See some of the resources I used for learning, as well as some other OS projects that I think are pretty amazing in [resources.md](https://github.com/jakeSteinburger/SpecOS/blob/main/resources.md). There's also a few unsolicited OS development opinions of mine in there (:
@@ -33,7 +35,7 @@ Note that you must be inside the scripts directory to run the compile script.
 This will generate a an executable disk image that you can run with qemu.
 ### Running
 ### On Qemu
-Simply cd into the directory of the built .bin file, and run:
+Simply cd into the directory of the built .img file, and run:
 ```
 qemu-system-i386 disk.img
 ```
@@ -65,6 +67,13 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
   - [X] Virtual memory management (paging)
   - [ ] Implement a heap (dynamic userspace stuff)
 - [X] ELF parsing
+- [ ] Switch to 64 bit higher half
+  - [X] Set up Limine (w/ loopback device)
+  - [X] Write 64 bit version of GDT & IDT
+  - [X] Draw text to graphical framebuffer provided by limine
+  - [X] Port to 64 bit version (FAT, RTC, hard disk driver, keyboard)
+  - [ ] Detect memory with limine
+  - [ ] Re-write 64 bit version of paging
 - [ ] Jump to userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
 - [ ] Some sort of NIC driver
