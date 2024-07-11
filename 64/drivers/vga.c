@@ -8,6 +8,7 @@
 
 #include "../limine.h"
 #include "../misc/font.h"
+#include "../utils/include/string.h"
 #include "include/serial.h"
 
 #include "include/vga.h"
@@ -72,15 +73,7 @@ void drawChar(int xOffset, int yOffset, int colour, char ch) {
 void writeChar(char ch, int colour) {
     drawChar(chX, chY, colour, ch);
     chX += 10;
-}
-
-int strlen(char* str) {
-    int i = 0;
-    while (1) {
-        if (str[i] == '\0')
-            return i;
-        i++;
-    }
+    outCharSerial(ch);
 }
 
 void newline() {
@@ -107,6 +100,7 @@ void writestring(char* str) {
          */
         if (str[i] == '\n') {
             newline();
+            outCharSerial('\n');
             continue;
         } else if (chX > ((screenWidth / 3) * 2)) {
             newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy

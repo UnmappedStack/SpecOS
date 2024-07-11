@@ -12,18 +12,27 @@
 #include "drivers/include/vga.h"
 #include "sys/include/gdt.h"
 #include "sys/include/idt.h"
+#include "drivers/include/keyboard.h"
+#include "drivers/include/rtc.h"
 
 void _start() {
     // Just send output to a serial port to test
     init_serial();
-    outCharSerial('(');
-    outCharSerial(';');
     initVGA();
     writestring("Trying to initialise GDT...\n");
     initGDT();
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    writestring("\nOkaayyyy, there wasn't a fault. Test to see if calling an interrupt will do stuff...");
+    writestring("\n\nTime: ");
+    writestring(wholeTime());
+    writestring("\nDate: ");
+    writestring(wholeDate());
+    writestring("\n\nWhat's your name?: \n");
+    char buffer[100];
+    scanf(buffer);
+    writestring("\nHello, ");
+    writestring(buffer);
+    writestring("!\n");
     for (;;);
 }

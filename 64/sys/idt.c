@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "../drivers/include/keyboard.h"
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
@@ -37,15 +38,6 @@ struct idtr IDTPtr;
 // and the thingies to make it do stuff
 
 void initIRQ();
-
-// just a test exception handler to see it works fine
-__attribute__((interrupt))
-void handleKeyboard(void*) {
-    writestring("\nKey pressed! :D");
-    inb(0x60);
-    outb(0x20, 0x20); // Acknowledge interrupt from slave PIC 
-}
-
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
 void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t dpl) {
@@ -91,7 +83,7 @@ void remapPIC() {
 
 void initIRQ() {
     remapPIC();
-    idtSetDescriptor(33, &handleKeyboard, 14, 0); // map keyboard irq
+    idtSetDescriptor(33, &isr_keyboard, 14, 0); // map keyboard irq
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ
     asm("sti");
 }
@@ -103,7 +95,7 @@ void initIDT() {
     IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
     writestring("\nLoading IDTR into the register thingy...");
     asm volatile("lidt %0" : : "m"(IDTPtr));
-    writestring("Setting up IRQ hardware thingy...");
+    writestring("\nSetting up IRQ hardware thingy...");
     initIRQ();
 }
 
