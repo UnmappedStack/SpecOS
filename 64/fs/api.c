@@ -130,8 +130,7 @@ char* cat(struct cd prevDir, char child[100], bool doEcho) {
     for (int i = 0; i < 10; i++) {
         if (filenameCompare(child, DEbuffer[i].filename)) {
             // Make sure it's not a folder
-            if (!DEbuffer[i].isDirectory) {
-                writestring("\nFound a file with a matching name\n");
+            if (!DEbuffer[i].isDirectory) { 
                 char fileContents[2000];
                 readFile(DEbuffer[i].firstCluster, fileContents);
                 int n = 0;
@@ -142,6 +141,10 @@ char* cat(struct cd prevDir, char child[100], bool doEcho) {
                         char* toReturnFileContents;
                         toReturnFileContents[n + 2] = 4;
                         // copy it
+                        if (n > 2000) {
+                            writestring("\nError: File is too big (max 2000 bytes)\n");
+                            return "";   
+                        }
                         for (int i = 0; i < n + 1; i++)
                             toReturnFileContents[i] = fileContents[i];
                         return fileContents;
