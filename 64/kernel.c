@@ -14,6 +14,9 @@
 #include "sys/include/idt.h"
 #include "drivers/include/keyboard.h"
 #include "drivers/include/rtc.h"
+#include "drivers/include/disk.h"
+#include "utils/include/string.h"
+#include "include/shell.h"
 
 void _start() {
     // Just send output to a serial port to test
@@ -24,15 +27,6 @@ void _start() {
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    writestring("\n\nTime: ");
-    writestring(wholeTime());
-    writestring("\nDate: ");
-    writestring(wholeDate());
-    writestring("\n\nWhat's your name?: \n");
-    char buffer[100];
-    scanf(buffer);
-    writestring("\nHello, ");
-    writestring(buffer);
-    writestring("!\n");
+    //test_userspace();
     for (;;);
 }

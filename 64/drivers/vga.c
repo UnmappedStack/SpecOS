@@ -33,6 +33,8 @@ static volatile LIMINE_REQUESTS_END_MARKER;
 int screenWidth;
 int screenHeight;
 
+int colourOut = 0xFFFFFF;
+
 void initVGA() {
     // I swear, this had better be the right version!
     if (LIMINE_BASE_REVISION_SUPPORTED == false)
@@ -105,7 +107,7 @@ void writestring(char* str) {
         } else if (chX > ((screenWidth / 3) * 2)) {
             newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy
         }
-        writeChar(str[i], 0xFFFFFF);
+        writeChar(str[i], colourOut);
     }
 }
 

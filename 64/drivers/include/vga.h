@@ -8,6 +8,8 @@
 extern int chY;
 extern int chX;
 
+extern int colourOut;
+
 void initVGA();
 
 void drawPix(int x, int y, int colour); 
