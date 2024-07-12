@@ -67,7 +67,14 @@ unsigned char convertScancode(unsigned char scancode) {
         // For some reason backspacing the first character is a special case cos otherwise it doesn't work
         if (inputLength == 1) {
             inputLength = 0;
-            wholeInput[0] = '\0';
+            // just reset the whole thing
+            int i = 0;
+            while (1) {
+                if (wholeInput[i] == '\0')
+                    break;
+                wholeInput[i] = '\0';
+                i++;
+            }
         }
         inputLength--;
         removeLastChar(wholeInput);

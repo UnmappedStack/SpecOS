@@ -9,6 +9,6 @@
 
 uint32_t getFirstSectorOfCluster(int clust);
 
-void readFile(int firstClust, char* buffer);
+int readFile(int firstClust, char buffer[1000000]);
  
 #endif

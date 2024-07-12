@@ -131,24 +131,18 @@ char* cat(struct cd prevDir, char child[100], bool doEcho) {
         if (filenameCompare(child, DEbuffer[i].filename)) {
             // Make sure it's not a folder
             if (!DEbuffer[i].isDirectory) { 
-                char fileContents[2000];
-                readFile(DEbuffer[i].firstCluster, fileContents);
+                char fileContents[1000000];
+                int status = readFile(DEbuffer[i].firstCluster, fileContents);
+                if (status == 1) {
+                    writestring("\nFile too large to read (max. 1MB)\n");
+                    return "";
+                }
                 int n = 0;
                 while (1) {
                     if (doEcho)
                         writestring(charToStr(fileContents[n]));
-                    if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4) {
-                        char* toReturnFileContents;
-                        toReturnFileContents[n + 2] = 4;
-                        // copy it
-                        if (n > 2000) {
-                            writestring("\nError: File is too big (max 2000 bytes)\n");
-                            return "";   
-                        }
-                        for (int i = 0; i < n + 1; i++)
-                            toReturnFileContents[i] = fileContents[i];
+                    if (fileContents[++n] == 4 && fileContents[n + 1] == 0 && fileContents[n + 2] == 4) 
                         return fileContents;
-                    }
                 }
             } else {
                 writestring("\nError: Is a directory.\n");
