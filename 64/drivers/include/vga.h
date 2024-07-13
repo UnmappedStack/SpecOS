@@ -10,6 +10,8 @@ extern int chX;
 
 extern int colourOut;
 
+void clearScreen();
+
 void initVGA();
 
 void drawPix(int x, int y, int colour); 

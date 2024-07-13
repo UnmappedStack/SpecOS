@@ -33,7 +33,9 @@ void detectMemmap() {
         uint32_to_hex_string(memmapEntries[i]->length, buffer1);
         writestring(buffer1);
         writestring(" | Type: ");
-        if (memmapEntries[i]->type == 0)
+        if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE ||
+            memmapEntries[i]->type == LIMINE_MEMMAP_ACPI_RECLAIMABLE ||
+            memmapEntries[i]->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
             writestring("Avaliable");
         else
             writestring("Not Avaliable");

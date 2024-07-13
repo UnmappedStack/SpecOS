@@ -16,6 +16,7 @@
 #include "fs/include/api.h"
 #include "include/shell.h"
 #include "mem/include/detect.h"
+#include "utils/include/printf.h"
 
 void test_userspace() {
     clearScreen();
@@ -28,10 +29,7 @@ void test_userspace() {
     writestring("|____/| .__/ \\___|\\___|\\___/|____/\n");
     writestring("      |_|\n");
     char inp[100];
-    writestring("Kernel compilation date: ");
-    writestring(__DATE__);
-    writestring(" at ");
-    writestring(__TIME__);
+    printf("Kernel compilation date: %s at %s", __DATE__, __TIME__);
     writestring("\nSpecOS shell 2024. Type help for options.\n");
     colourOut = 0xFFFFFF;
     // Set the current directory to the root (and create the current directory object)
