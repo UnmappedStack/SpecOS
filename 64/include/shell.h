@@ -5,6 +5,8 @@
 #ifndef SHELL_C
 #define SHELL_C
 
+struct cd;
+
 void test_userspace();
 
 #endif

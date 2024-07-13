@@ -402,7 +402,7 @@ struct limine_memmap_response {
     uint64_t entry_count;
     LIMINE_PTR(struct limine_memmap_entry **) entries;
 };
-
+    
 struct limine_memmap_request {
     uint64_t id[4];
     uint64_t revision;

@@ -70,7 +70,7 @@ cp limine/limine-bios.sys /mnt/specos/boot
 
 mkdir /mnt/specos/stuff
 echo "Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!" >> /mnt/specos/stuff/testfile.txt
-cp fscopy/font.bin /mnt/specos/stuff/
+cp fscopy/font.bin /mnt/specos
 
 # unmount it
 echo "Unmounting..."
