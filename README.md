@@ -72,7 +72,8 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
   - [X] Write 64 bit version of GDT & IDT
   - [X] Draw text to graphical framebuffer provided by limine
   - [X] Port to 64 bit version (FAT, RTC, hard disk driver, keyboard)
-  - [ ] Detect memory with limine
+  - [X] Detect memory with limine
+  - [ ] Re-write PMM to use bitmap instead of pooling
   - [ ] Re-write 64 bit version of paging
 - [ ] Jump to userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
