@@ -65,6 +65,9 @@ void test_userspace() {
                     outw(0x600, 0x34);
             }
             writestring("\n");
+        } else if(compareDifferentLengths(inp, "reboot")) {
+            // call an undefined interrupt to crash and restart the machine
+            asm("int $0x90");
         } else if (compareDifferentLengths(inp, "clear")) {
             clearScreen();
         } else if (compareDifferentLengths(inp, "help")) { 
