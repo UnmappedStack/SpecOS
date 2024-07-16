@@ -17,6 +17,7 @@
 #include "drivers/include/disk.h"
 #include "utils/include/string.h"
 #include "include/shell.h"
+#include "utils/include/printf.h"
 
 void _start() {
     // Just send output to a serial port to test
@@ -27,6 +28,9 @@ void _start() {
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
+    char buffer[9];
+    uint64_to_hex_string(268419072, buffer);
+    printf("\nTEST: Number in hex is 0x%s\n", buffer);
     test_userspace();
     for (;;);
 }

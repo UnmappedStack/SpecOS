@@ -14,7 +14,6 @@ SECTIONS
     /* Additionally, leave space for the ELF headers by adding SIZEOF_HEADERS to the */
     /* base load address. */
     . = 0xffffffff80000000 + SIZEOF_HEADERS;
-
     .rodata ALIGN(CONSTANT(MAXPAGESIZE)) : {
         *(.rodata .rodata.*)
     }

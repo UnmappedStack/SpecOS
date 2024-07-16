@@ -22,6 +22,7 @@ void uint16_to_string(uint16_t num, char *str);
 void uint32_to_string(uint32_t num, char *str);
 void memset(uint8_t *array, uint8_t value, size_t size);
 void uint32_to_hex_string(uint32_t num, char *str);
+void uint64_to_hex_string(uint64_t num, char *str);
 
 #endif
 

@@ -66,7 +66,13 @@ mkdir /mnt/specos/boot
 echo "Copying kernel files..."
 cp bin/SpecOS /mnt/specos/boot
 cp limine.cfg /mnt/specos/boot
+
+echo "Copying boot files..."
+mkdir /mnt/specos/EFI
+mkdir /mnt/specos/EFI/BOOT
+
 cp limine/limine-bios.sys /mnt/specos/boot
+cp limine/BOOTX64.EFI /mnt/specos/EFI/BOOT
 
 mkdir /mnt/specos/stuff
 echo "Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!" >> /mnt/specos/stuff/testfile.txt

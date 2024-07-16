@@ -6,6 +6,7 @@
 #include "../drivers/include/vga.h" // gimme dat printf debugging plz
 #include "../utils/include/string.h" // plz convert number to hex string
 #include "../misc/bootInfo.h" // limine info
+#include "../utils/include/printf.h"
 
 // get stuff from limine
 __attribute__((used, section(".requests")))
@@ -26,11 +27,11 @@ void detectMemmap() {
     for (int i = 0; i < memmapEntriesCount; i++) {
         writestring("\nBase: 0x");
         char buffer0[9];
-        uint32_to_hex_string(memmapEntries[i]->base, buffer0);
+        uint64_to_hex_string(memmapEntries[i]->base, buffer0);
         writestring(buffer0);
         writestring(" | Length: 0x");
         char buffer1[9];
-        uint32_to_hex_string(memmapEntries[i]->length, buffer1);
+        uint64_to_hex_string(memmapEntries[i]->length, buffer1);
         writestring(buffer1);
         writestring(" | Type: ");
         if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE ||
@@ -38,10 +39,10 @@ void detectMemmap() {
             memmapEntries[i]->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
             writestring("Avaliable");
         else
-            writestring("Not Avaliable");
+            printf("Not avaliable (%i)", memmapEntries[i]->type);
     }
-    writestring("\n");
-}
+    printf("\nThere are %i entries.\n", memmapEntriesCount);
+} 
 
 
 
