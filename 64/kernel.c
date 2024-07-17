@@ -18,6 +18,15 @@
 #include "utils/include/string.h"
 #include "include/shell.h"
 #include "utils/include/printf.h"
+#include "mem/include/pmm.h"
+#include "limine.h"
+
+// get stuff from limine so that other kernel modules can use it
+__attribute__((used, section(".requests")))
+static volatile struct limine_memmap_request memmapRequest = {
+    .id = LIMINE_MEMMAP_REQUEST,
+    .revision = 0
+};
 
 void _start() {
     // Just send output to a serial port to test
@@ -28,9 +37,8 @@ void _start() {
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    char buffer[9];
-    uint64_to_hex_string(268419072, buffer);
-    printf("\nTEST: Number in hex is 0x%s\n", buffer);
-    test_userspace();
+    writestring("\nStarting physical memory manager...");
+    initPMM(memmapRequest);
+    test_userspace(memmapRequest);
     for (;;);
 }

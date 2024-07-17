@@ -8,17 +8,7 @@
 #include "../misc/bootInfo.h" // limine info
 #include "../utils/include/printf.h"
 
-// get stuff from limine
-__attribute__((used, section(".requests")))
-static volatile struct limine_memmap_request memmapRequest = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0
-};
-
-/* Note that the physical memory manager has it's own memory map detection.
- * This is just used for debugging in the shell.
- */
-void detectMemmap() { 
+void detectMemmap(struct limine_memmap_request memmapRequest) {
     // get the stuff from limine
     struct limine_memmap_response *memmapResponse = memmapRequest.response;
     uint64_t memmapEntriesCount = memmapResponse->entry_count;

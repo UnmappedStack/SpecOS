@@ -17,8 +17,10 @@
 #include "include/shell.h"
 #include "mem/include/detect.h"
 #include "utils/include/printf.h"
+#include "mem/include/pmm.h"
+#include "limine.h"
 
-void test_userspace() {
+void test_userspace(struct limine_memmap_request mmapRequest) {
     clearScreen();
     colourOut = 0x878a87;
     // Some cool ASCII art that fIGlet totally didn't generate
@@ -73,7 +75,7 @@ void test_userspace() {
         } else if (compareDifferentLengths(inp, "help")) { 
             writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "memmap")) {
-            detectMemmap();
+            detectMemmap(mmapRequest);
         } else if (compareDifferentLengths(inp, "ls")) {
             listCurrentDirectory(currentDirectory.cluster); 
         } else if (compareDifferentLengths(inp, "cd")) {
