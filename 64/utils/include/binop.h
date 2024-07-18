@@ -13,5 +13,7 @@ Copyright (C) 2024 Jake Steinburger under the MIT license. See the github repo f
 
 uint32_t combine32bit(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4); 
 
+int getBit(unsigned char num, int x);
+ 
 #endif
 

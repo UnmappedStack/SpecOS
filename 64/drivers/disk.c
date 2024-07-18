@@ -8,6 +8,7 @@
 #include "include/vga.h"
 #include "../utils/include/io.h"
 #include "../utils/include/string.h"
+#include "../utils/include/binop.h"
 
 // IDENTIFY is split into two functions, initiate (run when actually reading/writing disk) and compatibility (run on device startup)
 // Compatibility is used to verify compatibility of the drive and make sure it's an existing ATA PIO drive.
@@ -61,11 +62,6 @@ bool identifyCompatibility() {
     }
 }
 
-int get_bit(unsigned char num, int x) {
-    // Shift 1 x positions to the right and perform bitwise AND with num
-    return (num >> x) & 1;
-}
-
 void showErrorTypes() {
     // This will be run assuming the error register is set, and will read the disk's error register to find what the issue is
     char *errorTypes[8] = {
@@ -80,7 +76,7 @@ void showErrorTypes() {
     };
     int error_register = inb(0x1F1); 
     for (int i = 0; i < 8; i++) {
-        if (get_bit(error_register, i)) {
+        if (getBit(error_register, i)) {
             writestring("ERROR: ");
             writestring(errorTypes[i]);
             writestring("\n");

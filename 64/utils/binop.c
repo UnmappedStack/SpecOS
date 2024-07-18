@@ -16,3 +16,10 @@ uint32_t combine32bit(uint8_t byte1, uint8_t byte2, uint8_t byte3, uint8_t byte4
         ((uint32_t)byte3 << 8)  |
         (uint32_t)byte4;
 }
+
+int getBit(unsigned char num, int x) {
+    // Shift 1 x positions to the right and perform bitwise AND with num
+    return (num >> x) & 1;
+}
+
+

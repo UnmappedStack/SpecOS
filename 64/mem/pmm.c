@@ -12,6 +12,7 @@
 #include "../utils/include/string.h"
 #include "include/pmm.h"
 #include "include/detect.h"
+#include "../utils/include/binop.h"
 
 struct pmemBitmap {
     uint8_t bitmap[0];
@@ -19,6 +20,21 @@ struct pmemBitmap {
 
 struct pmemData {
     _Alignas(1024) uint8_t data[0];
+};
+
+struct largestSection {
+    int maxBegin;
+    int maxLength;
+    int bitmapReserved; // in bytes
+};
+
+struct largestSection largestSect;
+
+// need dat HHDM to access physical memory
+__attribute__((used, section(".requests")))
+static volatile struct limine_hhdm_request hhdmRequest = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0
 };
 
 void initPMM(struct limine_memmap_request memmapRequest) {
@@ -36,6 +52,8 @@ void initPMM(struct limine_memmap_request memmapRequest) {
             maxLength = memmapEntries[i]->length;
         }   
     }
+    largestSect.maxBegin = maxBegin;
+    largestSect.maxLength = maxLength;
     // WARNING: Heavily commented section, because I was trying to get my brain to understand it
     // now that it's gotten the largest avaliable/reclaimable segment, allocate the first bit of space for the bitmap
     // and the rest for the actual data.
@@ -51,6 +69,7 @@ void initPMM(struct limine_memmap_request memmapRequest) {
         }
         n++;
     }
+    largestSect.bitmapReserved = bitmapReserved;
     // initialise that point in memory
     // set the bitmap to a proper array, set all to 0
     struct pmemBitmap memBuffBitmap;
@@ -72,6 +91,61 @@ void initPMM(struct limine_memmap_request memmapRequest) {
     uint64_to_hex_string(bitmapReserved, b3);
     printf("\nChosen segment starts at 0x%s, has a size of 0x%s, and reserves 0x%s bytes for the bitmap. Detected memory map:\n", b1, b2, b3);
 }
+
+// just a basic utility
+uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
+    if (bitPosition < 8) {
+        return byte |= (1 << bitPosition);
+    }
+}
+
+// Ooh, fancy! Dynamic memory management, kmalloc and kfree!
+// something I gotta remember sometimes is that, unlike userspace heap malloc,
+// this doesn't take a size. It will always allocate 1024 bytes
+void* kmalloc() {
+    // get the hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    printf("\nLooking for free memory (byte)...");
+    // go to the start of the largest part of memory, and look thru it.
+    for (int b = 0; b < largestSect.bitmapReserved; b++) {
+        // if every value is one, just skip to the next one, don't bother reading thru it
+        if (*((uint8_t*)(largestSect.maxBegin + b + hhdm)) == 256)
+            continue;
+        printf("\nFound avaliable memory (byte), looking for free memory (bit)...");
+        // if it got to this point, it knows that at least one bit of this is free.
+        // look through each bit checking if it's avaliable. If it is, return the matching memory address.
+        for (int y = 0; y < 8; y++) {
+            if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
+                printf("\nFound free memory! Returning.");
+                // avaliable frame found!
+                // set it to be used
+                *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y);
+                // the actual frame index is just `byte + bit`
+                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 1024)));
+            }
+        }
+        printf("\nUhh... something went horribly wrong. Freezing device.");
+        asm("cli; hlt");
+    }
+    // if it got to this point, no memory address is avaliable.
+    // print an error message and halt the computer
+    colourOut = 0xFF0000;
+    writestring("KERNEL ERROR: Not enough physical memory space to allocate.\nHalting device.");
+    asm("cli; hlt");
+    // and make the compiler happy by returning an arbitrary value
+    return (void*) 0x00;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

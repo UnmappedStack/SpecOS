@@ -56,6 +56,12 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
             writestring("\nDate: ");
             writestring(wholeDate());
             writestring("\n");
+        } else if (compareDifferentLengths(inp, "kmalloc")) {
+            uint8_t* ptr;
+            ptr = (uint8_t*) kmalloc();
+            char buf[9];
+            uint32_to_hex_string((uint32_t) ptr, buf);
+            printf("\n1204 byte block dynamically allocated by the kernel: offset 0x%s\n", buf);
         } else if (compareDifferentLengths(inp, "poweroff")) {
             writestring("\nAre you sure you would like to power off your device? (y/N)");
             scanf(inp);

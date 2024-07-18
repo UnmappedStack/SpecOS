@@ -22,11 +22,6 @@ void splitString(const char *input, char output[10][32]) {
     } 
 }
 
-int getBit(unsigned char num, int x) {
-    // Shift 1 x positions to the right and perform bitwise AND with num
-    return (num >> x) & 1;
-}
-
 // Used for skipping long file names
 void removeElementIfNeeded(struct directoryEntry array[], int *size, int index) {
     // Shift elements to the left starting from index
