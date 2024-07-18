@@ -93,7 +93,7 @@ void initPMM(struct limine_memmap_request memmapRequest) {
 }
 
 // just a basic utility
-uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
+static uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
     if (bitPosition < 8) {
         return byte |= (1 << bitPosition);
     }
