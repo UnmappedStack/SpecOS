@@ -93,7 +93,7 @@ void initPMM(struct limine_memmap_request memmapRequest) {
 }
 
 // just a basic utility
-uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
+static uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
     if (bitPosition < 8) {
         return byte |= (1 << bitPosition);
     }
@@ -109,11 +109,6 @@ void* kmalloc() {
     printf("\nLooking for free memory (byte)...");
     // go to the start of the largest part of memory, and look thru it.
     for (int b = 0; b < largestSect.bitmapReserved; b++) {
-        // if every value is one, just skip to the next one, don't bother reading thru it
-        if (*((uint8_t*)(largestSect.maxBegin + b + hhdm)) == 256)
-            continue;
-        printf("\nFound avaliable memory (byte), looking for free memory (bit)...");
-        // if it got to this point, it knows that at least one bit of this is free.
         // look through each bit checking if it's avaliable. If it is, return the matching memory address.
         for (int y = 0; y < 8; y++) {
             if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
@@ -122,11 +117,9 @@ void* kmalloc() {
                 // set it to be used
                 *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y);
                 // the actual frame index is just `byte + bit`
-                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 1024)));
+                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 1024)) + largestSect.bitmapReserved);
             }
         }
-        printf("\nUhh... something went horribly wrong. Freezing device.");
-        asm("cli; hlt");
     }
     // if it got to this point, no memory address is avaliable.
     // print an error message and halt the computer
