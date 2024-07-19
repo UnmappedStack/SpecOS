@@ -81,9 +81,28 @@ void remapPIC() {
     outb(0xA1, 0xFF);
 }
 
+// some interrupts to define
+__attribute__((interrupt))
+void pageFaultISR(void*) {
+    colourOut = 0xFF0000;
+    writestring("\nKERNEL ERROR: Page fault");
+    asm("cli; hlt");
+}
+
+__attribute__((interrupt))
+void generalProtectionFaultISR(void*) {
+    colourOut = 0xFF0000;
+    writestring("\nKERNEL ERROR: General protection fault");
+    asm("cli; hlt");
+}
+
+// stuff to set it all up
 void initIRQ() {
     remapPIC();
-    idtSetDescriptor(33, &isr_keyboard, 14, 0); // map keyboard irq
+    // map some stuff
+    idtSetDescriptor(33, &isr_keyboard, 14, 0);
+    idtSetDescriptor(14, &pageFaultISR, 15, 0);
+    idtSetDescriptor(13, &generalProtectionFaultISR, 15, 0);
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ
     asm("sti");
 }

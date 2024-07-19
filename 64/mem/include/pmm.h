@@ -11,4 +11,6 @@ void initPMM(struct limine_memmap_request memmapRequest);
 
 void* kmalloc();
 
+void kfree(void* location);
+
 #endif

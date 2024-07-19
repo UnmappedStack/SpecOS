@@ -97,9 +97,12 @@ void initPMM(struct limine_memmap_request memmapRequest) {
 }
 
 // just a basic utility
-static uint8_t setBit(uint8_t byte, uint8_t bitPosition) {
+static uint8_t setBit(uint8_t byte, uint8_t bitPosition, bool setTo) {
     if (bitPosition < 8) {
-        return byte |= (1 << bitPosition);
+        if (setTo)
+            return byte |= (1 << bitPosition);
+        else 
+            return byte &= ~(1 << bitPosition);
     }
 }
 
@@ -119,7 +122,7 @@ void* kmalloc() {
                 printf("\nFound free memory! Returning.");
                 // avaliable frame found!
                 // set it to be used
-                *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y);
+                *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
                 // the actual frame index is just `byte + bit`
                 return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 1024)) + largestSect.bitmapReserved);
             }
@@ -134,7 +137,24 @@ void* kmalloc() {
     return (void*) 0x00;
 }
 
-
+void kfree(void* location) {
+    // get hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    // get the memory address to change
+    // pageFrameNumber = (location - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024
+    // bitmapMemAddress = (pageFrameNumber >> 3) + largestSect.maxBegin + hhdm
+    uint32_t pfNum = (((uint64_t)location) - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024;
+    uint64_t bitmapMemAddr = (pfNum >> 3) + largestSect.maxBegin + hhdm;
+    // now get the thing at that address, and set the right thingy to 0
+    uint8_t bitmapByte = *((uint8_t*)bitmapMemAddr);
+    // get the bit that needs to be changed
+    uint8_t bitToChange = pfNum % 8;
+    // and change it, putting the new version at the correct address
+    uint8_t newByte = setBit(bitmapByte, bitToChange, 0);
+    *((uint8_t*)bitmapMemAddr) = newByte;
+    // and it should be free'd now :D
+}
 
 
 
