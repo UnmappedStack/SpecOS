@@ -38,6 +38,10 @@ static volatile struct limine_hhdm_request hhdmRequest = {
 };
 
 void initPMM(struct limine_memmap_request memmapRequest) {
+    // get the hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    // get the memmap
     struct limine_memmap_response *memmapResponse = memmapRequest.response;
     uint64_t memmapEntriesCount = memmapResponse->entry_count;
     struct limine_memmap_entry **memmapEntries = memmapResponse->entries;
@@ -80,8 +84,8 @@ void initPMM(struct limine_memmap_request memmapRequest) {
     for (int i = 0; i < maxBegin - bitmapReserved; i++)
         memBuffData.data[i] = 0;
     // put it at the right point in memory
-    *((struct pmemBitmap*) maxBegin) = memBuffBitmap;
-    *((struct pmemData*) (maxBegin + bitmapReserved)) = memBuffData;
+    *((struct pmemBitmap*) maxBegin + hhdm) = memBuffBitmap;
+    *((struct pmemData*) (maxBegin + bitmapReserved + hhdm)) = memBuffData;
     // display stuff for debugging
     char b1[9];
     char b2[9];
