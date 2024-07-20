@@ -115,13 +115,9 @@ void* kmalloc() {
     uint64_t hhdm = hhdmResponse->offset;
     // go to the start of the largest part of memory, and look thru it.
     for (int b = 0; b < largestSect.bitmapReserved; b++) {
-        char buffer[9];
-        uint64_to_hex_string(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), buffer);
-        printf("\n[DEBUG] Thingy: %s, and b = %i", buffer, b);
         // look through each bit checking if it's avaliable. If it is, return the matching memory address.
         for (int y = 0; y < 8; y++) {
             if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
-                printf("\nFound free memory! Returning.");
                 // avaliable frame found!
                 // set it to be used
                 *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
