@@ -20,11 +20,18 @@
 #include "utils/include/printf.h"
 #include "mem/include/pmm.h"
 #include "limine.h"
+#include "mem/include/paging.h"
 
 // get stuff from limine so that other kernel modules can use it
 __attribute__((used, section(".requests")))
 static volatile struct limine_memmap_request memmapRequest = {
     .id = LIMINE_MEMMAP_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".requests")))
+static volatile struct limine_hhdm_request hhdmRequest = {
+    .id = LIMINE_HHDM_REQUEST,
     .revision = 0
 };
 
@@ -38,7 +45,9 @@ void _start() {
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
     writestring("\nStarting physical memory manager...");
-    initPMM(memmapRequest);
+    initPMM(memmapRequest, hhdmRequest);
+    writestring("\nInitiating paging...");
+    //initPaging(hhdmRequest);
     test_userspace(memmapRequest);
     for (;;);
 }

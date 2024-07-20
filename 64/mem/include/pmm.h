@@ -7,7 +7,7 @@
 #ifndef PMM_H
 #define PMM_H
 
-void initPMM(struct limine_memmap_request memmapRequest);
+void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_request hhdmRequest);
 
 void* kmalloc();
 

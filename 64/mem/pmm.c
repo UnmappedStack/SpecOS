@@ -30,17 +30,13 @@ struct largestSection {
 
 struct largestSection largestSect;
 
-// need dat HHDM to access physical memory
-__attribute__((used, section(".requests")))
-static volatile struct limine_hhdm_request hhdmRequest = {
-    .id = LIMINE_HHDM_REQUEST,
-    .revision = 0
-};
+struct limine_hhdm_request hhdmRequest;
 
-void initPMM(struct limine_memmap_request memmapRequest) {
+void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_request hhdmRequestInit) {
     // get the hhdm
-    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    struct limine_hhdm_response *hhdmResponse = hhdmRequestInit.response;
     uint64_t hhdm = hhdmResponse->offset;
+    hhdmRequest = hhdmRequestInit;
     // get the memmap
     struct limine_memmap_response *memmapResponse = memmapRequest.response;
     uint64_t memmapEntriesCount = memmapResponse->entry_count;
