@@ -91,4 +91,4 @@ echo "Complete! disk.img should now be in the current directory and bootable wit
 
 # delete old stuff
 
-rm -rf obj bin limine
+rm -rf obj bin limine /mnt/specos
