@@ -19,7 +19,7 @@ struct pmemBitmap {
 };
 
 struct pmemData {
-    _Alignas(1024) uint8_t data[0];
+    _Alignas(4096) uint8_t data[0];
 };
 
 struct largestSection {
@@ -65,10 +65,10 @@ void initPMM(struct limine_memmap_request memmapRequest) {
     int bitmapReserved;
     int n = 1;
     while (1) { // keeps adding another page frame for the bitmap until it's enough
-        if (n * 1024 * 8 > // bitmap size (in bits)
-            (maxLength / 1024) - n) { // number of page frame to allocate
+        if (n * 4096 * 8 > // bitmap size (in bits)
+            (maxLength / 4096) - n) { // number of page frame to allocate
             // it's enough space: set this to be the correct number of page frames to reserve for the bitmap (in bytes)
-            bitmapReserved = n * 1024;
+            bitmapReserved = n * 4096;
             break;
         }
         n++;
@@ -124,7 +124,7 @@ void* kmalloc() {
                 // set it to be used
                 *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
                 // the actual frame index is just `byte + bit`
-                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 1024)) + largestSect.bitmapReserved);
+                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 4096)) + largestSect.bitmapReserved);
             }
         }
     }
@@ -144,7 +144,7 @@ void kfree(void* location) {
     // get the memory address to change
     // pageFrameNumber = (location - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024
     // bitmapMemAddress = (pageFrameNumber >> 3) + largestSect.maxBegin + hhdm
-    uint32_t pfNum = (((uint64_t)location) - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024;
+    uint32_t pfNum = (((uint64_t)location) - (largestSect.maxBegin + largestSect.bitmapReserved)) / 4096;
     uint64_t bitmapMemAddr = (pfNum >> 3) + largestSect.maxBegin + hhdm;
     // now get the thing at that address, and set the right thingy to 0
     uint8_t bitmapByte = *((uint8_t*)bitmapMemAddr);

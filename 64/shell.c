@@ -61,7 +61,7 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
             ptr = (uint8_t*) kmalloc();
             char buf[9];
             uint32_to_hex_string((uint32_t) ptr, buf);
-            printf("\n1204 byte block dynamically allocated by the kernel: offset 0x%s\n", buf);
+            printf("\n4096 byte block dynamically allocated by the kernel: offset 0x%s\n", buf);
         } else if (compareDifferentLengths(inp, "poweroff")) {
             writestring("\nAre you sure you would like to power off your device? (y/N)");
             scanf(inp);
