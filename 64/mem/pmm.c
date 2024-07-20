@@ -113,9 +113,11 @@ void* kmalloc() {
     // get the hhdm
     struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
     uint64_t hhdm = hhdmResponse->offset;
-    printf("\nLooking for free memory (byte)...");
     // go to the start of the largest part of memory, and look thru it.
     for (int b = 0; b < largestSect.bitmapReserved; b++) {
+        char buffer[9];
+        uint64_to_hex_string(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), buffer);
+        printf("\n[DEBUG] Thingy: %s, and b = %i", buffer, b);
         // look through each bit checking if it's avaliable. If it is, return the matching memory address.
         for (int y = 0; y < 8; y++) {
             if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
@@ -124,7 +126,7 @@ void* kmalloc() {
                 // set it to be used
                 *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
                 // the actual frame index is just `byte + bit`
-                return (void*)((largestSect.maxBegin + ((b + y + hhdm) * 4096)) + largestSect.bitmapReserved);
+                return (void*)((largestSect.maxBegin + (((b * 8) + y) * 4096)) + largestSect.bitmapReserved);
             }
         }
     }
