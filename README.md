@@ -10,9 +10,9 @@ An x86 OS kernel from scratch.
 > 
 > This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and is currently a series of messy C files. Seriously, don't learn anything from this project.
 
-SpecOS is a 32 bit operating system kernel for x86 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful.
+SpecOS is a 64 bit operating system kernel for x86-64 processors, still in quite early stages, written in (questionable quality) C. It is (not very) powerful.
 
-A 64 bit version of SpecOS (x86-64) is in development, and will soon be the main version of SpecOS.
+This used to be 32 bit, but has been transferred to a 64 bit operating system.
 
 It uses a monolithic kernel, because I like having everything in one place. This may take some inspiration from other operating systems, but it is **not UNIX based**. 
 
