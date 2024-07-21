@@ -1,68 +1,38 @@
-/*
-Physical memory detection for SpecOS, which currently relies on GRUB to recieve a memory map.
-Original file based on osdev.org example with no license. Modifications are under the following license:
-Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more info.
-*/
+/* Physical memory detection for use with Limine bootloader as part of the SpecOS kernel project.
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more information.
+ */
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stddef.h>
+#include "../limine.h" // gimme dat mem map plz limine
+#include "../drivers/include/vga.h" // gimme dat printf debugging plz
+#include "../utils/include/string.h" // plz convert number to hex string
+#include "../misc/bootInfo.h" // limine info
+#include "../utils/include/printf.h"
 
-#include "multiboot.h"
-#include "../utils/string.h"
-#include "../drivers/terminalWrite.h"
-
-void detectMemmap(multiboot_info_t* mbd, uint32_t magic) {
-    /* Make sure the magic number matches for memory mapping*/
-    if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
-        terminal_writestring("\ninvalid magic number!\n");
-        return;
+void detectMemmap(struct limine_memmap_request memmapRequest) {
+    // get the stuff from limine
+    struct limine_memmap_response *memmapResponse = memmapRequest.response;
+    uint64_t memmapEntriesCount = memmapResponse->entry_count;
+    struct limine_memmap_entry **memmapEntries = memmapResponse->entries;
+    // process and display it
+    for (int i = 0; i < memmapEntriesCount; i++) {
+        writestring("\nBase: 0x");
+        char buffer0[9];
+        uint64_to_hex_string(memmapEntries[i]->base, buffer0);
+        writestring(buffer0);
+        writestring(" | Length: 0x");
+        char buffer1[9];
+        uint64_to_hex_string(memmapEntries[i]->length, buffer1);
+        writestring(buffer1);
+        writestring(" | Type: ");
+        if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE ||
+            memmapEntries[i]->type == LIMINE_MEMMAP_ACPI_RECLAIMABLE ||
+            memmapEntries[i]->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
+            writestring("Avaliable");
+        else
+            printf("Not avaliable (%i)", memmapEntries[i]->type);
     }
-
-    /* Check bit 6 to see if we have a valid memory map */
-    if(!(mbd->flags >> 6 & 0x1)) {
-        terminal_writestring("\ninvalid memory map given by GRUB bootloader\n");
-        return;
-    }
-    // Loop through the memory map and display the values
-    int i;
-    for(i = 0; i < mbd->mmap_length; 
-        i += sizeof(multiboot_memory_map_t)) 
-    {
-        multiboot_memory_map_t* mmmt = 
-            (multiboot_memory_map_t*) (mbd->mmap_addr + i);
-        char startAddrBuffer[9];
-        char lengthBuffer[9];
-        uint32_to_hex_string(mmmt->addr, startAddrBuffer);
-        uint32_to_hex_string(mmmt->len, lengthBuffer);
-        terminal_writestring("\nStart Addr: 0x");
-        terminal_writestring(startAddrBuffer);
-        terminal_writestring(" | Length: 0x");
-        terminal_writestring(lengthBuffer);
-        if(mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            terminal_writestring(" | Avaliable");
-        } else {
-            terminal_writestring(" | Not Avaliable");
-        }
-    } 
-    // Check where the kernel is in memory
-    extern uint32_t startkernel;
-    extern uint32_t endkernel;
-    char kernelStartBuffer[9];
-    char kernelEndBuffer[9];
-    uint32_to_hex_string((uint32_t) &startkernel, kernelStartBuffer);
-    uint32_to_hex_string((uint32_t) &endkernel, kernelEndBuffer);
-    terminal_writestring("\nKernel is located from 0x");
-    terminal_writestring(kernelStartBuffer);
-    terminal_writestring(" to 0x");
-    terminal_writestring(kernelEndBuffer);
-    terminal_writestring(" (Size: 0x");
-    char ksizeBuffer[9];
-    uint32_to_hex_string(((uint32_t) &endkernel) - ((uint32_t) &startkernel), ksizeBuffer);
-    terminal_writestring(ksizeBuffer);
-    terminal_writestring(")\n");
-}
-
+    printf("\nThere are %i entries.\n", memmapEntriesCount);
+} 
 
 
 

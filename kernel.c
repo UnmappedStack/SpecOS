@@ -1,89 +1,54 @@
-/*
-SpecOS main kernel source, as part of the SpecOS complete kernel.
-This is under the MIT license. See the GitHub repo for more info.
-NOTE: This is an incomplete project (which may never be fully complete). Usage is at your own descretion.
-This is just a hobby project, and not necessarily a good one at that.
-*/
+/* 64 bit version of the SpecOS kernel.
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more information.
+ */
 
-#include <stdbool.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 
-#include "drivers/terminalWrite.h"
-#include "sys/gdt.h"
-#include "sys/idt.h"
-#include "shell.h"
-#include "drivers/disk.h"
-#include "utils/string.h"
-#include "mem/detect.h"
-#include "mem/pmm.h"
-#include "mem/vmm.h"
-#include "drivers/serial.h"
+#include "limine.h"
 
-void dummy_test_entrypoint() {
-}
+#include "drivers/include/serial.h"
+#include "drivers/include/vga.h"
+#include "sys/include/gdt.h"
+#include "sys/include/idt.h"
+#include "drivers/include/keyboard.h"
+#include "drivers/include/rtc.h"
+#include "drivers/include/disk.h"
+#include "utils/include/string.h"
+#include "include/shell.h"
+#include "utils/include/printf.h"
+#include "mem/include/pmm.h"
+#include "limine.h"
+#include "mem/include/paging.h"
 
-/* Check if the compiler thinks you are targeting the wrong operating system. */
-#if defined(__linux__)
-#error "You are not using a cross-compiler. Please make sure that you use the correct compile_all.sh file in the GitHub repo to compile."
-#endif
+// get stuff from limine so that other kernel modules can use it
+__attribute__((used, section(".requests")))
+static volatile struct limine_memmap_request memmapRequest = {
+    .id = LIMINE_MEMMAP_REQUEST,
+    .revision = 0
+};
 
-/* This will only work for the 32-bit ix86 targets. */
-#if !defined(__i386__)
-#error "Must be compiled with an ix86-elf compiler."
-#endif
+__attribute__((used, section(".requests")))
+static volatile struct limine_hhdm_request hhdmRequest = {
+    .id = LIMINE_HHDM_REQUEST,
+    .revision = 0
+};
 
-uint32_t firstPageFrame;
-
-void init_kernel(multiboot_info_t* mbd, unsigned int magic) {
-    __asm__ ("cli");
-    terminal_initialize();
-    hide_vga_cursor();
-    terminal_setcolor(VGA_COLOR_LIGHT_GREY);
-    terminal_writestring("Successful boot!\n");
-    serial_writestring("Hello world from serial!\nNew lines are supported by default (:");
-    terminal_writestring("\n\n");
-    terminal_writestring("Initialising GDT...\n");
-    init_gdt();
-    terminal_writestring("Initialising IDT...\n");
-    idt_init();
-    terminal_writestring("Initialising IRQs...\n");
-    init_IRQ();
-    terminal_writestring("Initialising physical memory manager...\n");
-    firstPageFrame = initPMM(mbd, magic);
-    terminal_writestring("Initialising virtual memory manager...\n");
-    initPaging(0, 1024);
-    terminal_writestring("Initialising drive...\n");
-    if (!identifyCompatibility()) {
-        terminal_set_bg(VGA_COLOR_BLACK);
-        terminal_initialize();
-        terminal_setcolor(VGA_COLOR_RED);
-        terminal_writestring("\n\n\n\n\n");
-        char* errStr1 = "BOOT ERROR: Can't initialise drive.";
-        char* errStr2 = "Make sure you have an ATA PIO mode compatible disk.";
-        terminal_column = VGA_WIDTH / 2 - strlen(errStr1) / 2;
-        for (int i = 0; i < strlen(errStr1); i++) {
-           terminal_putchar(errStr1[i]);
-        }
-        terminal_writestring("\n");
-        terminal_column = VGA_WIDTH / 2 - strlen(errStr2) / 2;
-        for (int i = 0; i < strlen(errStr2); i++) {
-            terminal_putchar(errStr2[i]);
-        }
-        terminal_setcolor(VGA_COLOR_DARK_GREY);
-        allow_scroll = false;
-        terminal_row = VGA_HEIGHT - 2;
-        terminal_column = 0;
-        terminal_writestring("IF YOU ARE USING QEMU...\nMake sure you use the -hda option when running.");
-        __asm__("cli; hlt");
-    } 
-    test_userspace(mbd, magic);
-    terminal_initialize();
-    terminal_setcolor(VGA_COLOR_RED);
-    terminal_writestring("KERNEL PANIC: All userspace applications halted!\nNothing to run. Freezing device.\n");
-    __asm__("cli; hlt");
-}
-
-void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
-    init_kernel(mbd, magic);
+void _start() {
+    // Just send output to a serial port to test
+    init_serial();
+    initVGA();
+    writestring("Trying to initialise GDT...\n");
+    initGDT();
+    writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");
+    writestring("\n\nTrying to initialise IDT & everything related...\n");
+    initIDT();
+    writestring("\nStarting physical memory manager...");
+    initPMM(memmapRequest, hhdmRequest);
+    // this is commented out cos paging doesn't work yet.
+    //writestring("\nInitiating paging...");
+    //initPaging(hhdmRequest);
+    test_userspace(memmapRequest);
+    for (;;);
 }

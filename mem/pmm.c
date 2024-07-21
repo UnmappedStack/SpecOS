@@ -1,90 +1,164 @@
-/*
-Physical memory manager for SpecOS. Probably one of, if not the, most important files in the project.
-I'm not gonna go into detail explaining what this does. Google it. 
-However, for some context, this uses a pooling allocator, which is probably the simplest allocator that allows dynamic sizing
-of page frames.
-This is probably also the part of the project that relies on the least other files (just a couple for mem detection & debugging stuff.)
-Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more info.
-*/
+/* Allocator for the SpecOS kernel project.
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more information.
+ * This uses a simple bitmap allocator for 1024 byte size page frames, but I may switch to a buddy allocator in the future.
+ */
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
 
-#include "../drivers/terminalWrite.h"
-#include "multiboot.h" // Memory detection
-#include "pmm.h"
-#include "../utils/string.h"
-#include "../kernel.h"
+#include "../drivers/include/vga.h"
+#include "../utils/include/printf.h"
+#include "../limine.h"
+#include "../utils/include/string.h"
+#include "include/pmm.h"
+#include "include/detect.h"
+#include "../utils/include/binop.h"
 
-struct memSect {
-    uint32_t start;
-    uint32_t end;
-    uint32_t size;
+struct pmemBitmap {
+    uint8_t bitmap[0];
 };
 
-struct initialFrames {
-    struct memSect preKernel;
-    struct memSect postKernel;
+struct pmemData {
+    _Alignas(4096) uint8_t data[0];
 };
 
-/*
-This function:
- - Finds start & end of largest avaliable section in physical memory
- - Finds start & end of kernel in physical memory
- - Forms an initialFrames struct, which basically holds where the bit before and after the kernel are.
-These are the initial page frames.
-*/
-struct initialFrames findInitialFrames(multiboot_info_t* mbd, uint32_t magic) {
-    // Find largest avaliable section in physical memory
-    struct memSect largestWhole;
-    largestWhole.size = 0;
-    for (int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
-        // Make sure it's avaliable. If so, check it's size, and if it's more than the largest so far, replace it
-        multiboot_memory_map_t* mmmt =
-            (multiboot_memory_map_t*) (mbd->mmap_addr + i);
-        if (mmmt->len > largestWhole.size && mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            largestWhole.size = mmmt->len;
-            largestWhole.start = mmmt->addr;
-            largestWhole.end = mmmt->addr + mmmt->len;
+struct largestSection {
+    int maxBegin;
+    int maxLength;
+    int bitmapReserved; // in bytes
+};
+
+struct largestSection largestSect;
+
+struct limine_hhdm_request hhdmRequest;
+
+void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_request hhdmRequestInit) {
+    // get the hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequestInit.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    hhdmRequest = hhdmRequestInit;
+    // get the memmap
+    struct limine_memmap_response *memmapResponse = memmapRequest.response;
+    uint64_t memmapEntriesCount = memmapResponse->entry_count;
+    struct limine_memmap_entry **memmapEntries = memmapResponse->entries;
+    int maxBegin = 0;
+    int maxLength = 0;
+    // Find the largest avaliable entry to use for allocation
+    for (int i = 0; i < memmapEntriesCount; i++) {
+        if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE &&
+            memmapEntries[i]->length > maxLength) {
+            // set it as this one
+            maxBegin = memmapEntries[i]->base;
+            maxLength = memmapEntries[i]->length;
+        }   
+    }
+    largestSect.maxBegin = maxBegin;
+    largestSect.maxLength = maxLength;
+    // WARNING: Heavily commented section, because I was trying to get my brain to understand it
+    // now that it's gotten the largest avaliable/reclaimable segment, allocate the first bit of space for the bitmap
+    // and the rest for the actual data.
+    // first of all, find the amount needed to allocate for the bitmap
+    int bitmapReserved;
+    int n = 1;
+    while (1) { // keeps adding another page frame for the bitmap until it's enough
+        if (n * 4096 * 8 > // bitmap size (in bits)
+            (maxLength / 4096) - n) { // number of page frame to allocate
+            // it's enough space: set this to be the correct number of page frames to reserve for the bitmap (in bytes)
+            bitmapReserved = n * 4096;
+            break;
+        }
+        n++;
+    }
+    largestSect.bitmapReserved = bitmapReserved;
+    // initialise that point in memory
+    // set the bitmap to a proper array, set all to 0
+    struct pmemBitmap memBuffBitmap;
+    for (int i = 0; i < bitmapReserved; i++)
+        memBuffBitmap.bitmap[i] = 0;
+    // set all of the data to 0
+    struct pmemData memBuffData;
+    for (int i = 0; i < maxBegin - bitmapReserved; i++)
+        memBuffData.data[i] = 0;
+    // put it at the right point in memory
+    *((struct pmemBitmap*) maxBegin + hhdm) = memBuffBitmap;
+    *((struct pmemData*) (maxBegin + bitmapReserved + hhdm)) = memBuffData;
+    // display stuff for debugging
+    char b1[9];
+    char b2[9];
+    char b3[9];
+    uint64_to_hex_string(maxBegin, b1);
+    uint64_to_hex_string(maxLength, b2);
+    uint64_to_hex_string(bitmapReserved, b3);
+    printf("\nChosen segment starts at 0x%s, has a size of 0x%s, and reserves 0x%s bytes for the bitmap. Detected memory map:\n", b1, b2, b3);
+}
+
+// just a basic utility
+static uint8_t setBit(uint8_t byte, uint8_t bitPosition, bool setTo) {
+    if (bitPosition < 8) {
+        if (setTo)
+            return byte |= (1 << bitPosition);
+        else 
+            return byte &= ~(1 << bitPosition);
+    }
+}
+
+// Ooh, fancy! Dynamic memory management, kmalloc and kfree!
+// something I gotta remember sometimes is that, unlike userspace heap malloc,
+// this doesn't take a size. It will always allocate 1024 bytes
+void* kmalloc() {
+    // get the hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    // go to the start of the largest part of memory, and look thru it.
+    for (int b = 0; b < largestSect.bitmapReserved; b++) {
+        // look through each bit checking if it's avaliable. If it is, return the matching memory address.
+        for (int y = 0; y < 8; y++) {
+            if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
+                // avaliable frame found!
+                // set it to be used
+                *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
+                // the actual frame index is just `byte + bit`
+                return (void*)((largestSect.maxBegin + (((b * 8) + y) * 4096)) + largestSect.bitmapReserved);
+            }
         }
     }
-    // Find the kernel
-    extern uint32_t startkernel;
-    extern uint32_t endkernel;
-    // Split the original page frame into two sets of addresses, for before and after the kernel. 
-    struct initialFrames toReturn;
-    struct memSect beforeKernel;
-    struct memSect afterKernel;
-    beforeKernel.start = largestWhole.start + 1;
-    beforeKernel.end = (uint32_t) &startkernel - 1;
-    afterKernel.start = (uint32_t) &endkernel + 1;
-    afterKernel.end = largestWhole.end - 1;
-    toReturn.preKernel = beforeKernel;
-    toReturn.postKernel = afterKernel;
-    return toReturn;
+    // if it got to this point, no memory address is avaliable.
+    // print an error message and halt the computer
+    colourOut = 0xFF0000;
+    writestring("KERNEL ERROR: Not enough physical memory space to allocate.\nHalting device.");
+    asm("cli; hlt");
+    // and make the compiler happy by returning an arbitrary value
+    return (void*) 0x00;
 }
 
-// This function is... actually the name is pretty self-explanitory
-// Returns address in the form of an integer of the first free thingymabob.
-uint32_t initPMM(multiboot_info_t* mbd, uint32_t magic) {
-    struct initialFrames firstFrames = findInitialFrames(mbd, magic);
-    // Make two page frames and place them in physical memory at the correct locations.
-    // First points to second, second one points to 0x00 (NULL, cos it's the last one)
-    struct kmallocNode p1;
-    struct kmallocNode p2;
-    p1.free = p2.free = true;
-    p1.nextAvaliableFrame = firstFrames.postKernel.start;
-    p2.nextAvaliableFrame = 0x00;
-    p1.pfSize = firstFrames.preKernel.end - firstFrames.preKernel.start;
-    p2.pfSize = firstFrames.postKernel.end - firstFrames.postKernel.start;
-    p1.neededSize = p2.neededSize = sizeof(struct kmallocNode);
-    // The contents isn't set yet.
-    // Now place these at the appropriate place in memory
-    struct kmallocNode *p1Location = (struct kmallocNode*) firstFrames.preKernel.start;
-    struct kmallocNode *p2Location = (struct kmallocNode*) firstFrames.postKernel.start;
-    *p1Location = p1;
-    *p2Location = p2;
-    return firstFrames.preKernel.start;
+void kfree(void* location) {
+    // get hhdm
+    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
+    uint64_t hhdm = hhdmResponse->offset;
+    // get the memory address to change
+    // pageFrameNumber = (location - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024
+    // bitmapMemAddress = (pageFrameNumber >> 3) + largestSect.maxBegin + hhdm
+    uint32_t pfNum = (((uint64_t)location) - (largestSect.maxBegin + largestSect.bitmapReserved)) / 4096;
+    uint64_t bitmapMemAddr = (pfNum >> 3) + largestSect.maxBegin + hhdm;
+    // now get the thing at that address, and set the right thingy to 0
+    uint8_t bitmapByte = *((uint8_t*)bitmapMemAddr);
+    // get the bit that needs to be changed
+    uint8_t bitToChange = pfNum % 8;
+    // and change it, putting the new version at the correct address
+    uint8_t newByte = setBit(bitmapByte, bitToChange, 0);
+    *((uint8_t*)bitmapMemAddr) = newByte;
+    // and it should be free'd now :D
 }
+
+
+
+
+
+
+
+
+
+
+
+
 

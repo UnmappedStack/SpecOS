@@ -1,74 +1,95 @@
+/* 64 bit long mode GDT for the SpecOS kernel project.
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more info.
+ * NOTE: This will only work when compiled with GCC due to the use of __attribute__((noinline))
+ * You'll have to change some stuff to work with other compilers. Beware!
+ */
+
+#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
-#include "gdt.h"
 
-// Segment descriptor structure
-struct gdt_entry {
-    uint16_t limit_low;     // The lower 16 bits of the limit
-    uint16_t base_low;      // The lower 16 bits of the base
-    uint8_t base_middle;    // The next 8 bits of the base
-    uint8_t access;         // Access flags
-    uint8_t granularity;
-    uint8_t base_high;      // The last 8 bits of the base
+#include "include/gdt.h"
+#include "../drivers/include/vga.h"
+
+// define some shit
+
+struct GDTEntry {
+    uint16_t limit1;
+    uint16_t base1;
+    uint8_t base2;
+    uint8_t accessByte;
+    uint8_t limit2 : 4;
+    uint8_t flags : 4;
+    uint8_t base3;
 } __attribute__((packed));
 
-// Pointer to the GDT structure
-struct gdt_ptr {
-    uint16_t limit;         // The upper 16 bits of all selector limits
-    uint32_t base;          // The address of the first gdt_entry_t struct
+struct GDTEntry GDT[5];
+
+struct GDTPtr {
+    uint16_t size;
+    uint64_t offset;
 } __attribute__((packed));
 
-// GDT array
-struct gdt_entry gdt[3];
+struct GDTPtr ptr;
 
-// GDT pointer
-struct gdt_ptr gp;
-
-// Function to set up a GDT entry
-void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran) {
-    // Set the base address
-    gdt[num].base_low    = (base & 0xFFFF);
-    gdt[num].base_middle = (base >> 16) & 0xFF;
-    gdt[num].base_high   = (base >> 24) & 0xFF;
-
-    // Set the limit
-    gdt[num].limit_low   = (limit & 0xFFFF);
-    gdt[num].granularity = ((limit >> 16) & 0x0F);
-
-    // Set flags
-    gdt[num].granularity |= (gran & 0xF0);
-    gdt[num].access      = access;
+// yeah I didn't know what to call this function lol so it's kinda weird
+// But, why does it not have a base & limit parameter? well this is 64 bit long mode, sooo... it's ignored.
+// It'll just be set to 0.
+struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags, uint32_t limit) {
+    struct GDTEntry toReturn;
+    // set stuff that's ignored to 0
+    toReturn.base1 = toReturn.base2 = toReturn.base3 = 0;
+    // split the limit into two parts and set it's values
+    // I know technically I don't have to because it's ignored but whatever.
+    toReturn.limit1 = limit & 0xFFFF; // first 16 bits
+    toReturn.limit2 = (limit >> 16) & 0xF; // next 4 bits
+    // the rest gets set pretty trivially
+    toReturn.accessByte = accessByte;
+    toReturn.flags = flags;
+    return toReturn;
 }
 
-// Function to load the GDT
-static inline void gdt_load() {
-    gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
-    gp.base = (uint32_t)&gdt;
+void setGate(int gateID, uint8_t accessByte, uint8_t flags, uint32_t limit) {
+    GDT[gateID] = putEntryTogether(accessByte, flags, limit);
+}
 
-    // Load the GDT
-    asm volatile("lgdt (%0)" : : "r"(&gp));
-    asm volatile("mov $0x10, %%ax; \
+// this expects that the global gdt var has already been set
+__attribute__((noinline))
+void loadGDT() {
+    // Make a GDTPtr thingy-ma-bob
+    writestring("\nSetting GDT pointer...");
+    ptr.size = (sizeof(struct GDTEntry) * 5) - 1;
+    ptr.offset = (uint64_t) &GDT;
+    // and now for the tidiest type of code in all of ever: inline assembly! yuck.
+    writestring("\nLoading new GDT...");
+    asm volatile("lgdt (%0)" : : "r" (&ptr));
+    // random comment but it feels weird making a pointer to a pointer.
+    // now reload it
+    writestring("\nReloading GDT...");
+    asm volatile("push $0x08; \
+                  lea .reload_CS(%%rip), %%rax; \
+                  push %%rax; \
+                  retfq; \
+                  .reload_CS: \
+                  mov $0x10, %%ax; \
                   mov %%ax, %%ds; \
                   mov %%ax, %%es; \
                   mov %%ax, %%fs; \
                   mov %%ax, %%gs; \
-                  ljmp $0x08, $next; \
-                  next:": : : "eax");
+                  mov %%ax, %%ss" : : : "eax", "rax");
+    // anyway now let's just hope I don't get a gpf.
 }
 
-void init_gdt() {
-    // Null segment
-    gdt_set_gate(0, 0, 0, 0, 0);
-
-    // Code segment
-    gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // 0x9A = present, ring 0, code segment
-                                                // 0xCF = 4 KB granularity, 32-bit mode, limit in 4 KB blocks
-
-    // Data segment
-    gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // 0x92 = present, ring 0, data segment
-                                                // 0xCF = 4 KB granularity, 32-bit mode, limit in 4 KB blocks
-
-    // Load the GDT
-    gdt_load();
+void initGDT() {
+    writestring("\nSetting GDT gates...");
+    setGate(0, 0, 0, 0); // first one's gotta be null
+    setGate(1, 0x9A, 0xA, 0xFFFFF); // kernel mode code segment
+    setGate(2, 0x92, 0xC, 0xFFFFF); // kernel mode data segment
+    setGate(3, 0xFA, 0xA, 0xFFFFF); // user mode code segment
+    setGate(4, 0xF2, 0xC, 0xFFFFF); // user mode data segment
+    loadGDT();
 }
+
+
+
+

@@ -1,16 +1,17 @@
-/*
-Basic output-only serial driver for SpecOS.
-Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
-*/
+/* Serial driver for SpecOS (re-written for 64 bit).
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
+ */
 
-#include "../utils/inx.h"
-#include "serial.h"
-#include "terminalWrite.h"
-#include "../utils/string.h"
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "include/serial.h"
+#include "../utils/include/io.h"
 
 #define PORT 0x3f8          // COM1
 
-static int init_serial() {
+int init_serial() {
    outb(PORT + 1, 0x00);    // Disable all interrupts
    outb(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
    outb(PORT + 0, 0x03);    // Set divisor to 3 (lo byte) 38400 baud
@@ -41,9 +42,4 @@ void outCharSerial(char ch) {
     outb(0x3f8, ch);
 }
 
-void serial_writestring(char* string) {
-    init_serial();
-    for (int i = 0; i < strlen(string); i++) {
-        outCharSerial(string[i]);
-    }
-}
+

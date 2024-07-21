@@ -8,145 +8,96 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fs/parseBootRecord.h"
-#include "drivers/terminalWrite.h"
-#include "drivers/disk.h"
-#include "bouncy.h"
-#include "drivers/rtc.h"
-#include "utils/inx.h"
-#include "utils/string.h"
-#include "drivers/keyboard.h"
-#include "fs/readClusterChain.h"
-#include "fs/decodeDirectory.h"
-#include "fs/api.h"
-#include "shell.h"
-#include "mem/detect.h"
-#include "mem/pmm.h"
-#include "mem/kmalloc.h"
-#include "userspace/parseElf.h"
+#include "drivers/include/vga.h"
+#include "drivers/include/rtc.h"
+#include "utils/include/io.h"
+#include "utils/include/string.h"
+#include "drivers/include/keyboard.h"
+#include "fs/include/api.h"
+#include "include/shell.h"
+#include "mem/include/detect.h"
+#include "utils/include/printf.h"
+#include "mem/include/pmm.h"
+#include "limine.h"
 
-void test_userspace(multiboot_info_t* mbd, unsigned int magic) {
-    terminal_initialize();
+void test_userspace(struct limine_memmap_request mmapRequest) {
+    clearScreen();
+    colourOut = 0x878a87;
     // Some cool ASCII art that fIGlet totally didn't generate
-    terminal_writestring(" ____                   ___  ____\n");
-    terminal_writestring("/ ___| _ __   ___  ___ / _ \\/ ___|\n");
-    terminal_writestring("\\___ \\| '_ \\ / _ \\/ __| | | \\___ \\\n");
-    terminal_writestring(" ___) | |_) |  __/ (__| |_| |___) |\n");
-    terminal_writestring("|____/| .__/ \\___|\\___|\\___/|____/\n");
-    terminal_writestring("      |_|\n");
+    writestring(" ____                   ___  ____\n");
+    writestring("/ ___| _ __   ___  ___ / _ \\/ ___|\n");
+    writestring("\\___ \\| '_ \\ / _ \\/ __| | | \\___ \\\n");
+    writestring(" ___) | |_) |  __/ (__| |_| |___) |\n");
+    writestring("|____/| .__/ \\___|\\___|\\___/|____/\n");
+    writestring("      |_|\n");
     char inp[100];
-    terminal_writestring("Kernel compilation date: ");
-    terminal_writestring(__DATE__);
-    terminal_writestring(" at ");
-    terminal_writestring(__TIME__);
-    terminal_writestring("\nSpecOS shell 2024. Type help for options.\n");
+    printf("Kernel compilation date: %s at %s", __DATE__, __TIME__);
+    writestring("\nSpecOS shell 2024. Type help for options.\n");
+    colourOut = 0xFFFFFF;
     // Set the current directory to the root (and create the current directory object)
     struct cd currentDirectory;
     currentDirectory.path[0] = '/';
     currentDirectory.cluster = 2;
     while(1) {
-        terminal_setcolor(VGA_COLOR_LIGHT_GREEN);
-        terminal_writestring(">> ");
-        terminal_setcolor(VGA_COLOR_WHITE);
+        colourOut = 0x19e026;
+        writestring(">> ");
+        colourOut = 0xFFFFFF;
         scanf(inp);
         if (compareDifferentLengths(inp, "echo")) {
-            terminal_writestring("\nArgument: ");
+            writestring("\nArgument: ");
             scanf(inp);
-            terminal_writestring("\n");
-            terminal_setcolor(VGA_COLOR_LIGHT_GREY);
-            terminal_writestring(inp);
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "memmap")) {
-            detectMemmap(mbd, magic); 
+            writestring("\n");
+            colourOut = 0x878a87;
+            writestring(inp);
+            writestring("\n");
         } else if (compareDifferentLengths(inp, "timedate")) {
-            terminal_writestring("\nTime: ");
-            terminal_writestring(wholeTime());
-            terminal_writestring("\nDate: ");
-            terminal_writestring(wholeDate());
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "colours") || compareDifferentLengths(inp, "colors")) {
-            terminal_writestring("\n");
-            for (enum vga_color colour = VGA_COLOR_BLACK; colour <= VGA_COLOR_WHITE; colour++) {
-                terminal_setcolor(colour);
-                terminal_writestring("\x7F");
-            }
-            terminal_writestring("\n");
+            writestring("\nTime: ");
+            writestring(wholeTime());
+            writestring("\nDate: ");
+            writestring(wholeDate());
+            writestring("\n");
+        } else if (compareDifferentLengths(inp, "kmalloc")) {
+            uint8_t* ptr;
+            ptr = (uint8_t*) kmalloc();
+            char buf[9];
+            uint64_to_hex_string((uint64_t) ptr, buf);
+            printf("\n4096 byte block dynamically allocated by the kernel: offset 0x%s\n", buf);
         } else if (compareDifferentLengths(inp, "poweroff")) {
-            terminal_writestring("\nAre you sure you would like to power off your device? (y/N)");
+            writestring("\nAre you sure you would like to power off your device? (y/N)");
             scanf(inp);
             if (compareDifferentLengths(inp, "y") != 0) {
-                terminal_writestring("\nBeware that this only works on emulators such as Qemu, Bochs, VirtualBox, and Cloud \nHypervisor.\nIf you are running on real hardware, you may need to disconnect your device from power or press the physical power button.\nTrying to power off...\n");
+                writestring("\nBeware that this only works on emulators such as Qemu, Bochs, VirtualBox, and Cloud \nHypervisor.\nIf you are running on real hardware, you may need to disconnect your device from power or press the physical power button.\nTrying to power off...\n");
                     outw(0xB004, 0x2000);
                     outw(0x604, 0x2000);
                     outw(0x4004, 0x3400);
                     outw(0x600, 0x34);
             }
-            terminal_writestring("\n");
+            writestring("\n");
+        } else if(compareDifferentLengths(inp, "reboot")) {
+            // call an undefined interrupt to crash and restart the machine
+            asm("int $0x90");
         } else if (compareDifferentLengths(inp, "clear")) {
-            terminal_initialize();
+            clearScreen();
         } else if (compareDifferentLengths(inp, "help")) { 
-            terminal_writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
-        } else if (compareDifferentLengths(inp, "readsect")) { 
-            // NOTE: This is a debug command. It's not in the help list because it's not meant to be used until the feature is complete.
-            terminal_writestring("\nTrying to read from sector 2048...\n");
-            char* result = readdisk(2048);
-            terminal_writestring("Successful read! Contents:\n");
-            // Print each character in the sector
-            for (int i = 0; i < 512; i++) {
-                terminal_writestring(charToStr(result[i]));
-            }
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "writesect")) {
-            // NOTE: Like the previous function, this is a debug command.
-            terminal_writestring("\nTrying to write to sector 30...\n");
-            char buffer[512] = "SUCCESS!";
-            writedisk(30, buffer);
-            terminal_writestring("Successful write! Try reading sector 30 to test.\n");
-        } else if (compareDifferentLengths(inp, "bouncy")) {
-            bouncy();
-        } else if (compareDifferentLengths(inp, "fstype")) {
-            terminal_writestring("\n");
-            terminal_writestring(readBoot().fileSysType);
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "sectorspercluster")) {
-            terminal_writestring("\n");
-            uint16_t bytesPerSect = readBoot().sectPerClust;
-            char buffer[6];
-            uint16_to_string(bytesPerSect, buffer);
-            terminal_writestring(buffer);
-            terminal_writestring("\n");
+            writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
+        } else if (compareDifferentLengths(inp, "memmap")) {
+            detectMemmap(mmapRequest);
         } else if (compareDifferentLengths(inp, "ls")) {
             listCurrentDirectory(currentDirectory.cluster); 
         } else if (compareDifferentLengths(inp, "cd")) {
-            terminal_writestring("\nArgument: ");
+            writestring("\nArgument: ");
             scanf(inp);
-            terminal_writestring("\n");
+            writestring("\n");
             currentDirectory = changeDirectorySingle(inp, currentDirectory); 
         } else if (compareDifferentLengths(inp, "cat")) {
-            terminal_writestring("\nArgument: ");
+            writestring("\nArgument: ");
             scanf(inp);
+            writestring("\n");
             cat(currentDirectory, inp, true);
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "kmalloc")) {
-            uint16_t *testThingy = (uint16_t*) kmalloc(sizeof(uint16_t));
-            char buffer[9];
-            uint32_to_hex_string((uint32_t) testThingy, buffer);
-            terminal_writestring("\nLocation dynamically provided by kernel PMM: 0x");
-            terminal_writestring(buffer);
-            terminal_writestring("\n");
-        } else if (compareDifferentLengths(inp, "elf")) {
-            terminal_writestring("\nArgument: ");
-            scanf(inp);
-            char* fileContents = cat(currentDirectory, inp, false);
-            struct elfHeader header = parseElf(fileContents);
-            char* buffer;
-            size_t_to_str(header.isValid, buffer);
-            terminal_writestring("Is valid?: ");
-            terminal_writestring(buffer);
-            terminal_writestring("\n");
+            writestring("\n");
         } else {
-            terminal_setcolor(VGA_COLOR_RED);
-            terminal_writestring("\nCommand not found.\n");
+            colourOut = 0xff0022;
+            writestring("\nCommand not found.\n");
         }
     }
 }

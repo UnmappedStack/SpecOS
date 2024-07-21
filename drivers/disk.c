@@ -1,18 +1,20 @@
+
 // This is an implementation of disk read/write function I'm currently working on for ATA PIO mode as part of SpecOS.
 // (C) Copyright 2024 Jake Steinburger (under MIT license, see GitHub repo for more info)
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "disk.h"
-#include "terminalWrite.h"
-#include "../utils/inx.h"
-#include "../utils/string.h"
+#include "include/disk.h"
+#include "include/vga.h"
+#include "../utils/include/io.h"
+#include "../utils/include/string.h"
+#include "../utils/include/binop.h"
 
 // IDENTIFY is split into two functions, initiate (run when actually reading/writing disk) and compatibility (run on device startup)
 // Compatibility is used to verify compatibility of the drive and make sure it's an existing ATA PIO drive.
 // Initiate gets the drive ready for read/write operations. It also runs compatibility from within as it contains some parts of the setup function.
 bool identifyInitiate() {
-    terminal_writestring("Initiating drive...");
+    writestring("Initiating drive...");
     outb(0x3F6, 0); // Reset the drive
     // Double check that it's compatible still.
     identifyCompatibility();
@@ -20,10 +22,10 @@ bool identifyInitiate() {
     while (((inb(0x1F7) & 8) >> 3) == 0 && ((inb(0x1F7) & 1) >> 0) == 0);
     // Now it's either returned an error or success.
     if (((inb(0x1F7) & 1) >> 0) != 0) {
-        terminal_writestring("Error flag set.\n");
+        writestring("Error flag set.\n");
         return false; // Error
     } else {
-        terminal_writestring("Ready to read/write disk.\n");
+        writestring("Ready to read/write disk.\n");
         return true; // It's ready to read from the data port
     }
 }
@@ -42,14 +44,14 @@ bool identifyCompatibility() {
     for (int j = 0; j < 14; j++)
         inb(0x1F7);
     if (inb(0x1F7) == 0) { // The drive does not exist
-        terminal_writestring("The drive does not exist.\n");
+        writestring("The drive does not exist.\n");
         return false;
     } else {
         // Poll the status port until bit 7 clears 
         while (((inb(0x1F7) & 0x80) >> 7) != 0);
         // Make sure LBAmid and LBAhi ports are non-zero
         if (inb(0x1F4) != 0 && inb(0x1F5) != 0) {
-            terminal_writestring("Not ATA.\n");
+            writestring("Not ATA.\n");
             return false; // The drive is not ATA
         } else {
             // Read values from the ATA data register (not really to do anything with it, just so that the actual disk data can be read)
@@ -58,11 +60,6 @@ bool identifyCompatibility() {
             return true;
         }
     }
-}
-
-int get_bit(unsigned char num, int x) {
-    // Shift 1 x positions to the right and perform bitwise AND with num
-    return (num >> x) & 1;
 }
 
 void showErrorTypes() {
@@ -79,10 +76,10 @@ void showErrorTypes() {
     };
     int error_register = inb(0x1F1); 
     for (int i = 0; i < 8; i++) {
-        if (get_bit(error_register, i)) {
-            terminal_writestring("ERROR: ");
-            terminal_writestring(errorTypes[i]);
-            terminal_writestring("\n");
+        if (getBit(error_register, i)) {
+            writestring("ERROR: ");
+            writestring(errorTypes[i]);
+            writestring("\n");
         }
     }
 } 
@@ -134,9 +131,9 @@ char* accessDisk(int32_t sect, bool isWrite, uint8_t data[512]) {
     }
     static char buffer8[512];
     if (isWrite) { 
-        terminal_writestring("Writing to disk: ");
-        terminal_writestring(data);
-        terminal_writestring("\n"); 
+        writestring("Writing to disk: ");
+        writestring(data);
+        writestring("\n"); 
         // Make sure there aren't any errors
         showErrorTypes();
         // Put the data into the data port one 16 bit char at a time (256 values max)
@@ -181,16 +178,4 @@ char* readdisk(int32_t sect) {
 void writedisk(int32_t sect, char* data) {
     accessDisk(sect, true, data);
 }
-
-
-
-
-
-
-
-
-
-
-
-
 

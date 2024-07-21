@@ -1,8 +1,13 @@
-#include "keyboard.h"
-#include "../sys/idt.h"
-#include "terminalWrite.h"
-#include "../utils/string.h"
-#include "../utils/inx.h"
+/* Keyboard driver for the SpecOS kernel project.
+ * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
+ */
+
+
+#include "include/keyboard.h"
+#include "../sys/include/idt.h"
+#include "include/vga.h"
+#include "../utils/include/string.h"
+#include "../utils/include/io.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -56,14 +61,25 @@ unsigned char convertScancode(unsigned char scancode) {
     }
 
     if (scancode == 0x0E && inputLength != 0) {
-        terminal_column--;
-        terminal_putentryat(' ', VGA_COLOR_BLACK, terminal_column, terminal_row);
+        chX -= 10;
+        writeChar(' ', 0x00);
+        chX -= 10;
+        // For some reason backspacing the first character is a special case cos otherwise it doesn't work
+        if (inputLength == 1) {
+            inputLength = 0;
+            // just reset the whole thing
+            int i = 0;
+            while (1) {
+                if (wholeInput[i] == '\0')
+                    break;
+                wholeInput[i] = '\0';
+                i++;
+            }
+        }
         inputLength--;
         removeLastChar(wholeInput);
         return '\0';
     }
-
-
 
     if (scancode == 0x1C) {
         inScanf = false;
@@ -108,8 +124,6 @@ void removeNullChars(char arr[100]) {
 }
 
 void scanf(char* inp) {
-    show_vga_cursor();
-    update_cursor(terminal_column, terminal_row + 1);
     shifted = false;
     inScanf = true;
     // Reset wholeInput
@@ -121,19 +135,18 @@ void scanf(char* inp) {
         i++;
     }
     while (inScanf) {
-        __asm__("hlt");
-        update_cursor(terminal_column, terminal_row + 1);
+        asm("hlt");
         // This next part will done only when the next interrupt is called.
         if (inb(0x60) == 0x1C)
             break;
     }
-    terminal_write("\0", 1); // I'm not really sure why, but if I don't write something to the terminal after the device crashes. 
+    writestring("\0"); // I'm not really sure why, but if I don't write something to the terminal after the device crashes. 
     strcpy(inp, wholeInput);
     removeNullChars(inp);
-    hide_vga_cursor();
 }
 
-void isr_keyboard() {
+__attribute__((interrupt))
+void isr_keyboard(void*) {
     unsigned char status = inb(0x64); // Read the status register of the keyboard controller
     if (status & 0x01) { // Check if the least significant bit (bit 0) is set, indicating data is available
         unsigned char scan_code = inb(0x60); // Read the scan code from the keyboard controller
@@ -143,13 +156,11 @@ void isr_keyboard() {
             char combined = convertScancode(scan_code);
             if (combined != '\0') {
                 addCharToString(wholeInput, combined);
-                terminal_putchar(combined);
+                writeChar(combined, 0xFFFFFF);
             }
-       }
+        }
     }
     outb(0x20, 0x20); // Acknowledge interrupt from master PIC
-    outb(0xa0, 0x20); // Acknowledge interrupt from slave PIC
-    init_IRQ();
-}
-
+    asm("sti");
+} 
 
