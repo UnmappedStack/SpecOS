@@ -67,9 +67,9 @@ override KNASMFLAGS += \
     -Wall \
     -f elf64
 
-override CFILES := $(shell find -L * -type f -name '*.c')
-override ASFILES := $(shell find -L * -type f -name '*.S')
-override NASMFILES := $(shell find -L * -type f -name '*.asm')
+override CFILES := $(shell find -L * -type f -name '*.c' -not -path '32/*')
+override ASFILES := $(shell find -L * -type f -name '*.S' -not -path '32/*')
+override NASMFILES := $(shell find -L * -type f -name '*.asm' -not -path '32/*')
 override OBJ := $(addprefix bin/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o) $(NASMFILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix bin/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 

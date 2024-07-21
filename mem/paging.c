@@ -105,12 +105,12 @@ void initPaging(struct limine_hhdm_request hhdmRequest) {
         pml1[mapping] = makePageLevelEntry(true, mapping * 4096); // for now it just identity maps.
     }*/
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
-    __asm__ volatile (
+    /*__asm__ volatile (
         "movq %0, %%cr3;"
         "movq %1, %%rsp"
         : : "r" ((uint64_t) pml4 + hhdm),
             "r" ((uint64_t) 0xfffffffffffff000)
-    );
+    );*/
     // no need to enable paging, limine already enables it :D
 }
 
