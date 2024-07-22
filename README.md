@@ -4,7 +4,7 @@
 ![GitHub top language](https://img.shields.io/github/languages/top/jakeSteinburger/SpecOS?logo=c&label=)
 [![GitHub license](https://img.shields.io/github/license/jakeSteinburger/SpecOS)](https://github.com/jakeSteinburger/SpecOS/blob/main/LICENSE)
 
-An x86 OS kernel from scratch.
+An x86-64 OS kernel from scratch.
 
 > **NOTE**
 > 
@@ -26,7 +26,7 @@ This works best on Linux (Mac should also be fine). If you're using Windows, it'
 Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf toolkit. This is easy to install with Brew (I even used Brew on Linux). Then simply clone the repo, cd into it, make `compile.sh` runnable and run the script:
 ```
 git clone https://github.com/jakeSteinburger/SpecOS.git
-cd SpecOS/scripts
+cd SpecOS
 chmod +x compile.sh
 ./compile.sh
 ```
@@ -37,7 +37,7 @@ This will generate a an executable disk image that you can run with qemu.
 ### On Qemu
 Simply cd into the directory of the built .img file, and run:
 ```
-qemu-system-i386 disk.img
+qemu-system-x86_64 disk.img
 ```
 You'll obviously need Qemu installed.
 
