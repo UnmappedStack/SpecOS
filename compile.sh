@@ -89,6 +89,8 @@ losetup -d /dev/loop1
 echo "Complete! disk.img should now be in the current directory and bootable with Qemu."
 # There should now be a disk image in the current directory (:
 
-# delete old stuff
+echo "Size of kernel: "
+du -h bin/SpecOS
 
+# delete old stuff
 rm -rf obj bin limine /mnt/specos

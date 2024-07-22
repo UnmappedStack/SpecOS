@@ -46,7 +46,7 @@ void _start() {
     initIDT();
     writestring("\nStarting physical memory manager...");
     initPMM(memmapRequest, hhdmRequest);
-    // this is commented out cos paging doesn't work yet.
+    // this is commented out cos paging doesn't work yet and it's still in progress.
     //writestring("\nInitiating paging...");
     //initPaging(hhdmRequest);
     test_userspace(memmapRequest);
