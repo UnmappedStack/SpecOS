@@ -8,6 +8,11 @@
 extern int chY;
 extern int chX;
 
+extern int bgColour;
+
+extern int screenWidth;
+extern int screenHeight;
+
 extern int colourOut;
 
 void clearScreen();

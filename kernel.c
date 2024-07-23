@@ -21,6 +21,7 @@
 #include "mem/include/pmm.h"
 #include "limine.h"
 #include "mem/include/paging.h"
+#include "sys/include/panic.h"
 
 // get stuff from limine so that other kernel modules can use it
 __attribute__((used, section(".requests")))
@@ -36,9 +37,9 @@ static volatile struct limine_hhdm_request hhdmRequest = {
 };
 
 void _start() {
-    // Just send output to a serial port to test
     init_serial();
-    initVGA();
+    initVGA(); 
+    // Just send output to a serial port to test
     writestring("Trying to initialise GDT...\n");
     initGDT();
     writestring("\nGDT successfully initialised! (as far as can be told. All I know is that there isn't a gpf.)");

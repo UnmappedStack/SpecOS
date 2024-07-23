@@ -46,6 +46,7 @@ override KCFLAGS += \
     -mno-mmx \
     -mno-sse \
     -mno-sse2 \
+	-fno-omit-frame-pointer \
     -mno-red-zone
 
 override KCPPFLAGS := \

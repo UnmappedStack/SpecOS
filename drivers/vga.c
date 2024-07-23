@@ -30,6 +30,8 @@ int screenHeight;
 
 int colourOut = 0xFFFFFF;
 
+int bgColour = 0x000000;
+
 void initVGA() {
     // I swear, this had better be the right version!
     if (LIMINE_BASE_REVISION_SUPPORTED == false)
@@ -60,7 +62,10 @@ void drawChar(int xOffset, int yOffset, int colour, char ch) {
     for (int by = 0; by < 8; by++) { 
         for (int bi = 0; bi < 8; bi++) {
             doDrawBuffer = (fontdata_8x8[firstByteIdx + by] >> (7 - bi)) & 1;
-            colourBuffer = doDrawBuffer * colour;
+            if (doDrawBuffer)
+                colourBuffer = colour;
+            else
+                colourBuffer = bgColour;
             drawPix(xOffset + bi, yOffset + by, colourBuffer);
         }
     }

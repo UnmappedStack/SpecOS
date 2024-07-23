@@ -14,6 +14,9 @@
 #include "../drivers/include/vga.h"
 #include "include/paging.h"
 
+#define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
+#define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
+
 /* uhhh yeah so I have no idea what I'm doing here, so I'm gonna write down what I DO understand here to help me.
  * So it's kinda like the 32 bit paging that I have done in Spec32, but with more layers, different address spaces, and a different number of entries.
  * The PMLs are just page directories stacked within each other. It'll have pml 1 through 4 (lower inside of higher levels),
@@ -103,6 +106,14 @@ void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool 
     }
     // now just put the stuff in and map it
     (*pml1Array)[pml1Index] = makePageLevelEntry(isKernelSpace, physAddr);
+}
+
+// And now a version of mapPage to map consecutive pages.
+void mapConsecutivePages(struct pmlEntry pml4[], uint64_t startingPhysAddr, uint64_t startingVirtAddr,
+                         bool isKernelSpace, int numPages, uint64_t hhdm) {
+    for (int i = 0; i < numPages; i++) {
+        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), isKernelSpace, hhdm);
+    }
 }
 
 void initPaging(struct limine_hhdm_request hhdmRequest) {

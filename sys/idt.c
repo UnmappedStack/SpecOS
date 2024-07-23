@@ -6,10 +6,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "include/panic.h"
 #include "../drivers/include/keyboard.h"
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
+#include "include/exceptions.h"
 
 // make it know what stuff is (today isn't a good day when it comes to wording for comments lol)
 struct IDTEntry {
@@ -81,29 +83,34 @@ void remapPIC() {
     outb(0xA1, 0xFF);
 }
 
-// some interrupts to define
-__attribute__((interrupt))
-void pageFaultISR(void*) {
-    colourOut = 0xFF0000;
-    writestring("\nKERNEL ERROR: Page fault");
-    asm("cli; hlt");
-}
-
-__attribute__((interrupt))
-void generalProtectionFaultISR(void*) {
-    colourOut = 0xFF0000;
-    writestring("\nKERNEL ERROR: General protection fault");
-    asm("cli; hlt");
-}
-
 // stuff to set it all up
 void initIRQ() {
     remapPIC();
     // map some stuff
     idtSetDescriptor(33, &isr_keyboard, 14, 0);
-    idtSetDescriptor(14, &pageFaultISR, 15, 0);
+    outb(0x21, ~(1 << 1)); // unmask keyboard IRQ 
+    // all the exceptions
+    idtSetDescriptor(0, &divideErrorISR, 15, 0);
+    idtSetDescriptor(1, &debugExceptionISR, 15, 0);
+    idtSetDescriptor(2, &nmiInterruptISR, 15, 0);
+    idtSetDescriptor(3, &breakpointISR, 15, 0);
+    idtSetDescriptor(4, &overflowISR, 15, 0);
+    idtSetDescriptor(5, &boundRangeExceededISR, 15, 0);
+    idtSetDescriptor(6, &invalidOpcodeISR, 15, 0);
+    idtSetDescriptor(7, &deviceNotAvailableISR, 15, 0);
+    idtSetDescriptor(8, &doubleFaultISR, 15, 0);
+    idtSetDescriptor(9, &coprocessorSegmentOverrunISR, 15, 0);
+    idtSetDescriptor(10, &invalidTSSISR, 15, 0);
+    idtSetDescriptor(11, &segmentNotPresentISR, 15, 0);
+    idtSetDescriptor(12, &stackSegmentFaultISR, 15, 0);
     idtSetDescriptor(13, &generalProtectionFaultISR, 15, 0);
-    outb(0x21, ~(1 << 1)); // unmask keyboard IRQ
+    idtSetDescriptor(14, &pageFaultISR, 15, 0);
+    idtSetDescriptor(16, &x87FPUErrorISR, 15, 0);
+    idtSetDescriptor(17, &alignmentCheckISR, 15, 0);
+    idtSetDescriptor(18, &machineCheckISR, 15, 0);
+    idtSetDescriptor(19, &simdFloatingPointExceptionISR, 15, 0);
+    idtSetDescriptor(20, &virtualizationExceptionISR, 15, 0);
+    idtSetDescriptor(30, &securityExceptionISR, 15, 0);
     asm("sti");
 }
 
