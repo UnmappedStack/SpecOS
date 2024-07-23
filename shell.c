@@ -75,11 +75,15 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
             writestring("\n");
         } else if(compareDifferentLengths(inp, "reboot")) {
             // call an undefined interrupt to crash and restart the machine
+            uint64_t zero = 0;
+            asm("lidt %0" : : "m"(zero)); // get rid of the IDT
             asm("int $0x90");
-        } else if (compareDifferentLengths(inp, "clear")) {
+        } else if(compareDifferentLengths(inp, "panic")) {
+            asm("int $0x01"); // debug isr
+        }  else if (compareDifferentLengths(inp, "clear")) {
             clearScreen();
         } else if (compareDifferentLengths(inp, "help")) { 
-            writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
+            writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\n - reboot    Reboot device\n - panic     Force a blue screen of death\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "memmap")) {
             detectMemmap(mmapRequest);
         } else if (compareDifferentLengths(inp, "ls")) {
