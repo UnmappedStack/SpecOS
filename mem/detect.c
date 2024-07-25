@@ -6,13 +6,13 @@
 #include "../drivers/include/vga.h" // gimme dat printf debugging plz
 #include "../utils/include/string.h" // plz convert number to hex string
 #include "../misc/bootInfo.h" // limine info
+#include "../include/kernel.h"
 #include "../utils/include/printf.h"
 
-void detectMemmap(struct limine_memmap_request memmapRequest) {
+void detectMemmap() {
     // get the stuff from limine
-    struct limine_memmap_response *memmapResponse = memmapRequest.response;
-    uint64_t memmapEntriesCount = memmapResponse->entry_count;
-    struct limine_memmap_entry **memmapEntries = memmapResponse->entries;
+    uint64_t memmapEntriesCount = kernel.memmapEntryCount;
+    struct limine_memmap_entry **memmapEntries = kernel.memmapEntries;
     // process and display it
     for (int i = 0; i < memmapEntriesCount; i++) {
         writestring("\nBase: 0x");

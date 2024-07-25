@@ -44,6 +44,7 @@ override KCFLAGS += \
     -march=x86-64 \
     -mno-80387 \
     -mno-mmx \
+	-g \
     -mno-sse \
     -mno-sse2 \
 	-fno-omit-frame-pointer \

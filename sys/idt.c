@@ -12,30 +12,7 @@
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
 #include "include/exceptions.h"
-
-// make it know what stuff is (today isn't a good day when it comes to wording for comments lol)
-struct IDTEntry {
-    uint16_t offset1;
-    uint16_t segmentSelector;
-    uint8_t ist : 3;
-    uint8_t reserved0 : 5;
-    uint8_t gateType : 4;
-    uint8_t empty : 1;
-    uint8_t dpl : 2;
-    uint8_t present : 1;
-    uint16_t offset2;
-    uint32_t offset3;
-    uint32_t reserved;
-} __attribute__((packed));
-
-struct idtr {
-    uint16_t size;
-    uint64_t offset;
-} __attribute__((packed));
-
-struct IDTEntry idt[256];
-
-struct idtr IDTPtr;
+#include "../include/kernel.h"
 
 // and the thingies to make it do stuff
 
@@ -43,7 +20,7 @@ void initIRQ();
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
 void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t dpl) {
-    struct IDTEntry* thisEntry = &idt[vect];
+    struct IDTEntry* thisEntry = &kernel.idt[vect];
     // set the thingies
     // isr offset
     thisEntry->offset1 = (uint64_t)isrThingy & 0xFFFF; // first 16 bits
@@ -87,7 +64,7 @@ void remapPIC() {
 void initIRQ() {
     remapPIC();
     // map some stuff
-    idtSetDescriptor(33, &isr_keyboard, 14, 0);
+    idtSetDescriptor(33, &isr_keyboard, 14, 0); 
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ 
     // all the exceptions
     idtSetDescriptor(0, &divideErrorISR, 15, 0);
@@ -117,10 +94,10 @@ void initIRQ() {
 void initIDT() {
     writestring("\nSetting IDT descriptors..."); 
     writestring("\nCreating IDTR (that IDT pointer thingy)...");
-    IDTPtr.offset = (uintptr_t)&idt[0];
-    IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
+    kernel.IDTPtr.offset = (uintptr_t)&kernel.idt[0];
+    kernel.IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
     writestring("\nLoading IDTR into the register thingy...");
-    asm volatile("lidt %0" : : "m"(IDTPtr));
+    asm volatile("lidt %0" : : "m"(kernel.IDTPtr));
     writestring("\nSetting up IRQ hardware thingy...");
     initIRQ();
 }

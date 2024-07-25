@@ -10,27 +10,9 @@
 
 #include "include/gdt.h"
 #include "../drivers/include/vga.h"
+#include "../include/kernel.h"
 
 // define some shit
-
-struct GDTEntry {
-    uint16_t limit1;
-    uint16_t base1;
-    uint8_t base2;
-    uint8_t accessByte;
-    uint8_t limit2 : 4;
-    uint8_t flags : 4;
-    uint8_t base3;
-} __attribute__((packed));
-
-struct GDTEntry GDT[5];
-
-struct GDTPtr {
-    uint16_t size;
-    uint64_t offset;
-} __attribute__((packed));
-
-struct GDTPtr ptr;
 
 // yeah I didn't know what to call this function lol so it's kinda weird
 // But, why does it not have a base & limit parameter? well this is 64 bit long mode, sooo... it's ignored.
@@ -50,7 +32,7 @@ struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags, uint32_t lim
 }
 
 void setGate(int gateID, uint8_t accessByte, uint8_t flags, uint32_t limit) {
-    GDT[gateID] = putEntryTogether(accessByte, flags, limit);
+    kernel.GDT[gateID] = putEntryTogether(accessByte, flags, limit);
 }
 
 // this expects that the global gdt var has already been set
@@ -58,11 +40,11 @@ __attribute__((noinline))
 void loadGDT() {
     // Make a GDTPtr thingy-ma-bob
     writestring("\nSetting GDT pointer...");
-    ptr.size = (sizeof(struct GDTEntry) * 5) - 1;
-    ptr.offset = (uint64_t) &GDT;
+    kernel.GDTR.size = (sizeof(struct GDTEntry) * 5) - 1;
+    kernel.GDTR.offset = (uint64_t) &kernel.GDT;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
     writestring("\nLoading new GDT...");
-    asm volatile("lgdt (%0)" : : "r" (&ptr));
+    asm volatile("lgdt (%0)" : : "r" (&kernel.GDTR));
     // random comment but it feels weird making a pointer to a pointer.
     // now reload it
     writestring("\nReloading GDT...");

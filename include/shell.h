@@ -9,6 +9,6 @@
 
 struct cd;
 
-void test_userspace(struct limine_memmap_request mmapRequest);
+void test_userspace();
 
 #endif

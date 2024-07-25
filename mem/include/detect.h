@@ -7,6 +7,6 @@
 #ifndef DETECT_H
 #define DETECT_H
 
-void detectMemmap(struct limine_memmap_request memmapRequest);
+void detectMemmap();
 
 #endif

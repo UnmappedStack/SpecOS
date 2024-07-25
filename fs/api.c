@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../include/kernel.h"
 #include "../drivers/include/vga.h"
 #include "include/api.h"
 #include "include/decodeDirectory.h"
@@ -68,13 +69,13 @@ void listCurrentDirectory(uint32_t currentDirectoryCluster) {
         if (!DEbuffer[i].isSet)
             continue;
         if (DEbuffer[i].isDirectory)
-            colourOut = 0x339091;
+            kernel.colourOut = 0x339091;
         padInputToFilename(DEbuffer[i].filename, readableBuffer);
         for (int c = 0; c < 12; c++) {
             writestring(charToStr(readableBuffer[c]));
         }
         writestring("\n");
-        colourOut = 0xFFFFFF;
+        kernel.colourOut = 0xFFFFFF;
     }
 }
 

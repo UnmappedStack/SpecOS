@@ -12,7 +12,7 @@
 #include "include/serial.h"
 #include "../fs/include/api.h" // for reading font files
 #include "../misc/bootInfo.h"
-
+#include "../include/kernel.h"
 #include "include/vga.h"
 
 // A bunch of stuff I gotta do to set up the frame buffer
@@ -25,12 +25,11 @@ static volatile struct limine_framebuffer_request framebuffer_request = {
     .revision = 0
 };
 
-int screenWidth;
-int screenHeight;
-
-int colourOut = 0xFFFFFF;
-
-int bgColour = 0x000000;
+void pushBackLastString(char* newStr) {
+    for (int i = 0; i < 9; i++)
+        kernel.last10[i] = kernel.last10[i + 1];
+    kernel.last10[9] = newStr;
+}
 
 void initVGA() {
     // I swear, this had better be the right version!
@@ -41,8 +40,8 @@ void initVGA() {
      || framebuffer_request.response->framebuffer_count < 1)
         __asm__("cli; hlt");
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
-    screenWidth = framebuffer->width;
-    screenHeight = framebuffer->height;
+    kernel.screenWidth = framebuffer->width;
+    kernel.screenHeight = framebuffer->height;
 }
 
 void drawPix(int x, int y, int colour) {
@@ -51,9 +50,6 @@ void drawPix(int x, int y, int colour) {
     // uhh hopefully this'll work but tbh I have no idea.
     fb_ptr[y * (framebuffer->pitch / 4) + x] = colour;
 }
-
-int chX = 5;
-int chY = 5;
 
 void drawChar(int xOffset, int yOffset, int colour, char ch) {
     int firstByteIdx = ch * 8;
@@ -65,7 +61,7 @@ void drawChar(int xOffset, int yOffset, int colour, char ch) {
             if (doDrawBuffer)
                 colourBuffer = colour;
             else
-                colourBuffer = bgColour;
+                colourBuffer = kernel.bgColour;
             drawPix(xOffset + bi, yOffset + by, colourBuffer);
         }
     }
@@ -73,28 +69,30 @@ void drawChar(int xOffset, int yOffset, int colour, char ch) {
 }
 
 void writeChar(char ch, int colour) {
-    drawChar(chX, chY, colour, ch);
-    chX += 10;
+    drawChar(kernel.chX, kernel.chY, colour, ch);
+    kernel.chX += 10;
     outCharSerial(ch);
 }
 
 void newline() {
-    chY += 10;
-    chX = 5;
+    kernel.chY += 10;
+    kernel.chX = 5;
 }
 
 void clearScreen() {
-    for (int i = 0; i < screenWidth; i++) {
-        for (int y = 0; y < screenHeight; y++)
+    for (int i = 0; i < kernel.screenWidth; i++) {
+        for (int y = 0; y < kernel.screenHeight; y++)
            drawPix(i, y, 0x0); 
     }
-    chX = 5;
-    chY = 5;
+    kernel.chX = 5;
+    kernel.chY = 5;
 }
 
 void writestring(char* str) {
+    if (kernel.doPush)
+        pushBackLastString(str);
     // Not rlly doing proper scrolling for now. If it's too big, clear the screen
-    if (chY >= (screenHeight / 3) * 2)
+    if (kernel.chY >= (kernel.screenHeight / 3) * 2)
         clearScreen();
     for (int i = 0; i < strlen(str); i++) {
         /* obvs this makes newline if it reaches a newline char, BUT it also
@@ -104,10 +102,10 @@ void writestring(char* str) {
             newline();
             outCharSerial('\n');
             continue;
-        } else if (chX > ((screenWidth / 3) * 2)) {
+        } else if (kernel.chX > ((kernel.screenWidth / 3) * 2)) {
             newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy
         }
-        writeChar(str[i], colourOut);
+        writeChar(str[i], kernel.colourOut);
     }
 }
 

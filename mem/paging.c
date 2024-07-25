@@ -13,6 +13,7 @@
 #include "../utils/include/printf.h" // my bestie, printf debugging!
 #include "../drivers/include/vga.h"
 #include "include/paging.h"
+#include "../include/kernel.h"
 
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
@@ -67,7 +68,7 @@ struct pmlEntry makePageLevelEntry(bool isKernelSpace, uint64_t address) {
 // it also needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
-void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool isKernelSpace, uint64_t hhdm) { 
+void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool isKernelSpace) { 
     // get the indexes of each page directory level (aka pml)
     uint16_t pml1Index = (virtAddr >> 12) % 512;
     uint16_t pml2Index = (virtAddr >> (12 + 9)) % 512;
@@ -85,24 +86,24 @@ void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool 
         // put a pointer to this pml3 array into this pml4 entry (and set up flags & stuff)
         pml4[pml4Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
         // make it into a virtual address and put stuff there
-        pml3Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + hhdm);
+        pml3Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml3Array = (struct pmlEntry (*)[512])((pml4[pml4Index].address << 12) + hhdm);
+        pml3Array = (struct pmlEntry (*)[512])((pml4[pml4Index].address << 12) + kernel.hhdm);
     }
     // now kinda just do the same thing for each layer (I'm not gonna reexplain for each time, it's the same as above)
     if ((*pml3Array)[pml3Index].isPresent == 0) {
         struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
         (*pml3Array)[pml3Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
-        pml2Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + hhdm);
+        pml2Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml2Array = (struct pmlEntry (*)[512])(((*pml3Array)[pml3Index].address << 12) + hhdm);
+        pml2Array = (struct pmlEntry (*)[512])(((*pml3Array)[pml3Index].address << 12) + kernel.hhdm);
     }
     if ((*pml2Array)[pml2Index].isPresent == 0) {
         struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
         (*pml2Array)[pml2Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
-        pml1Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + hhdm);
+        pml1Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml1Array = (struct pmlEntry (*)[512])(((*pml2Array)[pml2Index].address << 12) + hhdm);
+        pml1Array = (struct pmlEntry (*)[512])(((*pml2Array)[pml2Index].address << 12) + kernel.hhdm);
     }
     // now just put the stuff in and map it
     (*pml1Array)[pml1Index] = makePageLevelEntry(isKernelSpace, physAddr);
@@ -110,21 +111,18 @@ void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool 
 
 // And now a version of mapPage to map consecutive pages.
 void mapConsecutivePages(struct pmlEntry pml4[], uint64_t startingPhysAddr, uint64_t startingVirtAddr,
-                         bool isKernelSpace, int numPages, uint64_t hhdm) {
+                         bool isKernelSpace, int numPages) {
     for (int i = 0; i < numPages; i++) {
-        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), isKernelSpace, hhdm);
+        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), isKernelSpace);
     }
 }
 
-void initPaging(struct limine_hhdm_request hhdmRequest) {
-    // get hhdm
-    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
-    uint64_t hhdm = hhdmResponse->offset;
+void initPaging() {
     /* page entries will be defined later when filling pml1
      * and so will the pdpt when loading it into cr3
      * fill up pml1 with mappings
      * this initially sets up only kernelspace paging, and currently maps only the kernel memory
-     * kernel (including the headers) starts at 0xffffffff80000000 in vmem (-hhdm for physical memory)
+     * kernel (including the headers) starts at 0xffffffff80000000 in vmem (-kernel.hhdm for physical memory)
      * aCcorDiNG TO My caLcuLatIoNS, the kernel's size is about 108 kilobytes, which is 110592 bytes. 
      * That's 27 page frames. Just to be safe however, I'll give it one extra page frame in case the kernel grows.
      * So, it must map the kernel from 0xffffffff80000000 for 28 page frames in vmem.
@@ -133,14 +131,14 @@ void initPaging(struct limine_hhdm_request hhdmRequest) {
     uint64_t endPageFrame = startingPageFrame + 28;
     printf("\nMapping pages...");
     for (uint64_t i = startingPageFrame; i < endPageFrame; i++) { 
-        mapPage(pml4, (uint64_t) kmalloc(), i, true, hhdm);
+        mapPage(pml4, (uint64_t) kmalloc(), i, true);
     }
     printf("\nPages mapped, trying to reload cr3...");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile (
         "movq %0, %%cr3;"
         "movq %1, %%rsp"
-        : : "r" ((uint64_t) pml4 + hhdm),
+        : : "r" ((uint64_t) pml4 + kernel.hhdm),
             "r" ((uint64_t) 0xfffffffffffff000)
     );
     printf("\nPaging successfully enabled!");

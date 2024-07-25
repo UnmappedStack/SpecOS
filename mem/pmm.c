@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "../include/kernel.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/printf.h"
 #include "../limine.h"
@@ -13,6 +14,7 @@
 #include "include/pmm.h"
 #include "include/detect.h"
 #include "../utils/include/binop.h"
+#include "../include/kernel.h"
 
 struct pmemBitmap {
     uint8_t bitmap[0];
@@ -22,25 +24,10 @@ struct pmemData {
     _Alignas(4096) uint8_t data[0];
 };
 
-struct largestSection {
-    int maxBegin;
-    int maxLength;
-    int bitmapReserved; // in bytes
-};
-
-struct largestSection largestSect;
-
-struct limine_hhdm_request hhdmRequest;
-
-void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_request hhdmRequestInit) {
-    // get the hhdm
-    struct limine_hhdm_response *hhdmResponse = hhdmRequestInit.response;
-    uint64_t hhdm = hhdmResponse->offset;
-    hhdmRequest = hhdmRequestInit;
-    // get the memmap
-    struct limine_memmap_response *memmapResponse = memmapRequest.response;
-    uint64_t memmapEntriesCount = memmapResponse->entry_count;
-    struct limine_memmap_entry **memmapEntries = memmapResponse->entries;
+void initPMM() {
+    // get the memmap;
+    uint64_t memmapEntriesCount = kernel.memmapEntryCount;
+    struct limine_memmap_entry **memmapEntries = kernel.memmapEntries;
     int maxBegin = 0;
     int maxLength = 0;
     // Find the largest avaliable entry to use for allocation
@@ -52,8 +39,8 @@ void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_requ
             maxLength = memmapEntries[i]->length;
         }   
     }
-    largestSect.maxBegin = maxBegin;
-    largestSect.maxLength = maxLength;
+    kernel.largestSect.maxBegin = maxBegin;
+    kernel.largestSect.maxLength = maxLength;
     // WARNING: Heavily commented section, because I was trying to get my brain to understand it
     // now that it's gotten the largest avaliable/reclaimable segment, allocate the first bit of space for the bitmap
     // and the rest for the actual data.
@@ -69,7 +56,7 @@ void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_requ
         }
         n++;
     }
-    largestSect.bitmapReserved = bitmapReserved;
+    kernel.largestSect.bitmapReserved = bitmapReserved;
     // initialise that point in memory
     // set the bitmap to a proper array, set all to 0
     struct pmemBitmap memBuffBitmap;
@@ -80,8 +67,8 @@ void initPMM(struct limine_memmap_request memmapRequest, struct limine_hhdm_requ
     for (int i = 0; i < maxBegin - bitmapReserved; i++)
         memBuffData.data[i] = 0;
     // put it at the right point in memory
-    *((struct pmemBitmap*) maxBegin + hhdm) = memBuffBitmap;
-    *((struct pmemData*) (maxBegin + bitmapReserved + hhdm)) = memBuffData;
+    *((struct pmemBitmap*) maxBegin + kernel.hhdm) = memBuffBitmap;
+    *((struct pmemData*) (maxBegin + bitmapReserved + kernel.hhdm)) = memBuffData;
     // display stuff for debugging
     char b1[9];
     char b2[9];
@@ -106,25 +93,22 @@ static uint8_t setBit(uint8_t byte, uint8_t bitPosition, bool setTo) {
 // something I gotta remember sometimes is that, unlike userspace heap malloc,
 // this doesn't take a size. It will always allocate 1024 bytes
 void* kmalloc() {
-    // get the hhdm
-    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
-    uint64_t hhdm = hhdmResponse->offset;
     // go to the start of the largest part of memory, and look thru it.
-    for (int b = 0; b < largestSect.bitmapReserved; b++) {
+    for (int b = 0; b < kernel.largestSect.bitmapReserved; b++) {
         // look through each bit checking if it's avaliable. If it is, return the matching memory address.
         for (int y = 0; y < 8; y++) {
-            if (!getBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y)) {
+            if (!getBit(*((uint8_t*)(kernel.largestSect.maxBegin + b + kernel.hhdm)), y)) {
                 // avaliable frame found!
                 // set it to be used
-                *((uint8_t*)(largestSect.maxBegin + b + hhdm)) = setBit(*((uint8_t*)(largestSect.maxBegin + b + hhdm)), y, 1);
+                *((uint8_t*)(kernel.largestSect.maxBegin + b + kernel.hhdm)) = setBit(*((uint8_t*)(kernel.largestSect.maxBegin + b + kernel.hhdm)), y, 1);
                 // the actual frame index is just `byte + bit`
-                return (void*)((largestSect.maxBegin + (((b * 8) + y) * 4096)) + largestSect.bitmapReserved);
+                return (void*)((kernel.largestSect.maxBegin + (((b * 8) + y) * 4096)) + kernel.largestSect.bitmapReserved);
             }
         }
     }
     // if it got to this point, no memory address is avaliable.
     // print an error message and halt the computer
-    colourOut = 0xFF0000;
+    kernel.colourOut = 0xFF0000;
     writestring("KERNEL ERROR: Not enough physical memory space to allocate.\nHalting device.");
     asm("cli; hlt");
     // and make the compiler happy by returning an arbitrary value
@@ -132,14 +116,11 @@ void* kmalloc() {
 }
 
 void kfree(void* location) {
-    // get hhdm
-    struct limine_hhdm_response *hhdmResponse = hhdmRequest.response;
-    uint64_t hhdm = hhdmResponse->offset;
     // get the memory address to change
-    // pageFrameNumber = (location - (largestSect.maxBegin + largestSect.bitmapReserved)) / 1024
-    // bitmapMemAddress = (pageFrameNumber >> 3) + largestSect.maxBegin + hhdm
-    uint32_t pfNum = (((uint64_t)location) - (largestSect.maxBegin + largestSect.bitmapReserved)) / 4096;
-    uint64_t bitmapMemAddr = (pfNum >> 3) + largestSect.maxBegin + hhdm;
+    // pageFrameNumber = (location - (kernel.largestSect.maxBegin + kernel.largestSect.bitmapReserved)) / 1024
+    // bitmapMemAddress = (pageFrameNumber >> 3) + kernel.largestSect.maxBegin + kernel.hhdm
+    uint32_t pfNum = (((uint64_t)location) - (kernel.largestSect.maxBegin + kernel.largestSect.bitmapReserved)) / 4096;
+    uint64_t bitmapMemAddr = (pfNum >> 3) + kernel.largestSect.maxBegin + kernel.hhdm;
     // now get the thing at that address, and set the right thingy to 0
     uint8_t bitmapByte = *((uint8_t*)bitmapMemAddr);
     // get the bit that needs to be changed

@@ -7,6 +7,6 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-void initPaging(struct limine_hhdm_request hhdmRequest);
+void initPaging();
 
 #endif

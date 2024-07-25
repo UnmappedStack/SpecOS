@@ -17,12 +17,13 @@
 #include "include/shell.h"
 #include "mem/include/detect.h"
 #include "utils/include/printf.h"
+#include "include/kernel.h"
 #include "mem/include/pmm.h"
 #include "limine.h"
 
-void test_userspace(struct limine_memmap_request mmapRequest) {
+void test_userspace() {
     clearScreen();
-    colourOut = 0x878a87;
+    kernel.colourOut = 0x878a87;
     // Some cool ASCII art that fIGlet totally didn't generate
     writestring(" ____                   ___  ____\n");
     writestring("/ ___| _ __   ___  ___ / _ \\/ ___|\n");
@@ -33,21 +34,21 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
     char inp[100];
     printf("Kernel compilation date: %s at %s", __DATE__, __TIME__);
     writestring("\nSpecOS shell 2024. Type help for options.\n");
-    colourOut = 0xFFFFFF;
+    kernel.colourOut = 0xFFFFFF;
     // Set the current directory to the root (and create the current directory object)
     struct cd currentDirectory;
     currentDirectory.path[0] = '/';
     currentDirectory.cluster = 2;
     while(1) {
-        colourOut = 0x19e026;
+        kernel.colourOut = 0x19e026;
         writestring(">> ");
-        colourOut = 0xFFFFFF;
+        kernel.colourOut = 0xFFFFFF;
         scanf(inp);
         if (compareDifferentLengths(inp, "echo")) {
             writestring("\nArgument: ");
             scanf(inp);
             writestring("\n");
-            colourOut = 0x878a87;
+            kernel.colourOut = 0x878a87;
             writestring(inp);
             writestring("\n");
         } else if (compareDifferentLengths(inp, "timedate")) {
@@ -85,7 +86,7 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
         } else if (compareDifferentLengths(inp, "help")) { 
             writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\n - reboot    Reboot device\n - panic     Force a blue screen of death\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "memmap")) {
-            detectMemmap(mmapRequest);
+            detectMemmap();
         } else if (compareDifferentLengths(inp, "ls")) {
             listCurrentDirectory(currentDirectory.cluster); 
         } else if (compareDifferentLengths(inp, "cd")) {
@@ -100,7 +101,7 @@ void test_userspace(struct limine_memmap_request mmapRequest) {
             cat(currentDirectory, inp, true);
             writestring("\n");
         } else {
-            colourOut = 0xff0022;
+            kernel.colourOut = 0xff0022;
             writestring("\nCommand not found.\n");
         }
     }

@@ -22,6 +22,9 @@
 #include "limine.h"
 #include "mem/include/paging.h"
 #include "sys/include/panic.h"
+#include "include/kernel.h"
+
+Kernel kernel = {0};
 
 // get stuff from limine so that other kernel modules can use it
 __attribute__((used, section(".requests")))
@@ -36,7 +39,21 @@ static volatile struct limine_hhdm_request hhdmRequest = {
     .revision = 0
 };
 
+void initKernelData() {
+    // init info for the terminal & stdio
+    kernel.colourOut = 0xFFFFFF;
+    kernel.doPush = true;
+    kernel.chX = 5;
+    kernel.chY = 5;
+    // bootloader information
+    kernel.hhdm = (hhdmRequest.response)->offset;
+    struct limine_memmap_response memmapResponse = *memmapRequest.response;
+    kernel.memmapEntryCount = memmapResponse.entry_count;
+    kernel.memmapEntries = memmapResponse.entries;
+}
+
 void _start() {
+    initKernelData();
     init_serial();
     initVGA(); 
     // Just send output to a serial port to test
@@ -46,10 +63,10 @@ void _start() {
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
     writestring("\nStarting physical memory manager...");
-    initPMM(memmapRequest, hhdmRequest);
+    initPMM();
     // this is commented out cos paging doesn't work yet and it's still in progress.
     //writestring("\nInitiating paging...");
-    //initPaging(hhdmRequest);
-    test_userspace(memmapRequest);
+    //initPaging();
+    test_userspace();
     for (;;);
 }

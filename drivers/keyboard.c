@@ -6,6 +6,7 @@
 #include "include/keyboard.h"
 #include "../sys/include/idt.h"
 #include "include/vga.h"
+#include "../include/kernel.h"
 #include "../utils/include/string.h"
 #include "../utils/include/io.h"
 
@@ -61,9 +62,9 @@ unsigned char convertScancode(unsigned char scancode) {
     }
 
     if (scancode == 0x0E && inputLength != 0) {
-        chX -= 10;
+        kernel.chX -= 10;
         writeChar(' ', 0x00);
-        chX -= 10;
+        kernel.chX -= 10;
         // For some reason backspacing the first character is a special case cos otherwise it doesn't work
         if (inputLength == 1) {
             inputLength = 0;
@@ -124,6 +125,7 @@ void removeNullChars(char arr[100]) {
 }
 
 void scanf(char* inp) {
+    kernel.doPush = false;
     shifted = false;
     inScanf = true;
     // Reset wholeInput
@@ -143,6 +145,7 @@ void scanf(char* inp) {
     writestring("\0"); // I'm not really sure why, but if I don't write something to the terminal after the device crashes. 
     strcpy(inp, wholeInput);
     removeNullChars(inp);
+    kernel.doPush = true;
 }
 
 __attribute__((interrupt))

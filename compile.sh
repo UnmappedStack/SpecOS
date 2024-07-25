@@ -93,4 +93,4 @@ echo "Size of kernel: "
 du -h bin/SpecOS
 
 # delete old stuff
-rm -rf obj bin limine /mnt/specos
+rm -rf obj limine /mnt/specos
