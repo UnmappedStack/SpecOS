@@ -92,5 +92,11 @@ echo "Complete! disk.img should now be in the current directory and bootable wit
 echo "Size of kernel: "
 du -h bin/SpecOS
 
+# if image could be built, run it in qemu
+if test -f "bin/SpecOS"; then
+    qemu-system-x86_64 disk.img -d int -serial stdio --no-reboot --no-shutdown -accel kvm
+fi
+
 # delete old stuff
 rm -rf bin obj limine /mnt/specos
+

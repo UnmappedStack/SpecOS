@@ -67,6 +67,16 @@ void _start() {
     // this is commented out cos paging doesn't work yet and it's still in progress.
     //writestring("\nInitiating paging...");
     //initPaging();
+    char buffer[10];
+    uint64_t tableSingle;
+    for (int i = 0; i < 5; i++) {
+        for (int y = 0; y < 10; y++)
+            buffer[y] = 0;
+        tableSingle = *(uint64_t*)&(kernel.GDT)[i];
+        uint64_to_hex_string((uint64_t)tableSingle, buffer);
+        writestring("\nGDT contents: 0x");
+        writestring(buffer);
+    }
     test_userspace();
     for (;;);
 }

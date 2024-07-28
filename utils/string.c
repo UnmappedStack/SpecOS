@@ -18,6 +18,15 @@ size_t strlen(const char* str)
     return len;
 }
 
+bool strcmp(const char* str1, const char* str2) {
+    int str1len = strlen(str1);
+    int str2len = strlen(str2);
+    if (str1len != str2len) return false;
+    for (int c = 0; c < str1len && c < str2len; c++) {
+        if (str1[c] != str2[c]) return false;
+    }
+    return true;
+}
 
 void memset(uint8_t *array, uint8_t value, size_t size) {
     for (size_t i = 0; i < size; i++) {
@@ -146,13 +155,28 @@ void uint64_to_hex_string(uint64_t num, char *str) {
 }
 
 
-int get_num_length(uint32_t num) {
+int get_num_length(uint64_t num) {
     int length = 0;
     do {
         length++;
         num /= 10;
     } while (num > 0);
     return length;
+}
+
+void uint64_to_string(uint64_t num, char* str) {
+    // Get the length of the number
+    int length = get_num_length(num);
+
+    // Null-terminate the string
+    str[length] = '\0';
+
+    // Fill the buffer with digits in reverse order
+    int index = length - 1;
+    do {
+        str[index--] = '0' + (num % 10);
+        num /= 10;
+    } while (num > 0);
 }
 
 void uint32_to_string(uint32_t num, char* str) {

@@ -57,13 +57,10 @@ override KCPPFLAGS := \
     -MP
 
 override KLDFLAGS += \
-    -nostdlib \
-    -Wl,-m,elf_x86_64 \
-    -Wl,-nostdlib \
-    -Wl,-pie \
-    -Wl,-z,text \
-    -Wl,-z,max-page-size=0x1000 \
-    -Wl,-T,linker.ld
+    -Wl,-g \
+    -Wl,-T,linker.ld \
+	-nostdlib \
+	-Wl,-nostdlib
 
 override KNASMFLAGS += \
     -Wall \

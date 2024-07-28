@@ -16,10 +16,16 @@ void printf(char* format, ...) {
             i++;
             char buffer[10];
             if (format[i] == 'd' || format[i] == 'i') {
-                uint32_to_string(va_arg(args, int), buffer);
+                uint64_to_string(va_arg(args, uint64_t), buffer);
+                buffer[9] = 0;
                 writestring(buffer);
             } else if (format[i] == 'c') {
                 writestring(charToStr(va_arg(args, char)));
+            } else if (format[i] == 'x') {
+                char bufferx[20];
+                bufferx[19] = 0;
+                uint64_to_hex_string(va_arg(args, uint64_t), bufferx);
+                writestring(bufferx);
             } else if (format[i] == 's') {
                 writestring(va_arg(args, char*));
             }

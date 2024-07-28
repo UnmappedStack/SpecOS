@@ -33,28 +33,66 @@ struct elfSectionHeader {
     uint32_t info;
     uint64_t addressAlign;
     uint64_t entrySize;
-};
+} __attribute__ ((packed));
 
-void getFunctionName() {
+struct symtabEntry {
+    uint32_t name;
+    uint8_t info;
+    uint8_t other;
+    uint16_t shndx;
+    uint64_t value;
+    uint64_t size;
+};// __attribute__((packed));
+
+void assert(bool condition) {
+    if (condition) {
+        writestring("\nASSERT: True\n");
+    } else {
+        writestring("\nFailed assert.\n");
+        asm("cli; hlt");
+    }
+}
+
+void getFunctionName(uint64_t address) {
     struct limine_kernel_file_response kernelElfResponse = *kernelElfRequest.response;
     struct limine_file kernelFile = *kernelElfResponse.kernel_file;
     char* kernelFileStart = (char*) kernelFile.address;
     uint64_t kernelFileLength = kernelFile.size;
-    char buffer[19];
-    char buffer2[19];
-    uint64_to_hex_string((uint64_t) kernelFileStart, buffer2);
-    uint64_to_hex_string(kernelFileLength, buffer);
-    buffer[18] = 0;
-    printf("\nKernel address: 0x%s\nKernel size: 0x%s\n", buffer2, buffer);
     if (kernelFileStart[0] == 0x7F && kernelFileStart[1] == 'E' && kernelFileStart[2] == 'L' && kernelFileStart[3] == 'F' &&
         kernelFileStart[4] == 2) {
         // it's a valid 64 bit elf file!
         // parse the section header table
-        char* sectionHeaderOffset = (char*)((uint64_t)(*(char*)&kernelFileStart[40]) & 0xFFFFFFFFFFFFFF);
-        uint16_t sectionHeaderNumEntries = (kernelFileStart[60] << 8) | kernelFileStart[61];
-         
+        struct elfSectionHeader *sectionHeaderOffset = (struct elfSectionHeader*)(*(uint64_t*)((kernelFileStart + 40)) + ((uint64_t)kernelFileStart));
+        uint16_t sectionHeaderNumEntries = *(uint16_t*)(kernelFileStart + 60);
+        // parse the section header string table
+        uint16_t sectionHeaderStringTableIndex = *(uint16_t*)(kernelFileStart + 62);
+        char* sectionHeaderStringTableOffset = (char*)(sectionHeaderOffset[sectionHeaderStringTableIndex].offset + ((uint64_t)kernelFileStart));
+        // now look through each section header entry, comparing the name, and find the offset of .strtab and .symtab
+        struct symtabEntry *symtabOffset = 0;
+        char* strtabOffset = 0;
+        uint64_t symtabIndex = 0;
+        for (int i = 0; i < sectionHeaderNumEntries; i++) {
+            // check if it's .symtab or .strtab by comparing it's string in the section header string table
+            if (strcmp(&sectionHeaderStringTableOffset[sectionHeaderOffset[i].name], ".strtab")) {
+                strtabOffset = (char*)(sectionHeaderOffset[i].offset + (uint64_t)kernelFileStart);
+            }
+            if (strcmp(&sectionHeaderStringTableOffset[sectionHeaderOffset[i].name], ".symtab")) {
+                symtabOffset = (struct symtabEntry*)(sectionHeaderOffset[i].offset + (uint64_t)kernelFileStart);
+                symtabIndex = i;
+            }
+        }
+        // now go through .symtab, looking for an entry who's address is equal to `address`
+        for (int i = 0; i < sectionHeaderOffset[symtabIndex].size / sizeof(struct symtabEntry); i++) {
+            if (address >= symtabOffset[i].value && address < symtabOffset[i].value + symtabOffset[i].size) {
+                // found! parse the string table to find the actual thingy
+                printf("   %s\n", (&strtabOffset[symtabOffset[i].name]));
+                return;
+            }
+        } 
+        // if it got to this point, it's invalid.
+        printf("  <INVALID>\n");
     } else {
-        printf(" <INVALID>");
+        printf("  <INVALID>");
     }
 } 
 
@@ -67,12 +105,10 @@ void stackTrace(int m) {
     writestring("\n\n==== Stack Trace: ====\n\n"); // 22
     struct stackFrame *stack;
     asm("mov %%rbp, %0" : "=r"(stack));
-    char buffer[19];
     for (unsigned int f = 0; stack && f < m; f++) {
-        memset(buffer, 0, 18);
-        uint64_to_hex_string(stack->rip, buffer);
-        buffer[18] = '\0';
-        printf(" 0x%s\n", buffer);
+        printf(" 0x%x", stack->rip);
+        if (stack->rip)
+            getFunctionName(stack->rip);
         stack = stack->rbp;
     }
 }
@@ -139,6 +175,7 @@ void kpanic(char* exception) {
     writestring("\n\n== Last 10 stdio outputs: ==\n\n");
     for (int i = 0; i < 10; i++)
         writestring(kernel.last10[i]);
-    getFunctionName();*/
+    */
+     
     asm("cli; hlt");
 }
