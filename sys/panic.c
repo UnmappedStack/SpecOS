@@ -109,6 +109,8 @@ void stackTrace(int m) {
         printf(" 0x%x", stack->rip);
         if (stack->rip)
             getFunctionName(stack->rip);
+        else
+            writestring("\n");
         stack = stack->rbp;
     }
 }

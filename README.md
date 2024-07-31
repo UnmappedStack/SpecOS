@@ -42,10 +42,10 @@ qemu-system-x86_64 disk.img
 You'll obviously need Qemu installed.
 
 ### On real hardware
-This is ***not recommended***, and it has ***not been tested***, however you're welcome to give it a shot. In the directory of the .bin file, run:
+This is ***not recommended***, and it has ***not been tested***, however you're welcome to give it a shot. In the directory of the .img file, run:
 
 ```
-sudo dd if=SpecOS/scripts/disk.img of=/dev/sdN bs=4M status=progress
+sudo dd if=disk.img of=/dev/sdN bs=4M status=progress
 ```
 
 With /dev/sdN being the name of your USB. Then in your device's unique BIOS, change the boot order so it will boot from USB before your current OS, and restart with your now-formatted USB plugged in.
@@ -101,3 +101,9 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 It's a road to running DOOM!
 
 Note that a lot of this is unrealistic and probably won't happen - it's a lot easier said that done. But my hopes are high (:
+
+## Special thanks
+You didn't *really* think that *I* could do this alone of all people, did you? I'm not a genius! Thank you so, so much to these people who have made my journey in operating system development so much easier!
+
+ - [Bananymous](https://github.com/Bananymous) is a super smart guy, who taught me a *ton*. He also wrote the amazing [Banan-OS](https://github.com/Bananymous/banan-os)!
+ - [Dcraftbg](https://github.com/Dcraftbg) has taught me a whole lot about paging and a few other topics. He also just managed to enter userspace on his [MinOS](https://github.com/Dcraftbg/MinOS), nice one :D

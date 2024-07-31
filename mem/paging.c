@@ -28,22 +28,6 @@
 // make it know what stuff is
 // this is one definition, cos pml 1->4 are all basically the same
 // it's just layers of page directories
-struct pmlEntry {
-    uint8_t isPresent : 1;
-    uint8_t isReadOrWrite : 1;
-    uint8_t isUserOrSupervisor : 1;
-    uint8_t pwt : 1;
-    uint8_t cacheDisable : 1;
-    uint8_t accessed : 1;
-    uint8_t avaliable : 1;
-    uint8_t rsvdOrPageSize : 1; // rsvd if normal pml entry, page size if it's a pdpt entry or page directory entry. doesn't really matter cos it's 0 either way.
-    uint8_t avaliable2 : 4;
-    uint64_t address : 40;
-    // think there should be reserved bits here? think again! assume M = 51.
-    uint16_t available3 : 11;
-    uint8_t executeDisable : 1;
-} __attribute__((packed));
-
 // set up the structure
 struct pmlEntry pml4[512] __attribute__((aligned(4096)));
 
@@ -117,7 +101,7 @@ void mapConsecutivePages(struct pmlEntry pml4[], uint64_t startingPhysAddr, uint
     }
 }
 
-void initPaging() {
+struct pmlEntry* initPaging() {
     /* page entries will be defined later when filling pml1
      * and so will the pdpt when loading it into cr3
      * fill up pml1 with mappings
@@ -133,15 +117,8 @@ void initPaging() {
     for (uint64_t i = startingPageFrame; i < endPageFrame; i++) { 
         mapPage(pml4, (uint64_t) kmalloc(), i, true);
     }
-    printf("\nPages mapped, trying to reload cr3...");
-    // load a pointer to pml4 into cr3 and change the stack to point elsewhere
-    __asm__ volatile (
-        "movq %0, %%cr3;"
-        "movq %1, %%rsp"
-        : : "r" ((uint64_t) pml4 + kernel.hhdm),
-            "r" ((uint64_t) 0xfffffffffffff000)
-    );
-    printf("\nPaging successfully enabled!");
+    // return some stuff so the entry point function of the kernel can reload cr3
+    return pml4 + kernel.hhdm;
     // no need to enable paging, limine already enables it :D
 }
 

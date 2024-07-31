@@ -55,7 +55,7 @@ void initKernelData() {
 void _start() {
     initKernelData();
     init_serial();
-    initVGA(); 
+    initVGA();
     // Just send output to a serial port to test
     writestring("Trying to initialise GDT...\n");
     initGDT();
@@ -65,18 +65,18 @@ void _start() {
     writestring("\nStarting physical memory manager...");
     initPMM();
     // this is commented out cos paging doesn't work yet and it's still in progress.
-    //writestring("\nInitiating paging...");
-    //initPaging();
-    char buffer[10];
-    uint64_t tableSingle;
-    for (int i = 0; i < 5; i++) {
-        for (int y = 0; y < 10; y++)
-            buffer[y] = 0;
-        tableSingle = *(uint64_t*)&(kernel.GDT)[i];
-        uint64_to_hex_string((uint64_t)tableSingle, buffer);
-        writestring("\nGDT contents: 0x");
-        writestring(buffer);
-    }
+    /*writestring("\nInitiating paging...");
+    struct pmlEntry* pml4Address = initPaging(); 
+    printf("\nPages mapped, trying to reload cr3...");
+    // load a pointer to pml4 into cr3 and change the stack to point elsewhere
+    __asm__ volatile (
+//        "movq %0, %%rsp;"
+//        "movq %1, %%rbp;"
+        "movq %1, %%cr3"
+        : : "r" ((uint64_t) 0xfffffffffffff000),
+            "r" ((uint64_t) pml4Address)
+    );
+    printf("\nPaging successfully enabled!");*/
     test_userspace();
     for (;;);
 }

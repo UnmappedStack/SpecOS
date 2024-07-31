@@ -52,12 +52,12 @@ void drawPix(int x, int y, int colour) {
 }
 
 void drawChar(int xOffset, int yOffset, int colour, char ch) {
-    int firstByteIdx = ch * 8;
+    int firstByteIdx = ch * 16;
     bool doDrawBuffer;
     int colourBuffer;
-    for (int by = 0; by < 8; by++) { 
+    for (int by = 0; by < 16; by++) { 
         for (int bi = 0; bi < 8; bi++) {
-            doDrawBuffer = (fontdata_8x8[firstByteIdx + by] >> (7 - bi)) & 1;
+            doDrawBuffer = (fontGlyphBuffer[firstByteIdx + by] >> (7 - bi)) & 1;
             if (doDrawBuffer)
                 colourBuffer = colour;
             else
@@ -75,7 +75,7 @@ void writeChar(char ch, int colour) {
 }
 
 void newline() {
-    kernel.chY += 10;
+    kernel.chY += 16;
     kernel.chX = 5;
 }
 
