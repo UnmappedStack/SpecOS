@@ -9,4 +9,6 @@ void outCharSerial(char ch);
 
 int init_serial();
 
+void writeserial(char* str);
+
 #endif

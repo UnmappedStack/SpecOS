@@ -34,6 +34,9 @@ Note that you must be inside the scripts directory to run the compile script.
 
 This will generate a an executable disk image that you can run with qemu.
 ### Running
+> WARNING TILING WM USERS!
+> 
+> Qemu doesn't really like tiling mode, it'll cause it to show only part of the screen! Make sure that you run Qemu with floating window mode **only**.
 ### On Qemu
 Simply cd into the directory of the built .img file, and run:
 ```

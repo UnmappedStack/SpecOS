@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "include/serial.h"
+#include "../utils/include/string.h"
 #include "../utils/include/io.h"
 
 #define PORT 0x3f8          // COM1
@@ -42,4 +43,7 @@ void outCharSerial(char ch) {
     outb(0x3f8, ch);
 }
 
-
+void writeserial(char* str) {
+    for (int i = 0; i < strlen(str); i++)
+        outCharSerial(str[i]);
+}
