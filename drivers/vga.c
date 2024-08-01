@@ -78,9 +78,12 @@ void writeChar(char ch, int colour) {
     outCharSerial(ch);
 }
 
+void scrollLine();
+
 void newline() {
     kernel.chY += 16;
     kernel.chX = 5;
+    if (kernel.chY > kernel.screenHeight - 17) scrollLine();
 }
 
 void clearScreen() {
@@ -95,7 +98,7 @@ void clearScreen() {
 void scrollPixel() {
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     volatile uint32_t *fb_ptr = framebuffer->address;
-    for (int y = 0; y < kernel.screenHeight; y++) {
+    for (int y = 0; y <= kernel.screenHeight; y++) {
         for (int x = 0; x < kernel.screenWidth; x++) {
             // get the colour at the pixel the line above
             uint32_t *location = (uint32_t*)(((uint8_t*)fb_ptr) + (y + 1) * framebuffer->pitch);
@@ -107,16 +110,14 @@ void scrollPixel() {
 }
 
 void scrollLine() {
-    for (int i = 0; i < 32; i++) scrollPixel();
-    kernel.chY -= 32;
+    for (int i = 0; i < 33; i++) scrollPixel();
+    kernel.chY -= 33;
 }
 
 void writestring(char* str) {
     if (kernel.doPush)
         pushBackLastString(str);
-    // Not rlly doing proper scrolling for now. If it's too big, clear the screen
-    if (kernel.chY > kernel.screenHeight - 16)
-        scrollLine();
+    if (kernel.chY > kernel.screenHeight - 16) scrollLine();
     for (int i = 0; i < strlen(str); i++) {
         /* obvs this makes newline if it reaches a newline char, BUT it also
          * makes a new line if chX + 8 (aka. the end of the next char to be drawn) is more than screenWidth.
