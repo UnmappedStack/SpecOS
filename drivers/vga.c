@@ -95,13 +95,17 @@ void clearScreen() {
     kernel.chY = 5;
 }
 
-void scrollPixel() {
+void scrollPixel(int pixels) {
     struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
     volatile uint32_t *fb_ptr = framebuffer->address;
     for (int y = 0; y <= kernel.screenHeight; y++) {
         for (int x = 0; x < kernel.screenWidth; x++) {
+            if (y > (kernel.screenHeight - pixels)) {
+                drawPix(x, y, kernel.bgColour);
+                continue;
+            }
             // get the colour at the pixel the line above
-            uint32_t *location = (uint32_t*)(((uint8_t*)fb_ptr) + (y + 1) * framebuffer->pitch);
+            uint32_t *location = (uint32_t*)(((uint8_t*)fb_ptr) + (y + pixels) * framebuffer->pitch);
             uint32_t abovePixelValue = location[x];
             // draw it at this spot
             drawPix(x, y, abovePixelValue);
@@ -110,7 +114,7 @@ void scrollPixel() {
 }
 
 void scrollLine() {
-    for (int i = 0; i < 33; i++) scrollPixel();
+    scrollPixel(33);
     kernel.chY -= 33;
 }
 

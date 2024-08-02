@@ -76,7 +76,7 @@ void initPMM() {
     uint64_to_hex_string(maxBegin, b1);
     uint64_to_hex_string(maxLength, b2);
     uint64_to_hex_string(bitmapReserved, b3);
-    printf("\nChosen segment starts at 0x%s, has a size of 0x%s, and reserves 0x%s bytes for the bitmap. Detected memory map:\n", b1, b2, b3);
+    printf("\nChosen segment starts at 0x%s, has a size of 0x%s, and reserves 0x%s bytes for the bitmap.\n", b1, b2, b3);
 }
 
 // just a basic utility

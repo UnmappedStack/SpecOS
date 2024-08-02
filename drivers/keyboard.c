@@ -62,6 +62,7 @@ unsigned char convertScancode(unsigned char scancode) {
     }
 
     if (scancode == 0x0E && inputLength != 0) {
+        if (wholeInput[0] == '\0') return '\0'; // don't let it keep deleting characters outside of that input field!
         kernel.chX -= 10;
         writeChar(' ', 0x00);
         kernel.chX -= 10;
@@ -71,9 +72,9 @@ unsigned char convertScancode(unsigned char scancode) {
             // just reset the whole thing
             int i = 0;
             while (1) {
-                if (wholeInput[i] == '\0')
-                    break;
                 wholeInput[i] = '\0';
+                if (wholeInput[i + 1] == '\0')
+                    break;
                 i++;
             }
         }
@@ -128,6 +129,7 @@ void scanf(char* inp) {
     kernel.doPush = false;
     shifted = false;
     inScanf = true;
+    inputLength = 0;
     // Reset wholeInput
     int i = 0;
     while (1) {
