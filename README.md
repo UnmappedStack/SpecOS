@@ -18,8 +18,6 @@ It uses a monolithic kernel, because I like having everything in one place. This
 
 See some of the resources I used for learning, as well as some other OS projects that I think are pretty amazing in [resources.md](https://github.com/jakeSteinburger/SpecOS/blob/main/resources.md). There's also a few unsolicited OS development opinions of mine in there (:
 
-You may notice that SpecOS now has GRUB files that it didn't have before. This is because a custom bootloader was quite easy before, only needing to load specific sectors, but now that I need to create a FAT image, it becomes much more difficult. For this reason, I have moved away from a custom bootloader and now am using the GRUB bootloader.
-
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
