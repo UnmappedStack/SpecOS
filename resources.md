@@ -31,6 +31,6 @@ I didn't invent operating systems, obviously. I'm inspired by some other operati
 
 - [Banan-os](https://git.bananymous.com/Bananymous/banan-os) is a *very* cool project, which from what I can tell, has a fairly complete kernel, and is now moving on to a GUI. This thing even has a network stack! Most importantly, it runs DOOM. This is probably my goal at some point.
 - [SkiftOS](http://github.com/skift-org/skift) uses a micro-kernel, and is very graphics-oriented, with a complete user interface. After trying it out, I could only be impressed - I'd love to see it a little faster without needing kvm, but it's a really great project.
-- [SerenityOS](https://github.com/SerenityOS/serenity) isn't just an operating system. It's a whole suite of apps, ported from other operating systems. Andreas Kling, the developer, even wrote for it an entire web browser. This is *genuinly usable* as a daily driver, by the seems of it. Maybe it's time to replace my Arch setup?
+- [SerenityOS](https://github.com/SerenityOS/serenity) isn't just an operating system. It's a whole suite of apps, ported from other operating systems. Andreas Kling, the developer, even wrote for it an entire web browser. This is *genuinely usable* as a daily driver, by the seems of it. Maybe it's time to replace my Arch setup?
 
 The above are really amazing. Please try them out, star their repos, because they are far, far more than I could ever achieve (and in the nicest way possible, probably more than you could achieve).
