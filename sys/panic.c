@@ -15,13 +15,6 @@
 #include "../drivers/include/vga.h"
 #include "../limine.h"
 
-// turn a stack address into the name of a function (fancy, ik)
-__attribute__((used, section(".requests")))
-static volatile struct limine_kernel_file_request kernelElfRequest = {
-    .id = LIMINE_KERNEL_FILE_REQUEST,
-    .revision = 0
-};
-
 struct elfSectionHeader {
     uint32_t name;
     uint32_t type;
@@ -54,7 +47,7 @@ void assert(bool condition) {
 }
 
 void getFunctionName(uint64_t address) {
-    struct limine_kernel_file_response kernelElfResponse = *kernelElfRequest.response;
+    struct limine_kernel_file_response kernelElfResponse = kernel.kernelFile;
     struct limine_file kernelFile = *kernelElfResponse.kernel_file;
     char* kernelFileStart = (char*) kernelFile.address;
     uint64_t kernelFileLength = kernelFile.size;

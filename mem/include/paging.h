@@ -2,6 +2,7 @@
  * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
  */
 
+#include <stdbool.h>
 #include "../../limine.h"
 
 #ifndef PAGING_H
@@ -24,5 +25,7 @@ struct pmlEntry {
 } __attribute__((packed));
 
 struct pmlEntry* initPaging();
+
+void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool isKernelSpace);  
 
 #endif

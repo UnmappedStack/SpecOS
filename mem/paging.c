@@ -25,13 +25,6 @@
  * Hopefully should be pretty simple, so I'm gonna just give it a shot!
  */
 
-// make it know what stuff is
-// this is one definition, cos pml 1->4 are all basically the same
-// it's just layers of page directories
-// set up the structure
-struct pmlEntry pml4[512] __attribute__((aligned(4096)));
-
-// and make it do stuff (great comments, ik)
 
 // this only has a couple of arguments, cos it just needs that bit of info to work out the rest.
 // a lot of it is fancy pants stuff it doesn't need, so it'll just leave those as 0.
@@ -115,10 +108,10 @@ struct pmlEntry* initPaging() {
     uint64_t endPageFrame = startingPageFrame + 28;
     printf("\nMapping pages...");
     for (uint64_t i = startingPageFrame; i < endPageFrame; i++) { 
-        mapPage(pml4, (uint64_t) kmalloc(), i, true);
+        mapPage(kernel.pml4, (uint64_t) kmalloc(), i, true);
     }
     // return some stuff so the entry point function of the kernel can reload cr3
-    return pml4 + kernel.hhdm;
+    return kernel.pml4 + kernel.hhdm;
     // no need to enable paging, limine already enables it :D
 }
 

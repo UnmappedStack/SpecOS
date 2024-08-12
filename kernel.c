@@ -28,6 +28,12 @@ Kernel kernel = {0};
 
 // get stuff from limine so that other kernel modules can use it
 __attribute__((used, section(".requests")))
+static volatile struct limine_kernel_file_request kernelElfRequest = {
+    .id = LIMINE_KERNEL_FILE_REQUEST,
+    .revision = 0
+};
+
+__attribute__((used, section(".requests")))
 static volatile struct limine_memmap_request memmapRequest = {
     .id = LIMINE_MEMMAP_REQUEST,
     .revision = 0
@@ -50,6 +56,7 @@ void initKernelData() {
     struct limine_memmap_response memmapResponse = *memmapRequest.response;
     kernel.memmapEntryCount = memmapResponse.entry_count;
     kernel.memmapEntries = memmapResponse.entries;
+    kernel.kernelFile = *kernelElfRequest.response;
 }
 
 void _start() {

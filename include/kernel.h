@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../mem/include/paging.h"
 #include "../limine.h"
 
 #ifndef KERNEL_H
@@ -74,7 +75,9 @@ typedef struct {
     struct GDTEntry GDT[5]; // global descriptor table
     struct GDTPtr GDTR; // the pointer thingy to the GDT
     struct IDTEntry idt[256]; // the interrupt descriptor table
-    struct idtr IDTPtr; 
+    struct idtr IDTPtr;
+    struct pmlEntry pml4[512] __attribute__((aligned(4096))); 
+    struct limine_kernel_file_response kernelFile; 
 } Kernel;
 
 extern Kernel kernel;
