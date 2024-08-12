@@ -71,9 +71,9 @@ void _start() {
     writestring("\nStarting physical memory manager...");
     initPMM();
     // this is commented out cos paging doesn't work yet and it's still in progress.
-    writestring("\nInitiating paging...");/*
+    writestring("\nInitiating paging...\n");/*
     struct pmlEntry* pml4Address = initPaging(); 
-    printf("\nPages mapped, trying to reload cr3...");
+    printf("Pages mapped, trying to reload cr3...");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile (
         "movq %1, %%cr3;"
@@ -83,7 +83,7 @@ void _start() {
             "r" ((uint64_t) pml4Address)
     );
     for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
-    printf("\nPaging successfully enabled! CR3: 0x%x", (uint64_t)pml4Address);*/
+    printf("\nPaging successfully enabled! CR3: 0x%x\n", (uint64_t)pml4Address);*/
     test_userspace();
     for (;;);
 }
