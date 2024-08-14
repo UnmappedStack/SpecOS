@@ -18,7 +18,7 @@ It uses a monolithic kernel, because I like having everything in one place. This
 
 See some of the resources I used for learning, as well as some other OS projects that I think are pretty amazing in [resources.md](https://github.com/jakeSteinburger/SpecOS/blob/main/resources.md). There's also a few unsolicited OS development opinions of mine in there (:
 
-I have a Discord server for SpecOS where I will share most updates, and can also provide you help with OS development. You can join [here](https://discord.gg/gtR3V88q).
+I have a Discord server for SpecOS where I will share most updates, and can also provide you help with OS development. You can join [here](https://discord.gg/hPg9S2F2nD).
 
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
