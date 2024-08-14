@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "misc/fetch.h"
 #include "drivers/include/vga.h"
 #include "drivers/include/rtc.h"
 #include "utils/include/io.h"
@@ -57,6 +58,8 @@ void test_userspace() {
             writestring("\nDate: ");
             writestring(wholeDate());
             writestring("\n");
+        } else if (compareDifferentLengths(inp, "eyestat")) {
+            showFetch();
         } else if (compareDifferentLengths(inp, "kmalloc")) {
             uint8_t* ptr;
             ptr = (uint8_t*) kmalloc();
@@ -84,7 +87,20 @@ void test_userspace() {
         }  else if (compareDifferentLengths(inp, "clear")) {
             clearScreen();
         } else if (compareDifferentLengths(inp, "help")) { 
-            writestring("\nCOMMANDS:\n - help      Shows this help menu\n - poweroff  Turns off device\n - colours   Shows device colours (colors also works)\n - timedate  Shows the current time and date\n - clear     Clears shell\n - echo      Prints to screen.\n - ls        List files\n - cd        Change directory\n - cat       Read file\n - reboot    Reboot device\n - panic     Force a blue screen of death\nSpecOS is under the MIT license. See the GitHub page for more info.\n");
+            writestring("\nCOMMANDS:\n"
+                        " - help      Shows this help menu\n"
+                        " - kmalloc   Test physical memory allocator\n"
+                        " - eyestat   Fetch system info and a nice little icon\n"
+                        " - poweroff  Turns off device\n"
+                        " - timedate  Shows the current time and date\n"
+                        " - clear     Clears shell\n"
+                        " - echo      Prints to screen.\n"
+                        " - ls        List files\n"
+                        " - cd        Change directory\n"
+                        " - cat       Read file\n"
+                        " - reboot    Reboot device\n"
+                        " - panic     Force a blue screen of death\n"
+                        "SpecOS is under the MIT license. See the GitHub page for more info.\n");
         } else if (compareDifferentLengths(inp, "memmap")) {
             detectMemmap();
         } else if (compareDifferentLengths(inp, "ls")) {
