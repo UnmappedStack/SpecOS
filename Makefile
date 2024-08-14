@@ -102,4 +102,4 @@ bin/%.asm.o: %.asm
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin
+	rm -rf bin limine

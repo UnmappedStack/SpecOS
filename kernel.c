@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include "limine.h"
-
 #include "drivers/include/serial.h"
 #include "drivers/include/vga.h"
 #include "sys/include/gdt.h"
@@ -71,9 +70,9 @@ void _start() {
     writestring("\nStarting physical memory manager...");
     initPMM();
     // this is commented out cos paging doesn't work yet and it's still in progress.
-    writestring("\nInitiating paging...\n");/*
-    struct pmlEntry* pml4Address = initPaging(); 
-    printf("Pages mapped, trying to reload cr3...");
+    writestring("\nInitiating paging...\n");
+    struct pmlEntry* pml4Address = initPaging();
+    /*printf("Pages mapped, trying to reload cr3...");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile (
         "movq %1, %%cr3;"

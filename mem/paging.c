@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "include/mapKernel.h"
 #include "include/pmm.h" // for dynamically allocating phys mem
 #include "../utils/include/printf.h" // my bestie, printf debugging!
 #include "../drivers/include/vga.h"
@@ -107,9 +108,7 @@ struct pmlEntry* initPaging() {
     uint64_t startingPageFrame = 0xffffffff80000000 / 4096;
     uint64_t endPageFrame = startingPageFrame + 28;
     printf("\nMapping pages...");
-    for (uint64_t i = startingPageFrame; i < endPageFrame; i++) { 
-        mapPage(kernel.pml4, (uint64_t) kmalloc(), i, true);
-    }
+    mapKernel();
     // return some stuff so the entry point function of the kernel can reload cr3
     return kernel.pml4 + kernel.hhdm;
     // no need to enable paging, limine already enables it :D
