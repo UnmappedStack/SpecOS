@@ -34,7 +34,7 @@ Note that you must be inside the scripts directory to run the compile script.
 
 This will generate a an executable disk image that you can run with qemu.
 ### Running
-> WARNING TILING WM USERS!
+> **WARNING TILING WM USERS!**
 > 
 > Qemu doesn't really like tiling mode, it'll cause it to show only part of the screen! Make sure that you run Qemu with floating window mode **only**.
 ### On Qemu
@@ -45,10 +45,10 @@ qemu-system-x86_64 disk.img
 You'll obviously need Qemu installed.
 
 ### On real hardware
-This is ***not recommended***, and it has ***not been tested***, however you're welcome to give it a shot. In the directory of the .img file, run:
+In the directory of the .img file, run:
 
 ```
-sudo dd if=disk.img of=/dev/sdN bs=4M status=progress
+sudo dd if=disk.img of=/dev/sdN status=progress
 ```
 
 With /dev/sdN being the name of your USB. Then in your device's unique BIOS, change the boot order so it will boot from USB before your current OS, and restart with your now-formatted USB plugged in.
