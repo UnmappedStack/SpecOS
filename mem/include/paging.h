@@ -10,7 +10,7 @@
 
 struct pmlEntry {
     uint8_t isPresent : 1;
-    uint8_t isReadOrWrite : 1;
+    uint8_t rw : 1; // enable to allow write
     uint8_t isUserOrSupervisor : 1;
     uint8_t pwt : 1;
     uint8_t cacheDisable : 1;
@@ -26,6 +26,6 @@ struct pmlEntry {
 
 struct pmlEntry* initPaging();
 
-void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool isKernelSpace);  
+void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool supervisor, bool pxe, bool rw);  
 
 #endif

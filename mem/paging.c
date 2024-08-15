@@ -30,15 +30,16 @@
 // this only has a couple of arguments, cos it just needs that bit of info to work out the rest.
 // a lot of it is fancy pants stuff it doesn't need, so it'll just leave those as 0.
 // this also works for a page directory entry and a pdpt technically.
-struct pmlEntry makePageLevelEntry(bool isKernelSpace, uint64_t address) {
+struct pmlEntry makePageLevelEntry(bool rw, bool pxe, bool supervisor, uint64_t address) {
     struct pmlEntry toReturn;
     // put the address in
     // assuming M = 51, get bits 12 to M.
     toReturn.address = (address >> 12);
-    // set it to present. If it's in kernelspace, set supervisor.
+    // set some flags
+    toReturn.rw = rw;
+    toReturn.executeDisable = pxe;
     toReturn.isPresent = 1;
-    if (isKernelSpace)
-        toReturn.isUserOrSupervisor = 1;
+    toReturn.isUserOrSupervisor = supervisor;
     // and return :D
     return toReturn;
 }
@@ -46,7 +47,7 @@ struct pmlEntry makePageLevelEntry(bool isKernelSpace, uint64_t address) {
 // it also needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
-void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool isKernelSpace) { 
+void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool supervisor, bool pxe, bool rw) { 
     // get the indexes of each page directory level (aka pml)
     uint16_t pml1Index = (virtAddr >> 12) % 512;
     uint16_t pml2Index = (virtAddr >> (12 + 9)) % 512;
@@ -62,7 +63,7 @@ void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool 
         // make an array of page entries to go in there at a dynamically allocated memory address
         struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc(); 
         // put a pointer to this pml3 array into this pml4 entry (and set up flags & stuff)
-        pml4[pml4Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
+        pml4[pml4Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
         // make it into a virtual address and put stuff there
         pml3Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
@@ -71,27 +72,27 @@ void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool 
     // now kinda just do the same thing for each layer (I'm not gonna reexplain for each time, it's the same as above)
     if ((*pml3Array)[pml3Index].isPresent == 0) {
         struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
-        (*pml3Array)[pml3Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
+        (*pml3Array)[pml3Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
         pml2Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
         pml2Array = (struct pmlEntry (*)[512])(((*pml3Array)[pml3Index].address << 12) + kernel.hhdm);
     }
     if ((*pml2Array)[pml2Index].isPresent == 0) {
         struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
-        (*pml2Array)[pml2Index] = makePageLevelEntry(isKernelSpace, (uint64_t) newEntryPtr);
+        (*pml2Array)[pml2Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
         pml1Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
         pml1Array = (struct pmlEntry (*)[512])(((*pml2Array)[pml2Index].address << 12) + kernel.hhdm);
     }
     // now just put the stuff in and map it
-    (*pml1Array)[pml1Index] = makePageLevelEntry(isKernelSpace, physAddr);
+    (*pml1Array)[pml1Index] = makePageLevelEntry(rw, pxe, supervisor, physAddr);
 }
 
 // And now a version of mapPage to map consecutive pages.
 void mapConsecutivePages(struct pmlEntry pml4[], uint64_t startingPhysAddr, uint64_t startingVirtAddr,
-                         bool isKernelSpace, int numPages) {
+                         bool supervisor, bool pxe, bool rw, int numPages) {
     for (int i = 0; i < numPages; i++) {
-        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), isKernelSpace);
+        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), supervisor, pxe, rw);
     }
 }
 
