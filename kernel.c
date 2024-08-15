@@ -71,7 +71,7 @@ void _start() {
     initPMM();
     // this is commented out cos paging doesn't work yet and it's still in progress.
     writestring("\nInitiating paging...\n");
-    struct pmlEntry* pml4Address = initPaging();
+    uint64_t* pml4Address = initPaging();
     /*printf("Pages mapped, trying to reload cr3...");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile (

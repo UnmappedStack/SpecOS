@@ -16,6 +16,12 @@
 #include "include/paging.h"
 #include "../include/kernel.h"
 
+
+#define KERNEL_PFLAG_PRESENT 0b1
+#define KERNEL_PFLAG_WRITE   0b10
+#define KERNEL_PFLAG_USER    0b100
+#define KERNEL_PFLAG_PXD     0b10000000000000000000000000000000000000000000000000000000000000 // a bit long lmao
+
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
 
@@ -26,77 +32,60 @@
  * Hopefully should be pretty simple, so I'm gonna just give it a shot!
  */
 
-
-// this only has a couple of arguments, cos it just needs that bit of info to work out the rest.
-// a lot of it is fancy pants stuff it doesn't need, so it'll just leave those as 0.
-// this also works for a page directory entry and a pdpt technically.
-struct pmlEntry makePageLevelEntry(bool rw, bool pxe, bool supervisor, uint64_t address) {
-    struct pmlEntry toReturn;
-    // put the address in
-    // assuming M = 51, get bits 12 to M.
-    toReturn.address = (address >> 12);
-    // set some flags
-    toReturn.rw = rw;
-    toReturn.executeDisable = pxe;
-    toReturn.isPresent = 1;
-    toReturn.isUserOrSupervisor = supervisor;
-    // and return :D
-    return toReturn;
-}
-
-// it also needs to be able to actually map the pages
+// it needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
-void mapPage(struct pmlEntry pml4[], uint64_t physAddr, uint64_t virtAddr, bool supervisor, bool pxe, bool rw) { 
+void mapPage(uint64_t pml4[], uint64_t virtAddr, uint64_t flags) { 
     // get the indexes of each page directory level (aka pml)
     uint16_t pml1Index = (virtAddr >> 12) % 512;
     uint16_t pml2Index = (virtAddr >> (12 + 9)) % 512;
     uint16_t pml3Index = (virtAddr >> (12 + 18)) % 512;
     uint16_t pml4Index = (virtAddr >> (12 + 27)) % 512;
     // initialise all the levels
-    struct pmlEntry (*pml3Array)[512] = NULL;
-    struct pmlEntry (*pml2Array)[512] = NULL;
-    struct pmlEntry (*pml1Array)[512] = NULL;
+    uint64_t (*pml3Array)[512] = NULL;
+    uint64_t (*pml2Array)[512] = NULL;
+    uint64_t (*pml1Array)[512] = NULL;
+    uint64_t mask = ~(((1ULL << (52 - 12 + 1)) - 1) << 12);
+    uint64_t flagsClearAddr = mask & flags;
     // make sure the entries are there, and if they aren't, then make them be there. 
-    if (pml4[pml4Index].isPresent == 0) {
+    if (pml4[pml4Index] & 1) {
         // it hasn't been set yet!
         // make an array of page entries to go in there at a dynamically allocated memory address
-        struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc(); 
+        uint64_t *newEntryPtr = (uint64_t*) kmalloc(); 
         // put a pointer to this pml3 array into this pml4 entry (and set up flags & stuff)
-        pml4[pml4Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
+        pml4[pml4Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
         // make it into a virtual address and put stuff there
-        pml3Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
+        pml3Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml3Array = (struct pmlEntry (*)[512])((pml4[pml4Index].address << 12) + kernel.hhdm);
+        pml3Array = (uint64_t (*)[512])((((pml4[pml4Index] >> 12) & 40) << 12) + kernel.hhdm);
     }
     // now kinda just do the same thing for each layer (I'm not gonna reexplain for each time, it's the same as above)
-    if ((*pml3Array)[pml3Index].isPresent == 0) {
-        struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
-        (*pml3Array)[pml3Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
-        pml2Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
+    if ((*pml3Array)[pml3Index] & 1) {
+        uint64_t *newEntryPtr = (uint64_t*) kmalloc();
+        (*pml3Array)[pml3Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
+        pml2Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml2Array = (struct pmlEntry (*)[512])(((*pml3Array)[pml3Index].address << 12) + kernel.hhdm);
+        pml2Array = (uint64_t (*)[512])(((((*pml3Array)[pml3Index] >> 12) & 40) << 12) + kernel.hhdm);
     }
-    if ((*pml2Array)[pml2Index].isPresent == 0) {
-        struct pmlEntry *newEntryPtr = (struct pmlEntry*) kmalloc();
-        (*pml2Array)[pml2Index] = makePageLevelEntry(rw, pxe, supervisor, (uint64_t) newEntryPtr);
-        pml1Array = (struct pmlEntry (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
+    if ((*pml2Array)[pml2Index] & 1) {
+        uint64_t *newEntryPtr = (uint64_t*) kmalloc();
+        (*pml2Array)[pml2Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
+        pml1Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
     } else {
-        pml1Array = (struct pmlEntry (*)[512])(((*pml2Array)[pml2Index].address << 12) + kernel.hhdm);
+        pml1Array = (uint64_t (*)[512])(((((*pml2Array)[pml2Index] >> 12) & 40) << 12) + kernel.hhdm);
     }
     // now just put the stuff in and map it
-    (*pml1Array)[pml1Index] = makePageLevelEntry(rw, pxe, supervisor, physAddr);
+    (*pml1Array)[pml1Index] = flags;
 }
 
 // And now a version of mapPage to map consecutive pages.
-void mapConsecutivePages(struct pmlEntry pml4[], uint64_t startingPhysAddr, uint64_t startingVirtAddr,
-                         bool supervisor, bool pxe, bool rw, int numPages) {
+void mapConsecutivePages(uint64_t pml4[], uint64_t startingVirtAddr, uint64_t flags, uint64_t numPages) {
     for (int i = 0; i < numPages; i++) {
-        mapPage(pml4, startingPhysAddr + (i * 4096), startingVirtAddr + (i * 4096), supervisor, pxe, rw);
+        mapPage(pml4, startingVirtAddr + (i * 4096), flags);
     }
 }
 
-struct pmlEntry* initPaging() {
+uint64_t* initPaging() {
     /* page entries will be defined later when filling pml1
      * and so will the pdpt when loading it into cr3
      * fill up pml1 with mappings
