@@ -23,7 +23,7 @@ I have a Discord server for SpecOS where I will share most updates, and can also
 ## Building and running
 This works best on Linux (Mac should also be fine). If you're using Windows, it's best to use WSL.
 ### To compile
-Make sure that you have GCC, NASM and Qemu installed, as well as the i686-elf toolkit. This is easy to install with Brew (I even used Brew on Linux). Then simply clone the repo, cd into it, make `compile.sh` runnable and run the script:
+Make sure that you have GCC installed. Then simply clone the repo, cd into it, make `compile.sh` runnable and run the script:
 ```
 git clone https://github.com/jakeSteinburger/SpecOS.git
 cd SpecOS
