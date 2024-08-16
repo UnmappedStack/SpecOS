@@ -11,16 +11,12 @@
 #include <stdbool.h>
 #include "include/mapKernel.h"
 #include "include/pmm.h" // for dynamically allocating phys mem
+#include "include/mapKernel.h"
 #include "../utils/include/printf.h" // my bestie, printf debugging!
 #include "../drivers/include/vga.h"
 #include "include/paging.h"
 #include "../include/kernel.h"
 
-
-#define KERNEL_PFLAG_PRESENT 0b1
-#define KERNEL_PFLAG_WRITE   0b10
-#define KERNEL_PFLAG_USER    0b100
-#define KERNEL_PFLAG_PXD     0b10000000000000000000000000000000000000000000000000000000000000 // a bit long lmao
 
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
@@ -35,7 +31,7 @@
 // it needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
-void mapPage(uint64_t pml4[], uint64_t virtAddr, uint64_t flags) { 
+void mapPage(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags) { 
     // get the indexes of each page directory level (aka pml)
     uint16_t pml1Index = (virtAddr >> 12) % 512;
     uint16_t pml2Index = (virtAddr >> (12 + 9)) % 512;
@@ -75,13 +71,13 @@ void mapPage(uint64_t pml4[], uint64_t virtAddr, uint64_t flags) {
         pml1Array = (uint64_t (*)[512])(((((*pml2Array)[pml2Index] >> 12) & 40) << 12) + kernel.hhdm);
     }
     // now just put the stuff in and map it
-    (*pml1Array)[pml1Index] = flags;
+    (*pml1Array)[pml1Index] = physAddr | flags;
 }
 
 // And now a version of mapPage to map consecutive pages.
-void mapConsecutivePages(uint64_t pml4[], uint64_t startingVirtAddr, uint64_t flags, uint64_t numPages) {
+void mapConsecutivePages(uint64_t pml4[], uint64_t startingVirtAddr, uint64_t startingPhysAddr, uint64_t flags, uint64_t numPages) {
     for (int i = 0; i < numPages; i++) {
-        mapPage(pml4, startingVirtAddr + (i * 4096), flags);
+        mapPage(pml4, startingVirtAddr + (i * 4096), startingPhysAddr + (i * 4096), flags);
     }
 }
 
@@ -97,7 +93,7 @@ uint64_t* initPaging() {
      */
     uint64_t startingPageFrame = 0xffffffff80000000 / 4096;
     uint64_t endPageFrame = startingPageFrame + 28;
-    printf("\nMapping pages...");
+    printf("\nMapping pages...\n");
     mapKernel();
     // return some stuff so the entry point function of the kernel can reload cr3
     return kernel.pml4 + kernel.hhdm;
