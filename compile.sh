@@ -5,6 +5,59 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+echo "Checking that some required packages are installed. You may need to agree to install them."
+# check if the required thingies are installed. If not, install it
+if [ ! -f "/bin/mkdosfs" ]; then
+    if test -f "/bin/apt"; then
+        # if using debian based distro
+        apt update
+        apt install dosfstools
+    elif test -f "/bin/pacman"; then
+        # if using pacman based distro
+        pacman -Sy dosfstools
+    elif test -f "/bin"; then
+        # if using fedora based distro
+        dnf upgrade
+        dnf install dosfstools
+    else
+        echo "You need to install dosfstools. This is not supported automatically with your linux distribution."
+    fi
+fi
+
+if [ ! -f "/bin/nasm" ]; then
+    if test -f "/bin/apt"; then
+        apt update
+        apt install nasm
+    elif test -f "/bin/pacman"; then
+        pacman -Sy nasm
+    elif test -f "/bin/dnf"; then
+        dnf upgrade
+        dnf install nasm
+    else
+        echo "You need to install NASM. This is not supported automatically with your linux distribution."
+    fi
+fi
+
+
+if [ ! -f "/bin/qemu" ]; then
+    if test -f "/bin/apt"; then
+        apt update
+        sudo apt install qemu qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager
+        systemctl enable libvirtd
+        systemctl start libvirtd
+    elif test -f "/bin/pacman"; then
+        pacman -Sy qemu-full
+    elif test -f "/bin/dnf"; then
+        dnf upgrade
+        dnf install @virtualization
+        systemctl enable libvirtd
+        systemctl start libvirtd
+    else
+        echo "You need to install Qemu. This is not supported automatically with your linux distribution."
+    fi
+fi
+
+
 make # compile the kernel
 
 # clone limine repo and build it
