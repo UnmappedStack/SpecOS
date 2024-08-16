@@ -39,7 +39,7 @@ if [ ! -f "/bin/nasm" ]; then
 fi
 
 
-if [ ! -f "/bin/qemu" ]; then
+if [ ! -f "/bin/qemu-system-x86_64" ]; then
     if test -f "/bin/apt"; then
         apt update
         sudo apt install qemu qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils virt-manager
