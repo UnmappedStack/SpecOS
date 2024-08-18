@@ -51,12 +51,14 @@ override KCFLAGS += \
     -mno-red-zone
 
 override KCPPFLAGS := \
+	-g \
     -I src \
     $(KCPPFLAGS) \
     -MMD \
     -MP
 
 override KLDFLAGS += \
+	-g \
     -Wl,-g \
     -Wl,-T,linker.ld \
 	-nostdlib \
@@ -102,4 +104,4 @@ bin/%.asm.o: %.asm
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin limine
+	rm -rf obj

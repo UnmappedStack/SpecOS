@@ -151,5 +151,5 @@ if test -f "bin/SpecOS"; then
 fi
 
 # delete old stuff
-rm -rf bin obj limine /mnt/specos
+rm -rf obj limine /mnt/specos
 

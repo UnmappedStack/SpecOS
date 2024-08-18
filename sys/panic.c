@@ -95,10 +95,10 @@ struct stackFrame {
 };
 
 void stackTrace(int m) {
-    writestring("\n\n==== Stack Trace: ====\n\n"); // 22
+    writestring("\n\n==== Stack Trace: ====\n\n");
     struct stackFrame *stack;
     asm("mov %%rbp, %0" : "=r"(stack));
-    for (unsigned int f = 0; stack && f < m; f++) {
+    while (stack) {
         printf(" 0x%x", stack->rip);
         if (stack->rip)
             getFunctionName(stack->rip);
@@ -137,7 +137,7 @@ void kpanic(char* exception) {
         drawPix(x, kernel.chY, 0xFFFFFF);
     kernel.chY += 5;
     kernel.chX = 5;
-    writestring("============= DEBUG ============="); // 24
+    writestring("\n============= DEBUG ============="); // 24
     printf("\n\n Fault: %s", exception);
     char bufferGDTR[19];
     char bufferIDTR[19];

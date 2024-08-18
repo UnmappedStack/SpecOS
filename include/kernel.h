@@ -7,9 +7,14 @@
 
 #include "../mem/include/paging.h"
 #include "../limine.h"
+#include "../drivers/include/vga.h"
 
 #ifndef KERNEL_H
 #define KERNEL_H
+
+
+__attribute__((noreturn))
+void __stack_chk_fail(void);
 
 // some stuff it needs before the main struct
 struct largestSection {
@@ -77,7 +82,8 @@ typedef struct {
     struct IDTEntry idt[256]; // the interrupt descriptor table
     struct idtr IDTPtr;
     uint64_t pml4[512] __attribute__((aligned(4096))); 
-    struct limine_kernel_file_response kernelFile; 
+    struct limine_kernel_file_response kernelFile;
+    struct limine_kernel_address_response kernelAddress; 
 } Kernel;
 
 extern Kernel kernel;

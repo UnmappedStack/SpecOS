@@ -23,6 +23,12 @@
 #include "sys/include/panic.h"
 #include "include/kernel.h"
 
+__attribute__((noreturn))
+void __stack_chk_fail(void) {
+    writestring("\nStack smashing detected. Halting.\n");
+    for (;;) asm("cli; hlt");
+}
+
 Kernel kernel = {0};
 
 // get stuff from limine so that other kernel modules can use it
@@ -44,6 +50,12 @@ static volatile struct limine_hhdm_request hhdmRequest = {
     .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_kernel_address_request kernelAddressRequest = {
+    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+    .revision = 0
+};
+
 void initKernelData() {
     // init info for the terminal & stdio
     kernel.colourOut = 0xFFFFFF;
@@ -56,6 +68,7 @@ void initKernelData() {
     kernel.memmapEntryCount = memmapResponse.entry_count;
     kernel.memmapEntries = memmapResponse.entries;
     kernel.kernelFile = *kernelElfRequest.response;
+    kernel.kernelAddress = *kernelAddressRequest.response;
 }
 
 void _start() {
