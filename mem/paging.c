@@ -19,6 +19,8 @@
 #include "include/paging.h"
 #include "../include/kernel.h"
 
+
+#define PHYS_ADDR_MASK 0xFFFF000000000000
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
 
@@ -29,12 +31,31 @@
  * Hopefully should be pretty simple, so I'm gonna just give it a shot!
  */
 
-void debugPml4(uint64_t* arr) {
-    for (int i = 0; i < 512; i++)
-        printf("Index %i of pml4: %i\n", i, arr[i]);
+void debugPageTree(uint64_t* arr) {
+    for (int p4 = 0; p4 < 512; p4++) {
+        if (arr[p4]) {
+            printf("pml4 index %i: 0b%b\n", p4, arr[p4]);
+            uint64_t* p3addr = (uint64_t*)PAGE_ALIGN_DOWN((arr[p4] & PHYS_ADDR_MASK) + kernel.hhdm);
+            for (int p3 = 0; p3 < 512; p3++) {
+                if (p3addr[p3]) {
+                    printf("  -> pml3 index %i: 0b%b\n", p3, p3addr[p3]);
+                    uint64_t* p2addr = (uint64_t*)PAGE_ALIGN_DOWN((p3addr[p3] & PHYS_ADDR_MASK) + kernel.hhdm);
+                    for (int p2 = 0; p2 < 512; p2++) {
+                        if (p2addr[p2]) {
+                            printf("    -> pml2 index %i: 0b%b\n", p2, p2addr[p2]);
+                            uint64_t* p1addr = (uint64_t*)PAGE_ALIGN_DOWN((p2addr[p2] & PHYS_ADDR_MASK) + kernel.hhdm);
+                            for (int p1 = 0; p1 < 512; p1++) {
+                                if (p2addr[p1]) {
+                                    printf("      -> pml1 index %i: 0b%b\n", p1, p1addr[p1]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
-
-#define PHYS_ADDR_MASK 0xFFFF000000000000
 
 // it needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
@@ -99,7 +120,7 @@ uint64_t* initPaging() {
     uint64_t* pml4Phys = kernel.kernelAddress.physical_base + (kernel.pml4 - 0xffffffff80000000);
     mapKernel();
     //printf("pml4 contents: \n");
-    debugPml4(kernel.pml4);
+    debugPageTree(kernel.pml4);
     // return some stuff so the entry point function of the kernel can reload cr3
     return pml4Phys;
     // no need to enable paging, limine already enables it :D

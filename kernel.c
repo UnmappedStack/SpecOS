@@ -76,7 +76,7 @@ void _start() {
     init_serial();
     writeserial("\nStarting physical memory manager...\n");
     initPMM();
-    /*// this is commented out cos paging doesn't work yet and it's still in progress.
+    // this is commented out cos paging doesn't work yet and it's still in progress.
     writeserial("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
     writeserial("Pages mapped, trying to reload cr3...\n");
@@ -90,7 +90,6 @@ void _start() {
     );
     for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
     writeserial("\nPaging successfully enabled!\n");
-    */
     initVGA();
     printf("Test binary: %b\n", 0b11001100);
     // Just send output to a serial port to test
