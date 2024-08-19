@@ -26,6 +26,11 @@ void printf(char* format, ...) {
                 bufferx[19] = 0;
                 uint64_to_hex_string(va_arg(args, uint64_t), bufferx);
                 writestring(bufferx);
+            } else if (format[i] == 'b') {
+                char bufferb[65];
+                uint64_to_binary_string(va_arg(args, uint64_t), bufferb);
+                bufferb[64] = 0;
+                writestring(bufferb);
             } else if (format[i] == 's') {
                 writestring(va_arg(args, char*));
             }

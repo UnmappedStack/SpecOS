@@ -29,9 +29,9 @@
  * Hopefully should be pretty simple, so I'm gonna just give it a shot!
  */
 
-void debugPml4() {
+void debugPml4(uint64_t* arr) {
     for (int i = 0; i < 512; i++)
-        printf("Index %i of pml4: %i\n", i, kernel.pml4[i]);
+        printf("Index %i of pml4: %i\n", i, arr[i]);
 }
 
 #define PHYS_ADDR_MASK 0xFFFF000000000000
@@ -99,20 +99,8 @@ uint64_t* initPaging() {
     uint64_t* pml4Phys = kernel.kernelAddress.physical_base + (kernel.pml4 - 0xffffffff80000000);
     mapKernel();
     //printf("pml4 contents: \n");
-    //debugPml4();
+    debugPml4(kernel.pml4);
     // return some stuff so the entry point function of the kernel can reload cr3
     return pml4Phys;
     // no need to enable paging, limine already enables it :D
 }
-
-
-
-
-
-
-
-
-
-
-
-
