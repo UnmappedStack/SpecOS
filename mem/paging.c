@@ -33,12 +33,14 @@ void debugPml4() {
         printf("Index %i of pml4: %i\n", i, kernel.pml4[i]);
 }
 
+#define PHYS_ADDR_MASK 0xFFFF000000000000
+
 // it needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
 void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages) {
+    writestring(" [DEBUG] Trying to map a new set of pages...\n");
     virtAddr &= ~0xFFFF000000000000;
-    physAddr &= ~0xFFFF800000000000LL;
     // get the indexes of each page directory level (aka pml)
     uint64_t pml1Index = (virtAddr >> 12) & 511;
     uint64_t pml2Index = (virtAddr >> (12 + 9)) & 511;
@@ -48,11 +50,12 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
         uint64_t *pml3Addr = NULL;
         if (pml4[pml4Index] == 0) {
             pml4[pml4Index] = (uint64_t)kmalloc();
+            printf("Address pml4 value will be at: %x\n", pml4[pml4Index]);
             pml3Addr = (uint64_t*)(pml4[pml4Index] + kernel.hhdm);
             memset((uint8_t*)pml3Addr, 0, 8 * 512);
-            pml4[pml4Index] |= flags;
+            pml4[pml4Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
         } else {
-            pml3Addr = (uint64_t*)PAGE_ALIGN_DOWN(pml4[pml4Index]) + kernel.hhdm;
+            pml3Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml4[pml4Index] & PHYS_ADDR_MASK) + kernel.hhdm);
         }
         
         for (; pml3Index < 512; pml3Index++) {
@@ -61,9 +64,9 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                 pml3Addr[pml3Index] = (uint64_t)kmalloc();
                 pml2Addr = (uint64_t*)(pml3Addr[pml3Index] + kernel.hhdm);
                 memset((uint8_t*)pml2Addr, 0, 8 * 512);
-                pml3Addr[pml3Index] |= flags;
+                pml3Addr[pml3Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
             } else {
-                pml2Addr = (uint64_t*)PAGE_ALIGN_DOWN(pml3Addr[pml3Index]) + kernel.hhdm;
+                pml2Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml3Addr[pml3Index] & PHYS_ADDR_MASK) + kernel.hhdm);
             }
 
             for (; pml2Index < 512; pml2Index++) {
@@ -72,9 +75,9 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                     pml2Addr[pml2Index] = (uint64_t)kmalloc();
                     pml1Addr = (uint64_t*)(pml2Addr[pml2Index] + kernel.hhdm);
                     memset((uint8_t*)pml1Addr, 0, 8 * 512);
-                    pml2Addr[pml2Index] |= flags;
+                    pml2Addr[pml2Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
                 } else {
-                    pml1Addr = (uint64_t*)PAGE_ALIGN_DOWN(pml2Addr[pml2Index]) + kernel.hhdm;
+                    pml1Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml2Addr[pml2Index] & PHYS_ADDR_MASK) + kernel.hhdm);
                 }
                 
                 for (; pml1Index < 512; pml1Index++) {
