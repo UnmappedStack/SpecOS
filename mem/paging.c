@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include "include/mapKernel.h"
 #include "include/pmm.h" // for dynamically allocating phys mem
+#include "../drivers/include/serial.h"
 #include "include/mapKernel.h"
 #include "../utils/include/string.h"
 #include "../utils/include/printf.h" // my bestie, printf debugging!
@@ -39,7 +40,6 @@ void debugPml4() {
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
 void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages) {
-    writestring(" [DEBUG] Trying to map a new set of pages...\n");
     virtAddr &= ~0xFFFF000000000000;
     // get the indexes of each page directory level (aka pml)
     uint64_t pml1Index = (virtAddr >> 12) & 511;
@@ -50,7 +50,6 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
         uint64_t *pml3Addr = NULL;
         if (pml4[pml4Index] == 0) {
             pml4[pml4Index] = (uint64_t)kmalloc();
-            printf("Address pml4 value will be at: %x\n", pml4[pml4Index]);
             pml3Addr = (uint64_t*)(pml4[pml4Index] + kernel.hhdm);
             memset((uint8_t*)pml3Addr, 0, 8 * 512);
             pml4[pml4Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
@@ -85,7 +84,6 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                     numPages--;
                     physAddr += 4096;
                     if (numPages == 0) {
-                        writestring(" [DEBUG] Finished mapping pages.\n");
                         return;
                     }
                 }
@@ -98,24 +96,12 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
 }
 
 uint64_t* initPaging() {
-    /* page entries will be defined later when filling pml1
-     * and so will the pdpt when loading it into cr3
-     * fill up pml1 with mappings
-     * this initially sets up only kernelspace paging, and currently maps only the kernel memory
-     * kernel (including the headers) starts at 0xffffffff80000000 in vmem (-kernel.hhdm for physical memory)
-     * aCcorDiNG TO My caLcuLatIoNS, the kernel's size is about 108 kilobytes, which is 110592 bytes. 
-     * That's 27 page frames. Just to be safe however, I'll give it one extra page frame in case the kernel grows.
-     * So, it must map the kernel from 0xffffffff80000000 for 28 page frames in vmem.
-     */
-    uint64_t startingPageFrame = 0xffffffff80000000 / 4096;
-    uint64_t endPageFrame = startingPageFrame + 28;
-    printf("\nMapping pages...\n");
+    uint64_t* pml4Phys = kernel.kernelAddress.physical_base + (kernel.pml4 - 0xffffffff80000000);
     mapKernel();
-    printf("Pages mapped successfully\n");
     //printf("pml4 contents: \n");
     //debugPml4();
     // return some stuff so the entry point function of the kernel can reload cr3
-    return kernel.pml4 + kernel.hhdm;
+    return pml4Phys;
     // no need to enable paging, limine already enables it :D
 }
 

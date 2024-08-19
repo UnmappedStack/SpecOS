@@ -147,7 +147,7 @@ du -h bin/SpecOS
 
 # if image could be built, run it in qemu
 if test -f "bin/SpecOS"; then
-    qemu-system-x86_64 disk.img -d int -serial stdio --no-reboot --no-shutdown -accel kvm
+    qemu-system-x86_64 disk.img -d int -serial stdio --no-reboot --no-shutdown
 fi
 
 # delete old stuff
