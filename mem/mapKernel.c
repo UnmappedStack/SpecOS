@@ -33,15 +33,15 @@ void mapKernel() {
     uint64_t lengthBuffer;
     uint64_t physBuffer;
     /* map from kernel_start to nxe_enabled_start with nothing but `present` (.text section) */
-    lengthBuffer = PAGE_ALIGN_UP(nxe_enabled_start) - PAGE_ALIGN_DOWN(kernel_start);
-    physBuffer = kernel.kernelAddress.physical_base + (kernel_start - 0xffffffff80000000);
+    lengthBuffer = PAGE_ALIGN_UP(nxe_enabled_start - kernel_start);
+    physBuffer = kernel.kernelAddress.physical_base + (kernel_start - kernel.kernelAddress.virtual_base);
     mapPages(kernel.pml4, PAGE_ALIGN_DOWN(kernel_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
     /* map from nxe_enabled_start to writeallowed_start with `present` and `pxd` */
-    physBuffer = kernel.kernelAddress.physical_base + (nxe_enabled_start - 0xffffffff80000000);
+    physBuffer = kernel.kernelAddress.physical_base + (nxe_enabled_start - kernel.kernelAddress.virtual_base);
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_start) - PAGE_ALIGN_DOWN(nxe_enabled_start);
     mapPages(kernel.pml4, PAGE_ALIGN_DOWN(nxe_enabled_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
     /* map from writeallowed_start to writeallowed_end with `present`, `pxd`, and `write` flags */
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_end) - PAGE_ALIGN_DOWN(writeallowed_start);
-    physBuffer = kernel.kernelAddress.physical_base + (writeallowed_start - 0xffffffff80000000);
-    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer);
+    physBuffer = kernel.kernelAddress.physical_base + (writeallowed_start - kernel.kernelAddress.virtual_base);
+    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096);
 }

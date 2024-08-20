@@ -81,7 +81,7 @@ typedef struct {
     struct GDTPtr GDTR; // the pointer thingy to the GDT
     struct IDTEntry idt[256]; // the interrupt descriptor table
     struct idtr IDTPtr;
-    uint64_t pml4[512] __attribute__((aligned(4096))); 
+    uint64_t pml4[512]; 
     struct limine_kernel_file_response kernelFile;
     struct limine_kernel_address_response kernelAddress; 
 } Kernel;
