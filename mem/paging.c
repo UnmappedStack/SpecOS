@@ -20,7 +20,6 @@
 #include "../include/kernel.h"
 
 
-#define PHYS_ADDR_MASK 0xFFFF000000000000
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
 
@@ -35,15 +34,15 @@ void debugPageTree(uint64_t* arr) {
     for (int p4 = 0; p4 < 512; p4++) {
         if (arr[p4]) {
             printf("pml4 index %i: 0b%b\n", p4, arr[p4]);
-            uint64_t* p3addr = (uint64_t*)PAGE_ALIGN_DOWN((arr[p4] & PHYS_ADDR_MASK) + kernel.hhdm);
+            uint64_t* p3addr = (uint64_t*)PAGE_ALIGN_DOWN((arr[p4]) + kernel.hhdm);
             for (int p3 = 0; p3 < 512; p3++) {
                 if (p3addr[p3]) {
                     printf("  -> pml3 index %i: 0b%b\n", p3, p3addr[p3]);
-                    uint64_t* p2addr = (uint64_t*)PAGE_ALIGN_DOWN((p3addr[p3] & PHYS_ADDR_MASK) + kernel.hhdm);
+                    uint64_t* p2addr = (uint64_t*)PAGE_ALIGN_DOWN((p3addr[p3]) + kernel.hhdm);
                     for (int p2 = 0; p2 < 512; p2++) {
                         if (p2addr[p2]) {
                             printf("    -> pml2 index %i: 0b%b\n", p2, p2addr[p2]);
-                            uint64_t* p1addr = (uint64_t*)PAGE_ALIGN_DOWN((p2addr[p2] & PHYS_ADDR_MASK) + kernel.hhdm);
+                            uint64_t* p1addr = (uint64_t*)PAGE_ALIGN_DOWN((p2addr[p2]) + kernel.hhdm);
                             for (int p1 = 0; p1 < 512; p1++) {
                                 if (p2addr[p1]) {
                                     printf("      -> pml1 index %i: 0b%b\n", p1, p1addr[p1]);
@@ -75,7 +74,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
             memset((uint8_t*)pml3Addr, 0, 8 * 512);
             pml4[pml4Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
         } else {
-            pml3Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml4[pml4Index] & PHYS_ADDR_MASK) + kernel.hhdm);
+            pml3Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml4[pml4Index]) + kernel.hhdm);
         }
         
         for (; pml3Index < 512; pml3Index++) {
@@ -86,7 +85,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                 memset((uint8_t*)pml2Addr, 0, 8 * 512);
                 pml3Addr[pml3Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
             } else {
-                pml2Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml3Addr[pml3Index] & PHYS_ADDR_MASK) + kernel.hhdm);
+                pml2Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml3Addr[pml3Index]) + kernel.hhdm);
             }
 
             for (; pml2Index < 512; pml2Index++) {
@@ -97,7 +96,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                     memset((uint8_t*)pml1Addr, 0, 8 * 512);
                     pml2Addr[pml2Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
                 } else {
-                    pml1Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml2Addr[pml2Index] & PHYS_ADDR_MASK) + kernel.hhdm);
+                    pml1Addr = (uint64_t*)PAGE_ALIGN_DOWN((pml2Addr[pml2Index]) + kernel.hhdm);
                 }
                 
                 for (; pml1Index < 512; pml1Index++) {
@@ -120,7 +119,7 @@ uint64_t* initPaging() {
     uint64_t* pml4Phys = kernel.kernelAddress.physical_base + (kernel.pml4 - 0xffffffff80000000);
     mapKernel();
     //printf("pml4 contents: \n");
-    debugPageTree(kernel.pml4);
+//    debugPageTree(kernel.pml4);
     // return some stuff so the entry point function of the kernel can reload cr3
     return pml4Phys;
     // no need to enable paging, limine already enables it :D

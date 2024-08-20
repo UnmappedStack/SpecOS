@@ -76,6 +76,13 @@ void _start() {
     init_serial();
     writeserial("\nStarting physical memory manager...\n");
     initPMM();
+    initVGA();
+    printf("Test binary: %b\n", 0b11001100);
+    // Just send output to a serial port to test
+    writestring("Trying to initialise GDT...\n");
+    initGDT();
+    writestring("\n\nTrying to initialise IDT & everything related...\n");
+    initIDT();
     // this is commented out cos paging doesn't work yet and it's still in progress.
     writeserial("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
@@ -90,13 +97,7 @@ void _start() {
     );
     for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
     writeserial("\nPaging successfully enabled!\n");
-    initVGA();
-    printf("Test binary: %b\n", 0b11001100);
-    // Just send output to a serial port to test
-    writestring("Trying to initialise GDT...\n");
-    initGDT();
-    writestring("\n\nTrying to initialise IDT & everything related...\n");
-    initIDT();
+    
     //test_userspace();
     for (;;);
 }
