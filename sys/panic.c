@@ -159,7 +159,8 @@ void kpanic(char* exception, struct IDTEFrame registers) {
     kernel.chY += 5;
     kernel.chX = 5;
     writestring("\n============= DEBUG ============="); // 24
-    printf("\n\n Fault: %s", exception);
+    printf("\n\n Fault:      %s\n", exception);
+    printf(" Error code: 0b%b", registers.ss);
     char bufferGDTR[19];
     char bufferIDTR[19];
     char bufferCR3[19];

@@ -1,6 +1,6 @@
 /* Allocator for the SpecOS kernel project.
  * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more information.
- * This uses a simple bitmap allocator for 1024 byte size page frames, but I may switch to a buddy allocator in the future.
+ * This uses a simple bitmap allocator for 4096 byte size page frames, but I may switch to a buddy allocator in the future.
  */
 
 #include <stdint.h>
@@ -22,7 +22,7 @@ struct pmemBitmap {
 };
 
 struct pmemData {
-    _Alignas(4096) uint8_t data[0];
+    uint8_t data[0];
 };
 
 void initPMM() {
