@@ -70,6 +70,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
     uint64_t pml2Index = (virtAddr >> (12 + 9)) & 511;
     uint64_t pml3Index = (virtAddr >> (12 + 18)) & 511;
     uint64_t pml4Index = (virtAddr >> (12 + 27)) & 511;
+    memset((uint8_t*)pml4, 0, 8 * 512);
     for (; pml4Index < 512; pml4Index++) {
         uint64_t *pml3Addr = NULL;
         if (pml4[pml4Index] == 0) {
@@ -122,7 +123,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
 }
 
 uint64_t* initPaging() {
-    uint64_t* pml4Phys = kernel.kernelAddress.physical_base + (kernel.pml4 - kernel.kernelAddress.virtual_base);
+    uint64_t* pml4Phys = (uint64_t*)(kernel.kernelAddress.physical_base + (((uint64_t)kernel.pml4) - kernel.kernelAddress.virtual_base));
     mapKernel();
     //printf("pml4 contents: \n");
 //    debugPageTree(kernel.pml4);
