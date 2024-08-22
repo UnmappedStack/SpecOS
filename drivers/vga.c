@@ -130,7 +130,7 @@ void writestring(char* str) {
             newline();
             outCharSerial('\n');
             continue;
-        } else if (kernel.chX > (kernel.screenWidth - 9)) {
+        } else if (kernel.chX > (kernel.screenWidth - 8)) {
             newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy
         }
         writeChar(str[i], kernel.colourOut);
