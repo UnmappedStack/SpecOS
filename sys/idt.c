@@ -11,7 +11,6 @@
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
-#include "include/exceptions.h"
 #include "../include/kernel.h"
 
 // and the thingies to make it do stuff
@@ -60,6 +59,27 @@ void remapPIC() {
     outb(0xA1, 0xFF);
 }
 
+
+extern void divideException();
+extern void debugException();
+extern void breakpointException();
+extern void overflowException();
+extern void boundRangeExceededException();
+extern void invalidOpcodeException();
+extern void deviceNotAvaliableException();
+extern void doubleFaultException();
+extern void coprocessorSegmentOverrunException();
+extern void invalidTSSException();
+extern void segmentNotPresentException();
+extern void stackSegmentFaultException();
+extern void generalProtectionFaultException();
+extern void pageFaultException();
+extern void floatingPointException();
+extern void alignmentCheckException(); 
+extern void machineCheckException();
+extern void simdFloatingPointException();
+extern void virtualisationException();
+
 // stuff to set it all up
 void initIRQ() {
     remapPIC();
@@ -67,27 +87,25 @@ void initIRQ() {
     idtSetDescriptor(33, &isr_keyboard, 14, 0); 
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ 
     // all the exceptions
-    idtSetDescriptor(0, &divideErrorISR, 15, 0);
-    idtSetDescriptor(1, &debugExceptionISR, 15, 0);
-    idtSetDescriptor(2, &nmiInterruptISR, 15, 0);
-    idtSetDescriptor(3, &breakpointISR, 15, 0);
-    idtSetDescriptor(4, &overflowISR, 15, 0);
-    idtSetDescriptor(5, &boundRangeExceededISR, 15, 0);
-    idtSetDescriptor(6, &invalidOpcodeISR, 15, 0);
-    idtSetDescriptor(7, &deviceNotAvailableISR, 15, 0);
-    idtSetDescriptor(8, &doubleFaultISR, 15, 0);
-    idtSetDescriptor(9, &coprocessorSegmentOverrunISR, 15, 0);
-    idtSetDescriptor(10, &invalidTSSISR, 15, 0);
-    idtSetDescriptor(11, &segmentNotPresentISR, 15, 0);
-    idtSetDescriptor(12, &stackSegmentFaultISR, 15, 0);
-    idtSetDescriptor(13, &generalProtectionFaultISR, 15, 0);
-    idtSetDescriptor(14, &pageFaultISR, 15, 0);
-    idtSetDescriptor(16, &x87FPUErrorISR, 15, 0);
-    idtSetDescriptor(17, &alignmentCheckISR, 15, 0);
-    idtSetDescriptor(18, &machineCheckISR, 15, 0);
-    idtSetDescriptor(19, &simdFloatingPointExceptionISR, 15, 0);
-    idtSetDescriptor(20, &virtualizationExceptionISR, 15, 0);
-    idtSetDescriptor(30, &securityExceptionISR, 15, 0);
+    idtSetDescriptor(0, &divideException, 15, 0);
+    idtSetDescriptor(1, &debugException, 15, 0);
+    idtSetDescriptor(3, &breakpointException, 15, 0);
+    idtSetDescriptor(4, &overflowException, 15, 0);
+    idtSetDescriptor(5, &boundRangeExceededException, 15, 0);
+    idtSetDescriptor(6, &invalidOpcodeException, 15, 0);
+    idtSetDescriptor(7, &deviceNotAvaliableException, 15, 0);
+    idtSetDescriptor(8, &doubleFaultException, 15, 0);
+    idtSetDescriptor(9, &coprocessorSegmentOverrunException, 15, 0);
+    idtSetDescriptor(10, &invalidTSSException, 15, 0);
+    idtSetDescriptor(11, &segmentNotPresentException, 15, 0);
+    idtSetDescriptor(12, &stackSegmentFaultException, 15, 0);
+    idtSetDescriptor(13, &generalProtectionFaultException, 15, 0);
+    idtSetDescriptor(14, &pageFaultException, 15, 0);
+    idtSetDescriptor(16, &floatingPointException, 15, 0);
+    idtSetDescriptor(17, &alignmentCheckException, 15, 0);
+    idtSetDescriptor(18, &machineCheckException, 15, 0);
+    idtSetDescriptor(19, &simdFloatingPointException, 15, 0);
+    idtSetDescriptor(20, &virtualisationException, 15, 0);
     asm("sti");
 }
 

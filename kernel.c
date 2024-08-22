@@ -74,10 +74,11 @@ void initKernelData() {
 void _start() {
     initKernelData();
     init_serial();
-    writeserial("\nStarting physical memory manager...\n");
-    initPMM();
     initVGA();
     printf("Test binary: %b\n", 0b11001100);
+    printf("HHDM: 0x%x\n", kernel.hhdm);
+    writeserial("\nStarting physical memory manager...\n");
+    initPMM();
     // Just send output to a serial port to test
     writestring("Trying to initialise GDT...\n");
     initGDT();
@@ -96,8 +97,7 @@ void _start() {
             "r" ((uint64_t) pml4Address)
     );
     for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
-    writeserial("\nPaging successfully enabled!\n");
-    
-    //test_userspace();
+    writeserial("\nPaging successfully enabled!\n"); 
+    test_userspace();
     for (;;);
 }
