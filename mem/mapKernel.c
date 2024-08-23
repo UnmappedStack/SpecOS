@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "include/pmm.h"
 #include "include/mapKernel.h"
 #include "../include/kernel.h"
 #include "../drivers/include/serial.h"
@@ -26,7 +27,6 @@ uint64_t nxe_enabled_end = (uint64_t)p_nxe_enabled_end;
 uint64_t writeallowed_start = (uint64_t)p_writeallowed_start;
 uint64_t writeallowed_end = (uint64_t)p_writeallowed_end;
 
-
 // void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages)
 
 void mapKernel() {
@@ -44,4 +44,4 @@ void mapKernel() {
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_end - writeallowed_start);
     physBuffer = kernel.kernelAddress.physical_base + (writeallowed_start - kernel.kernelAddress.virtual_base);
     mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096);
-}
+} 

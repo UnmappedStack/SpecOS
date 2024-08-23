@@ -87,17 +87,18 @@ void _start() {
     // this is commented out cos paging doesn't work yet and it's still in progress.
     writeserial("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
-    writeserial("Pages mapped, trying to reload cr3...\n");
+    // allocate & map a couple page frames for the new stack
+    uint64_t stackStart = 0xFFFFFFFFFFFFF000LL - (2LL*4096);
+    allocPages(kernel.pml4, stackStart, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, 2);
+    writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile (
-        "mov %1, %%cr3;"
-        "mov %0, %%rsp;"
-        "mov %1, %%rbp"
-        : : "r" ((uint64_t) 0xfffffffffffff000),
-            "r" ((uint64_t) pml4Address)
+        "mov %0, %%cr3\r\n"
+        "mov %1, %%rsp"
+            : : "r" ((uint64_t) pml4Address),
+                "r" (0xFFFFFFFFFFFFF000LL)
     );
-    for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
-    writeserial("\nPaging successfully enabled!\n"); 
+    writeserial("\nPaging successfully enabled!\n");
     test_userspace();
     for (;;);
 }

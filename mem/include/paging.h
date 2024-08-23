@@ -21,4 +21,6 @@ uint64_t* initPaging();
 
 void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages);
 
+void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t numPages);
+
 #endif
