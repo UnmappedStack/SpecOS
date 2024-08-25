@@ -78,15 +78,10 @@ void initKernelData() {
     kernel.kernelAddress = *kernelAddressRequest.response;
 }
 
-#define PAGE_SIZE 4096
-#define KERNEL_STACK_PAGES 2LL
-#define KERNEL_STACK_PTR 0xFFFFFFFFFFFFF000LL
-#define KERNEL_STACK_ADDR KERNEL_STACK_PTR-(KERNEL_STACK_PAGES*PAGE_SIZE)
-
 #define KERNEL_SWITCH_STACK() \
     __asm__ volatile (\
        "movq %0, %%rsp\n"\
-       "movq %0, %%rbp\n"\
+       "movq $0, %%rbp\n"\
        "push $0"\
        :\
        :  "r" (KERNEL_STACK_PTR)\
@@ -114,7 +109,6 @@ void _start() {
     uint64_t* pml4Address = initPaging();
     // allocate & map a couple page frames for the new stack
     writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
-    allocPages(kernel.pml4, KERNEL_STACK_ADDR, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, KERNEL_STACK_PAGES);
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
     __asm__ volatile(
         "movq %0, %%cr3"

@@ -119,7 +119,6 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
 
 // kinda like mapPages but it also allocates the pages
 void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t numPages) {
-    printf("pml4 address: 0x%x, starting virtAddr: 0x%x, flags: 0b%b, numPages: %i\n", (uint64_t)pml4, virtAddr, flags, numPages);
     virtAddr &= ~TOPBITS;
     // get the indexes of each page directory level (aka pml)
     uint64_t pml1Index = (virtAddr >> 12) & 511;

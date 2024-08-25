@@ -34,10 +34,10 @@ void mapSectionType(int type) {
     uint64_t memmapEntriesCount = kernel.memmapEntryCount;
     struct limine_memmap_entry **memmapEntries = kernel.memmapEntries;
     // process and display it
-    int mapped =  0;
+    int mapped = 0;
     for (int i = 0; i < memmapEntriesCount; i++) {
         if (memmapEntries[i]->type == type) {
-            mapPages(kernel.pml4, memmapEntries[i]->base + kernel.hhdm, PAGE_ALIGN_DOWN(memmapEntries[i]->base), KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, memmapEntries[i]->length / 4096);
+            mapPages(kernel.pml4, memmapEntries[i]->base + kernel.hhdm, memmapEntries[i]->base, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, memmapEntries[i]->length / 4096);
             mapped++;
         }
     }
@@ -64,4 +64,6 @@ void mapKernel() {
     mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE);
     mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER);
     mapSectionType(LIMINE_MEMMAP_USABLE);
+    // map the kernel's stack
+    allocPages(kernel.pml4, KERNEL_STACK_ADDR, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, KERNEL_STACK_PAGES);
 }
