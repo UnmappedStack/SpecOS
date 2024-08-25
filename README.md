@@ -68,7 +68,8 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [ ] Memory management
   - [X] Physical memory management (pooling allocator)
   - [X] Virtual memory management (paging)
-  - [ ] Implement a heap (dynamic userspace stuff)
+  - [ ] Kernelspace heap
+  - [ ] Userspace heap
 - [X] ELF parsing
 - [ ] Switch to 64 bit higher half
   - [X] Set up Limine (w/ loopback device)
@@ -77,7 +78,7 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
   - [X] Port to 64 bit version (FAT, RTC, hard disk driver, keyboard)
   - [X] Detect memory with limine
   - [X] Re-write PMM to use bitmap instead of pooling
-  - [ ] Re-write 64 bit version of paging
+  - [X] Re-write 64 bit version of paging
 - [ ] Jump to userspace (apps are a big milestone for me!)
 - [ ] Write libc (maybe port one? I don't really know yet.)
 - [ ] Some sort of NIC driver

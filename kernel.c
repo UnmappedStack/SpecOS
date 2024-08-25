@@ -104,7 +104,6 @@ void _start() {
     initGDT();
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    // this is commented out cos paging doesn't work yet and it's still in progress./*
     writeserial("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
     // allocate & map a couple page frames for the new stack

@@ -1,8 +1,4 @@
 /* 64 bit paging for the SpecOS kernel project.
- * INCOMPLETE FILE: There's some code here that's just outright not done. Don't expect it to work.
- * It isn't even called from the kernel. I'm still working on it, so ignore this file.
- * Note that this is NOT the VMM itself. The VMM is stored in heap.c.
- * WARNING: Heavily commented file cos I had no idea what I'm doing.
  * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
  */
 
