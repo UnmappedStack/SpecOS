@@ -71,6 +71,7 @@ typedef struct {
     int screenWidth;
     int screenHeight;
     int bpp;
+    struct limine_framebuffer_response *framebufferResponse;
     bool doPush; // debug: this should only be false on kernel panic
     char* last10[10]; // debug: last 10 stdio outputs
     struct largestSection largestSect; // info about location of the pmm's bitmap

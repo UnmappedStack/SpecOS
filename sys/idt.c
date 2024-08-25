@@ -106,7 +106,6 @@ void initIRQ() {
     idtSetDescriptor(18, &machineCheckException, 15, 0);
     idtSetDescriptor(19, &simdFloatingPointException, 15, 0);
     idtSetDescriptor(20, &virtualisationException, 15, 0);
-    asm("sti");
 }
 
 void initIDT() {

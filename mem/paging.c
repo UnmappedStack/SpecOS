@@ -63,7 +63,6 @@ void debugPageTree(uint64_t* arr) {
 #define TOPBITS 0xFFFF000000000000
 
 void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages) {
-    printf("pml4 address: 0x%x, starting virtAddr: 0x%x, starting physAddr: 0x%x, flags: 0b%b, numPages: %i\n", (uint64_t)pml4, virtAddr, physAddr, flags, numPages);
     virtAddr &= ~TOPBITS;
     // get the indexes of each page directory level (aka pml)
     uint64_t pml1Index = (virtAddr >> 12) & 511;
@@ -106,10 +105,7 @@ void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t fl
                     pml1Addr[pml1Index] = physAddr | flags;
                     numPages--;
                     physAddr += 4096;
-                    if (numPages == 0) {
-                        printf("Finished mapping section of pages.\n");
-                        return;
-                    }
+                    if (numPages == 0) return;
                 }
                 pml1Index = 0;
             }
@@ -163,7 +159,8 @@ void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t num
                 }
                 
                 for (; pml1Index < 512; pml1Index++) {
-                    pml1Addr[pml1Index] = ((uint64_t)kmalloc()) | flags;
+                    uint64_t phys = (uint64_t)kmalloc();
+                    pml1Addr[pml1Index] = phys | flags;
                     numPages--;
                     if (numPages == 0) {
                         printf("Finished mapping section of pages.\n");

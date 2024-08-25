@@ -24,9 +24,7 @@ void detectMemmap() {
         uint64_to_hex_string(memmapEntries[i]->length, buffer1);
         writestring(buffer1);
         writestring(" | Type: ");
-        if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE ||
-            memmapEntries[i]->type == LIMINE_MEMMAP_ACPI_RECLAIMABLE ||
-            memmapEntries[i]->type == LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE)
+        if (memmapEntries[i]->type == LIMINE_MEMMAP_USABLE)
             writestring("Avaliable");
         else
             printf("Not avaliable (%i)", memmapEntries[i]->type);

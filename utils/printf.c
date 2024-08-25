@@ -2,6 +2,7 @@
  * Copyright (c) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
  */
 
+#include "../drivers/include/serial.h"
 #include "../drivers/include/vga.h"
 #include "include/string.h"
 #include "include/printf.h"

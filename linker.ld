@@ -19,7 +19,6 @@ SECTIONS
     } :text
     p_nxe_enabled_start = .; /* For where it stops being allowed to execute. */
     . += CONSTANT(MAXPAGESIZE);
-
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
@@ -37,10 +36,11 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
+    . += CONSTANT(MAXPAGESIZE);
     p_writeallowed_end = .;
     p_nxe_enabled_end = .;
     /DISCARD/ : {
         *(.eh_frame)
         *(.note .note.*)
-    }
+    } 
 }

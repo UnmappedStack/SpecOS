@@ -21,6 +21,7 @@
 #include "include/kernel.h"
 #include "mem/include/pmm.h"
 #include "limine.h"
+#include "drivers/include/serial.h"
 
 void test_userspace() {
     clearScreen();
@@ -31,7 +32,7 @@ void test_userspace() {
     writestring("\\___ \\| '_ \\ / _ \\/ __| | | \\___ \\\n");
     writestring(" ___) | |_) |  __/ (__| |_| |___) |\n");
     writestring("|____/| .__/ \\___|\\___|\\___/|____/\n");
-    writestring("      |_|\n");
+    printf("      |_|\n");
     char inp[100];
     printf("Kernel compilation date: %s at %s", __DATE__, __TIME__);
     writestring("\nSpecOS shell 2024. Type help for options.\n");
