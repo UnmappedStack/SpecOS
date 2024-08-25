@@ -94,11 +94,32 @@ struct stackFrame {
     uint64_t rip;
 };
 
-void stackTrace(int m) {
-    writestring("\n\n==== Stack Trace: ====\n\n"); // 22
-    struct stackFrame *stack;
-    asm("mov %%rbp, %0" : "=r"(stack));
-    for (unsigned int f = 0; stack && f < m; f++) {
+void exceptionHandler(struct IDTEFrame registers) {
+    printf("\nException occurred. RIP: 0x%x\n", registers.rip);
+    char labelDesignate[30];
+    char* label = (char*)labelDesignate;
+    if (registers.type == 14)
+        label = "Page Fault\0";
+    else if (registers.type == 13)
+        label = "General Protection Fault.\0";
+    else
+        uint16_to_string(registers.type, label);
+    labelDesignate[29] = 0; // just in case
+    kpanic(label, registers);
+    asm("cli; hlt");
+}
+
+void stackTrace(int m, uint64_t rbp, uint64_t rip) {
+    writestring("\n\n==== Stack Trace: ====\n\n");
+    // first the faulting address
+    printf(" 0x%x", rip);
+    if (rip)
+        getFunctionName(rip);
+    else
+        writestring("\n");
+    // and now for the rest of it
+    struct stackFrame *stack = (struct stackFrame*)rbp;
+    while (stack) {
         printf(" 0x%x", stack->rip);
         if (stack->rip)
             getFunctionName(stack->rip);
@@ -108,7 +129,7 @@ void stackTrace(int m) {
     }
 }
 
-void kpanic(char* exception) {
+void kpanic(char* exception, struct IDTEFrame registers) {
     kernel.doPush = false;
     for (int x = 0; x < kernel.screenWidth; x++) {
         for (int y = 0; y < kernel.screenHeight; y++) {
@@ -137,8 +158,9 @@ void kpanic(char* exception) {
         drawPix(x, kernel.chY, 0xFFFFFF);
     kernel.chY += 5;
     kernel.chX = 5;
-    writestring("============= DEBUG ============="); // 24
-    printf("\n\n Fault: %s", exception);
+    writestring("\n============= DEBUG ============="); // 24
+    printf("\n\n Fault:      %s\n", exception);
+    printf(" Error code: 0b%b", registers.ss);
     char bufferGDTR[19];
     char bufferIDTR[19];
     char bufferCR3[19];
@@ -166,7 +188,7 @@ void kpanic(char* exception) {
     writestring(bufferCR3);
     writestring("\n CR2: 0x");
     writestring(bufferCR2);
-    stackTrace(10);/*
+    stackTrace(10, registers.rbp, registers.rip);/*
     writestring("\n\n== Last 10 stdio outputs: ==\n\n");
     for (int i = 0; i < 10; i++)
         writestring(kernel.last10[i]);

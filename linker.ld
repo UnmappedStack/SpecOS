@@ -13,19 +13,17 @@ PHDRS
 SECTIONS
 {
     . = 0xffffffff80000000;
-    readonly_start = .; 
+    p_kernel_start = .;
     .text : {
         *(.text .text.*)
     } :text
-    nxe_enabled_start = .; /* For where it stops being allowed to execute. */
+    p_nxe_enabled_start = .; /* For where it stops being allowed to execute. */
     . += CONSTANT(MAXPAGESIZE);
-
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata
-    readonly_end = .;
     . += CONSTANT(MAXPAGESIZE);
-    writeallowed_start = .;
+    p_writeallowed_start = .;
     .data : {
         *(.data .data.*)
     } :data
@@ -38,10 +36,11 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
-    writeallowed_end = .;
-    nxe_enabled_end = .;
+    . += CONSTANT(MAXPAGESIZE);
+    p_writeallowed_end = .;
+    p_nxe_enabled_end = .;
     /DISCARD/ : {
         *(.eh_frame)
         *(.note .note.*)
-    }
+    } 
 }

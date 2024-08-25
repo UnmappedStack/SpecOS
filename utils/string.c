@@ -67,6 +67,23 @@ void reverse(char str[], int length) {
     }
 }
 
+void uint64_to_binary_string(uint64_t num, char *buf) {
+    char buffer[65];
+    int idx = 0;
+    if (num == 0) {
+        buffer[idx++] = '0';
+    } else {
+        while (num > 0) {
+            buffer[idx++] = (num & 1) ? '1' : '0';
+            num >>= 1;
+        }
+    }
+    buffer[idx] = 0;
+    reverse(buffer, idx);
+    for (int i = 0; i <= idx; i++)
+        buf[i] = buffer[i];
+}
+
 void uint16_to_string(uint16_t num, char *str) {
     // Define a buffer large enough to hold the maximum uint16_t value in decimal
     char buffer[6];  // Max length of uint16_t in decimal is 5 digits, plus null terminator

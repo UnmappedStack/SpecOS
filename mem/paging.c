@@ -11,16 +11,14 @@
 #include <stdbool.h>
 #include "include/mapKernel.h"
 #include "include/pmm.h" // for dynamically allocating phys mem
+#include "../drivers/include/serial.h"
+#include "include/mapKernel.h"
+#include "../utils/include/string.h"
 #include "../utils/include/printf.h" // my bestie, printf debugging!
 #include "../drivers/include/vga.h"
 #include "include/paging.h"
 #include "../include/kernel.h"
 
-
-#define KERNEL_PFLAG_PRESENT 0b1
-#define KERNEL_PFLAG_WRITE   0b10
-#define KERNEL_PFLAG_USER    0b100
-#define KERNEL_PFLAG_PXD     0b10000000000000000000000000000000000000000000000000000000000000 // a bit long lmao
 
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
@@ -32,86 +30,158 @@
  * Hopefully should be pretty simple, so I'm gonna just give it a shot!
  */
 
+void debugPageTree(uint64_t* arr) {
+    for (int p4 = 0; p4 < 512; p4++) {
+        if (arr[p4]) {
+            printf("pml4 index %i: 0b%b\n", p4, arr[p4]);
+            uint64_t* p3addr = (uint64_t*)PAGE_ALIGN_DOWN((arr[p4]) + kernel.hhdm);
+            for (int p3 = 0; p3 < 512; p3++) {
+                if (p3addr[p3]) {
+                    printf("  -> pml3 index %i: 0b%b\n", p3, p3addr[p3]);
+                    uint64_t* p2addr = (uint64_t*)PAGE_ALIGN_DOWN((p3addr[p3]) + kernel.hhdm);
+                    for (int p2 = 0; p2 < 512; p2++) {
+                        if (p2addr[p2]) {
+                            printf("    -> pml2 index %i: 0b%b\n", p2, p2addr[p2]);
+                            uint64_t* p1addr = (uint64_t*)PAGE_ALIGN_DOWN((p2addr[p2]) + kernel.hhdm);
+                            for (int p1 = 0; p1 < 512; p1++) {
+                                if (p2addr[p1]) {
+                                    printf("      -> pml1 index %i: 0b%b\n", p1, p1addr[p1]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // it needs to be able to actually map the pages
 // this will require getting the pml indexes to use based on the virtual address to map
 // idk how else to explain it really lol, sorry
-void mapPage(uint64_t pml4[], uint64_t virtAddr, uint64_t flags) { 
+
+#define TOPBITS 0xFFFF000000000000
+
+void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages) {
+    virtAddr &= ~TOPBITS;
     // get the indexes of each page directory level (aka pml)
-    uint16_t pml1Index = (virtAddr >> 12) % 512;
-    uint16_t pml2Index = (virtAddr >> (12 + 9)) % 512;
-    uint16_t pml3Index = (virtAddr >> (12 + 18)) % 512;
-    uint16_t pml4Index = (virtAddr >> (12 + 27)) % 512;
-    // initialise all the levels
-    uint64_t (*pml3Array)[512] = NULL;
-    uint64_t (*pml2Array)[512] = NULL;
-    uint64_t (*pml1Array)[512] = NULL;
-    uint64_t mask = ~(((1ULL << (52 - 12 + 1)) - 1) << 12);
-    uint64_t flagsClearAddr = mask & flags;
-    // make sure the entries are there, and if they aren't, then make them be there. 
-    if (pml4[pml4Index] & 1) {
-        // it hasn't been set yet!
-        // make an array of page entries to go in there at a dynamically allocated memory address
-        uint64_t *newEntryPtr = (uint64_t*) kmalloc(); 
-        // put a pointer to this pml3 array into this pml4 entry (and set up flags & stuff)
-        pml4[pml4Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
-        // make it into a virtual address and put stuff there
-        pml3Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
-    } else {
-        pml3Array = (uint64_t (*)[512])((((pml4[pml4Index] >> 12) & 40) << 12) + kernel.hhdm);
+    uint64_t pml1Index = (virtAddr >> 12) & 511;
+    uint64_t pml2Index = (virtAddr >> (12 + 9)) & 511;
+    uint64_t pml3Index = (virtAddr >> (12 + 18)) & 511;
+    uint64_t pml4Index = (virtAddr >> (12 + 27)) & 511;
+    for (; pml4Index < 512; pml4Index++) {
+        uint64_t *pml3Addr = NULL;
+        if (pml4[pml4Index] == 0) {
+            pml4[pml4Index] = (uint64_t)kmalloc();
+            pml3Addr = (uint64_t*)(pml4[pml4Index] + kernel.hhdm);
+            memset((uint8_t*)pml3Addr, 0, 8 * 512);
+            pml4[pml4Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+        } else {
+            pml3Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml4[pml4Index]) + kernel.hhdm);
+        }
+        for (; pml3Index < 512; pml3Index++) {
+            uint64_t *pml2Addr = NULL;
+            if (pml3Addr[pml3Index] == 0) {
+                pml3Addr[pml3Index] = (uint64_t)kmalloc();
+                pml2Addr = (uint64_t*)(pml3Addr[pml3Index] + kernel.hhdm);
+                memset((uint8_t*)pml2Addr, 0, 8 * 512);
+                pml3Addr[pml3Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+            } else {
+                pml2Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml3Addr[pml3Index]) + kernel.hhdm);
+            }
+
+            for (; pml2Index < 512; pml2Index++) {
+                uint64_t *pml1Addr = NULL;
+                if (pml2Addr[pml2Index] == 0) {
+                    pml2Addr[pml2Index] = (uint64_t)kmalloc();
+                    pml1Addr = (uint64_t*)(pml2Addr[pml2Index] + kernel.hhdm);
+                    memset((uint8_t*)pml1Addr, 0, 8 * 512);
+                    pml2Addr[pml2Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+                } else {
+                    pml1Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml2Addr[pml2Index]) + kernel.hhdm);
+                }
+                
+                for (; pml1Index < 512; pml1Index++) {
+                    pml1Addr[pml1Index] = physAddr | flags;
+                    numPages--;
+                    physAddr += 4096;
+                    if (numPages == 0) return;
+                }
+                pml1Index = 0;
+            }
+            pml2Index = 0;
+        }
+        pml3Index = 0;
     }
-    // now kinda just do the same thing for each layer (I'm not gonna reexplain for each time, it's the same as above)
-    if ((*pml3Array)[pml3Index] & 1) {
-        uint64_t *newEntryPtr = (uint64_t*) kmalloc();
-        (*pml3Array)[pml3Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
-        pml2Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
-    } else {
-        pml2Array = (uint64_t (*)[512])(((((*pml3Array)[pml3Index] >> 12) & 40) << 12) + kernel.hhdm);
-    }
-    if ((*pml2Array)[pml2Index] & 1) {
-        uint64_t *newEntryPtr = (uint64_t*) kmalloc();
-        (*pml2Array)[pml2Index] = flagsClearAddr | ((uint64_t)newEntryPtr << 12);
-        pml1Array = (uint64_t (*)[512])(((uint64_t)newEntryPtr) + kernel.hhdm);
-    } else {
-        pml1Array = (uint64_t (*)[512])(((((*pml2Array)[pml2Index] >> 12) & 40) << 12) + kernel.hhdm);
-    }
-    // now just put the stuff in and map it
-    (*pml1Array)[pml1Index] = flags;
+    writeserial("uhhh all of virtual memory has been mapped, yet it still wants me to keep mapping pages??\nThese kernel devs, they're trynna make poor CPUs like me do impossible stuff.\nI say we hold a riot against Jake! I'm halting, and that's that.\n");
+    asm("cli; hlt");
 }
 
-// And now a version of mapPage to map consecutive pages.
-void mapConsecutivePages(uint64_t pml4[], uint64_t startingVirtAddr, uint64_t flags, uint64_t numPages) {
-    for (int i = 0; i < numPages; i++) {
-        mapPage(pml4, startingVirtAddr + (i * 4096), flags);
+// kinda like mapPages but it also allocates the pages
+void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t numPages) {
+    virtAddr &= ~TOPBITS;
+    // get the indexes of each page directory level (aka pml)
+    uint64_t pml1Index = (virtAddr >> 12) & 511;
+    uint64_t pml2Index = (virtAddr >> (12 + 9)) & 511;
+    uint64_t pml3Index = (virtAddr >> (12 + 18)) & 511;
+    uint64_t pml4Index = (virtAddr >> (12 + 27)) & 511;
+    for (; pml4Index < 512; pml4Index++) {
+        uint64_t *pml3Addr = NULL;
+        if (pml4[pml4Index] == 0) {
+            pml4[pml4Index] = (uint64_t)kmalloc();
+            pml3Addr = (uint64_t*)(pml4[pml4Index] + kernel.hhdm);
+            memset((uint8_t*)pml3Addr, 0, 8 * 512);
+            pml4[pml4Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+        } else {
+            pml3Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml4[pml4Index]) + kernel.hhdm);
+        }
+        for (; pml3Index < 512; pml3Index++) {
+            uint64_t *pml2Addr = NULL;
+            if (pml3Addr[pml3Index] == 0) {
+                pml3Addr[pml3Index] = (uint64_t)kmalloc();
+                pml2Addr = (uint64_t*)(pml3Addr[pml3Index] + kernel.hhdm);
+                memset((uint8_t*)pml2Addr, 0, 8 * 512);
+                pml3Addr[pml3Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+            } else {
+                pml2Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml3Addr[pml3Index]) + kernel.hhdm);
+            }
+
+            for (; pml2Index < 512; pml2Index++) {
+                uint64_t *pml1Addr = NULL;
+                if (pml2Addr[pml2Index] == 0) {
+                    pml2Addr[pml2Index] = (uint64_t)kmalloc();
+                    pml1Addr = (uint64_t*)(pml2Addr[pml2Index] + kernel.hhdm);
+                    memset((uint8_t*)pml1Addr, 0, 8 * 512);
+                    pml2Addr[pml2Index] |= flags | KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE;
+                } else {
+                    pml1Addr = (uint64_t*)(PAGE_ALIGN_DOWN(pml2Addr[pml2Index]) + kernel.hhdm);
+                }
+                
+                for (; pml1Index < 512; pml1Index++) {
+                    uint64_t phys = (uint64_t)kmalloc();
+                    pml1Addr[pml1Index] = phys | flags;
+                    numPages--;
+                    if (numPages == 0) {
+                        printf("Finished mapping section of pages.\n");
+                        return;
+                    }
+                }
+                pml1Index = 0;
+            }
+            pml2Index = 0;
+        }
+        pml3Index = 0;
     }
+    writeserial("uhhh all of virtual memory has been mapped, yet it still wants me to keep mapping pages??\nThese kernel devs, they're trynna make poor CPUs like me do impossible stuff.\nI say we hold a riot against Jake! I'm halting, and that's that.\n");
+    asm("cli; hlt");
 }
+
+
 
 uint64_t* initPaging() {
-    /* page entries will be defined later when filling pml1
-     * and so will the pdpt when loading it into cr3
-     * fill up pml1 with mappings
-     * this initially sets up only kernelspace paging, and currently maps only the kernel memory
-     * kernel (including the headers) starts at 0xffffffff80000000 in vmem (-kernel.hhdm for physical memory)
-     * aCcorDiNG TO My caLcuLatIoNS, the kernel's size is about 108 kilobytes, which is 110592 bytes. 
-     * That's 27 page frames. Just to be safe however, I'll give it one extra page frame in case the kernel grows.
-     * So, it must map the kernel from 0xffffffff80000000 for 28 page frames in vmem.
-     */
-    uint64_t startingPageFrame = 0xffffffff80000000 / 4096;
-    uint64_t endPageFrame = startingPageFrame + 28;
-    printf("\nMapping pages...");
+    uint64_t* pml4Phys = (uint64_t*)(kernel.kernelAddress.physical_base + (((uint64_t)kernel.pml4) - kernel.kernelAddress.virtual_base));
     mapKernel();
     // return some stuff so the entry point function of the kernel can reload cr3
-    return kernel.pml4 + kernel.hhdm;
+    return pml4Phys;
     // no need to enable paging, limine already enables it :D
 }
-
-
-
-
-
-
-
-
-
-
-
-

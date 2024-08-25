@@ -23,9 +23,21 @@
 #include "sys/include/panic.h"
 #include "include/kernel.h"
 
+__attribute__((noreturn))
+void __stack_chk_fail(void) {
+    writestring("\nStack smashing detected. Halting.\n");
+    for (;;) asm("cli; hlt");
+}
+
 Kernel kernel = {0};
 
 // get stuff from limine so that other kernel modules can use it
+__attribute__((used, section(".requests")))
+static volatile struct limine_framebuffer_request framebufferRequest = {
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
+    .revision = 0
+};
+
 __attribute__((used, section(".requests")))
 static volatile struct limine_kernel_file_request kernelElfRequest = {
     .id = LIMINE_KERNEL_FILE_REQUEST,
@@ -44,45 +56,67 @@ static volatile struct limine_hhdm_request hhdmRequest = {
     .revision = 0
 };
 
+__attribute__((used, section(".requests")))
+static volatile struct limine_kernel_address_request kernelAddressRequest = {
+    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+    .revision = 0
+};
+
 void initKernelData() {
     // init info for the terminal & stdio
     kernel.colourOut = 0xFFFFFF;
     kernel.doPush = true;
     kernel.chX = 5;
     kernel.chY = 5;
+    kernel.framebufferResponse = framebufferRequest.response;
     // bootloader information
     kernel.hhdm = (hhdmRequest.response)->offset;
     struct limine_memmap_response memmapResponse = *memmapRequest.response;
     kernel.memmapEntryCount = memmapResponse.entry_count;
     kernel.memmapEntries = memmapResponse.entries;
     kernel.kernelFile = *kernelElfRequest.response;
+    kernel.kernelAddress = *kernelAddressRequest.response;
 }
+
+#define KERNEL_SWITCH_STACK() \
+    __asm__ volatile (\
+       "movq %0, %%rsp\n"\
+       "movq $0, %%rbp\n"\
+       "push $0"\
+       :\
+       :  "r" (KERNEL_STACK_PTR)\
+    )
 
 void _start() {
     initKernelData();
     init_serial();
+    writeserial("trying to init vga...\n");
     initVGA();
+    struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
+    printf("Framebuffer address: 0x%x\n", (uint64_t)framebuffer);
+    writeserial("success\n");
+    printf("Test binary: %b\n", 0b11001100);
+    printf("HHDM: 0x%x\n", kernel.hhdm);
+    writeserial("\nStarting physical memory manager...\n");
+    initPMM();
     // Just send output to a serial port to test
     writestring("Trying to initialise GDT...\n");
     initGDT();
     writestring("\n\nTrying to initialise IDT & everything related...\n");
     initIDT();
-    writestring("\nStarting physical memory manager...");
-    initPMM();
-    // this is commented out cos paging doesn't work yet and it's still in progress.
-    writestring("\nInitiating paging...\n");
+    // this is commented out cos paging doesn't work yet and it's still in progress./*
+    writeserial("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
-    /*printf("Pages mapped, trying to reload cr3...");
+    // allocate & map a couple page frames for the new stack
+    writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
-    __asm__ volatile (
-        "movq %1, %%cr3;"
-//        "movq %0, %%rsp;"
-//        "movq %1, %%rbp"
-        : : "r" ((uint64_t) 0xfffffffffffff000),
-            "r" ((uint64_t) pml4Address)
+    __asm__ volatile(
+        "movq %0, %%cr3"
+            : : "r" ((uint64_t) pml4Address)
     );
-    for (;;); // so that it doesn't try do stuff that requires a stack, thus crashing it
-    printf("\nPaging successfully enabled! CR3: 0x%x\n", (uint64_t)pml4Address);*/
+    KERNEL_SWITCH_STACK();
+    writeserial("\nPaging successfully enabled!\n");
+    asm("sti");
     test_userspace();
     for (;;);
 }

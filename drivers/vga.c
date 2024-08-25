@@ -15,15 +15,11 @@
 #include "../include/kernel.h"
 #include "include/vga.h"
 
-// A bunch of stuff I gotta do to set up the frame buffer
+// A bunch of stuff I gotta do to set up the frame buffer;
 __attribute__((used, section(".requests")))
 static volatile LIMINE_BASE_REVISION(2);
 
-__attribute__((used, section(".requests")))
-static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST,
-    .revision = 0
-};
+
 
 void pushBackLastString(char* newStr) {
     for (int i = 0; i < 9; i++)
@@ -36,17 +32,18 @@ void initVGA() {
     if (LIMINE_BASE_REVISION_SUPPORTED == false)
         __asm__("cli; hlt");
     // Plz give me a valid framebuffer lemon- I mean, Limine.
-    if (framebuffer_request.response == NULL
-     || framebuffer_request.response->framebuffer_count < 1)
+    if (kernel.framebufferResponse->framebuffer_count < 1)
         __asm__("cli; hlt");
-    struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+    struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
     kernel.screenWidth = framebuffer->width;
     kernel.screenHeight = framebuffer->height;
     kernel.bpp = framebuffer->bpp;
 }
 
+
+
 void drawPix(int x, int y, int colour) {
-    struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+    struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
     volatile uint32_t *fb_ptr = framebuffer->address;
     // uhh hopefully this'll work but tbh I have no idea.
     //int pixelWidth = framebuffer->bpp;
@@ -88,15 +85,16 @@ void newline() {
 
 void clearScreen() {
     for (int i = 0; i < kernel.screenWidth; i++) {
-        for (int y = 0; y < kernel.screenHeight; y++)
-           drawPix(i, y, 0x0); 
+        for (int y = 0; y < kernel.screenHeight; y++) {
+            drawPix(i, y, 0x0);
+        }
     }
     kernel.chX = 5;
     kernel.chY = 5;
 }
 
 void scrollPixel(int pixels) {
-    struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+    struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
     volatile uint32_t *fb_ptr = framebuffer->address;
     for (int y = 0; y <= kernel.screenHeight; y++) {
         for (int x = 0; x < kernel.screenWidth; x++) {
@@ -130,7 +128,7 @@ void writestring(char* str) {
             newline();
             outCharSerial('\n');
             continue;
-        } else if (kernel.chX > kernel.screenWidth - 5) {
+        } else if (kernel.chX > (kernel.screenWidth - 8)) {
             newline(); // this is a seperate block cos in this case, it shouldn't skip to the next thingy
         }
         writeChar(str[i], kernel.colourOut);

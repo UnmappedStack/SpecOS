@@ -1,6 +1,6 @@
 /* Allocator for the SpecOS kernel project.
  * Copyright (C) 2024 Jake Steinburger under the MIT license. See the GitHub repository for more information.
- * This uses a simple bitmap allocator for 1024 byte size page frames, but I may switch to a buddy allocator in the future.
+ * This uses a simple bitmap allocator for 4096 byte size page frames, but I may switch to a buddy allocator in the future.
  */
 
 #include <stdint.h>
@@ -12,6 +12,7 @@
 #include "../limine.h"
 #include "../utils/include/string.h"
 #include "include/pmm.h"
+#include "../drivers/include/serial.h"
 #include "include/detect.h"
 #include "../utils/include/binop.h"
 #include "../include/kernel.h"
@@ -21,7 +22,7 @@ struct pmemBitmap {
 };
 
 struct pmemData {
-    _Alignas(4096) uint8_t data[0];
+    uint8_t data[0];
 };
 
 void initPMM() {
@@ -76,7 +77,7 @@ void initPMM() {
     uint64_to_hex_string(maxBegin, b1);
     uint64_to_hex_string(maxLength, b2);
     uint64_to_hex_string(bitmapReserved, b3);
-    printf("\nChosen segment starts at 0x%s, has a size of 0x%s, and reserves 0x%s bytes for the bitmap.\n", b1, b2, b3);
+    writeserial("Successfully initialised physical memory allocator.\n");
 }
 
 // just a basic utility
@@ -109,7 +110,7 @@ void* kmalloc() {
     // if it got to this point, no memory address is avaliable.
     // print an error message and halt the computer
     kernel.colourOut = 0xFF0000;
-    writestring("KERNEL ERROR: Not enough physical memory space to allocate.\nHalting device.");
+    writeserial("KERNEL ERROR: Not enough physical memory space to allocate.\nHalting device.");
     asm("cli; hlt");
     // and make the compiler happy by returning an arbitrary value
     return (void*) 0x00;

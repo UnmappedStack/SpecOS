@@ -7,9 +7,14 @@
 
 #include "../mem/include/paging.h"
 #include "../limine.h"
+#include "../drivers/include/vga.h"
 
 #ifndef KERNEL_H
 #define KERNEL_H
+
+
+__attribute__((noreturn))
+void __stack_chk_fail(void);
 
 // some stuff it needs before the main struct
 struct largestSection {
@@ -66,6 +71,7 @@ typedef struct {
     int screenWidth;
     int screenHeight;
     int bpp;
+    struct limine_framebuffer_response *framebufferResponse;
     bool doPush; // debug: this should only be false on kernel panic
     char* last10[10]; // debug: last 10 stdio outputs
     struct largestSection largestSect; // info about location of the pmm's bitmap
@@ -76,8 +82,9 @@ typedef struct {
     struct GDTPtr GDTR; // the pointer thingy to the GDT
     struct IDTEntry idt[256]; // the interrupt descriptor table
     struct idtr IDTPtr;
-    uint64_t pml4[512] __attribute__((aligned(4096))); 
-    struct limine_kernel_file_response kernelFile; 
+    _Alignas(4096) uint64_t pml4[512]; 
+    struct limine_kernel_file_response kernelFile;
+    struct limine_kernel_address_response kernelAddress; 
 } Kernel;
 
 extern Kernel kernel;

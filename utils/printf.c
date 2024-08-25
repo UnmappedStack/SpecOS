@@ -2,6 +2,7 @@
  * Copyright (c) 2024 Jake Steinburger under the MIT license. See the GitHub repo for more information.
  */
 
+#include "../drivers/include/serial.h"
 #include "../drivers/include/vga.h"
 #include "include/string.h"
 #include "include/printf.h"
@@ -26,6 +27,11 @@ void printf(char* format, ...) {
                 bufferx[19] = 0;
                 uint64_to_hex_string(va_arg(args, uint64_t), bufferx);
                 writestring(bufferx);
+            } else if (format[i] == 'b') {
+                char bufferb[65];
+                uint64_to_binary_string(va_arg(args, uint64_t), bufferb);
+                bufferb[64] = 0;
+                writestring(bufferb);
             } else if (format[i] == 's') {
                 writestring(va_arg(args, char*));
             }
