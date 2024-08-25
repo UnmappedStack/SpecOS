@@ -68,7 +68,7 @@ Some things that I gotta do, and some things that I have done, in SpecOS. Yeah, 
 - [ ] Memory management
   - [X] Physical memory management (pooling allocator)
   - [X] Virtual memory management (paging)
-  - [ ] Kernelspace heap
+  - [X] Kernelspace heap
   - [ ] Userspace heap
 - [X] ELF parsing
 - [ ] Switch to 64 bit higher half

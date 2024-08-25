@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #include "limine.h"
+#include "mem/include/kheap.h"
 #include "drivers/include/serial.h"
 #include "drivers/include/vga.h"
 #include "sys/include/gdt.h"
@@ -90,21 +91,18 @@ void initKernelData() {
 void _start() {
     initKernelData();
     init_serial();
-    writeserial("trying to init vga...\n");
+    writeserial("Trying to initiate framebuffer...");
     initVGA();
     struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
-    printf("Framebuffer address: 0x%x\n", (uint64_t)framebuffer);
-    writeserial("success\n");
-    printf("Test binary: %b\n", 0b11001100);
-    printf("HHDM: 0x%x\n", kernel.hhdm);
-    writeserial("\nStarting physical memory manager...\n");
+    writestring("\nStarting physical memory manager...\n");
     initPMM();
-    // Just send output to a serial port to test
-    writestring("Trying to initialise GDT...\n");
+    writestring("Initiating kernelspace heap...\n");
+    initKHeap();
+    writestring("Trying to initialise GDT...");
     initGDT();
-    writestring("\n\nTrying to initialise IDT & everything related...\n");
+    writestring("\nTrying to initialise IDT & everything related...");
     initIDT();
-    writeserial("\nInitiating paging...\n");
+    writestring("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
     // allocate & map a couple page frames for the new stack
     writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
@@ -114,7 +112,7 @@ void _start() {
             : : "r" ((uint64_t) pml4Address)
     );
     KERNEL_SWITCH_STACK();
-    writeserial("\nPaging successfully enabled!\n");
+    writestring("Paging successfully enabled!\n");
     asm("sti");
     test_userspace();
     for (;;);

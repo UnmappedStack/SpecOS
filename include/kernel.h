@@ -84,7 +84,8 @@ typedef struct {
     struct idtr IDTPtr;
     _Alignas(4096) uint64_t pml4[512]; 
     struct limine_kernel_file_response kernelFile;
-    struct limine_kernel_address_response kernelAddress; 
+    struct limine_kernel_address_response kernelAddress;
+    uintptr_t kheapAddr; 
 } Kernel;
 
 extern Kernel kernel;
