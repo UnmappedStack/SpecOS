@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../drivers/include/vga.h"
 #include "include/api.h"
 #include "include/decodeDirectory.h"

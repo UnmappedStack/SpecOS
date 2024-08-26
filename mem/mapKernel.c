@@ -8,7 +8,7 @@
 
 #include "include/pmm.h"
 #include "include/mapKernel.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../drivers/include/serial.h"
 #include "../utils/include/printf.h"
 #include "include/paging.h"

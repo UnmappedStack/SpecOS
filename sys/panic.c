@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../utils/include/string.h"
 #include "../drivers/include/vga.h"
 #include "include/panic.h"

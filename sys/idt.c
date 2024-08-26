@@ -11,7 +11,7 @@
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 
 // and the thingies to make it do stuff
 

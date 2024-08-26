@@ -5,7 +5,7 @@
 
 #include "include/kheap.h"
 #include "../utils/include/printf.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../utils/include/string.h"
 #include "include/pmm.h"
 #include <stdbool.h>

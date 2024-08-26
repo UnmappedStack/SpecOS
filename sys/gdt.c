@@ -11,7 +11,7 @@
 #include "include/gdt.h"
 #include "include/tss.h"
 #include "../drivers/include/vga.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 
 // define some shit
 

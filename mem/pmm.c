@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/printf.h"
 #include "../limine.h"
@@ -15,7 +15,6 @@
 #include "../drivers/include/serial.h"
 #include "include/detect.h"
 #include "../utils/include/binop.h"
-#include "../include/kernel.h"
 
 struct pmemBitmap {
     uint8_t bitmap[0];

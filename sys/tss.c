@@ -3,7 +3,7 @@
  */
 
 #include "include/tss.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>

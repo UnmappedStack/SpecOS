@@ -8,20 +8,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "misc/fetch.h"
-#include "drivers/include/vga.h"
-#include "drivers/include/rtc.h"
-#include "utils/include/io.h"
-#include "utils/include/string.h"
-#include "drivers/include/keyboard.h"
-#include "fs/include/api.h"
+#include "../misc/fetch.h"
+#include "../drivers/include/vga.h"
+#include "../drivers/include/rtc.h"
+#include "../utils/include/io.h"
+#include "../utils/include/string.h"
+#include "../drivers/include/keyboard.h"
+#include "../fs/include/api.h"
 #include "include/shell.h"
-#include "mem/include/detect.h"
-#include "utils/include/printf.h"
+#include "../mem/include/detect.h"
+#include "../utils/include/printf.h"
 #include "include/kernel.h"
-#include "mem/include/pmm.h"
-#include "limine.h"
-#include "drivers/include/serial.h"
+#include "../mem/include/pmm.h"
+#include "../limine.h"
+#include "../drivers/include/serial.h"
 
 void test_userspace() {
     clearScreen();

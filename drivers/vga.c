@@ -12,7 +12,7 @@
 #include "include/serial.h"
 #include "../fs/include/api.h" // for reading font files
 #include "../misc/bootInfo.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "include/vga.h"
 
 // A bunch of stuff I gotta do to set up the frame buffer;

@@ -6,7 +6,7 @@
 #include "../limine.h"
 #include "fetch.h"
 #include "fetchicon.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/printf.h"
 

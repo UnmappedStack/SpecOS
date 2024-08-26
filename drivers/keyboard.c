@@ -6,7 +6,7 @@
 #include "include/keyboard.h"
 #include "../sys/include/idt.h"
 #include "include/vga.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 #include "../utils/include/string.h"
 #include "../utils/include/io.h"
 

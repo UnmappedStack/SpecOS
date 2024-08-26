@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "../mem/include/paging.h"
-#include "../limine.h"
-#include "../drivers/include/vga.h"
+#include "../../mem/include/paging.h"
+#include "../../limine.h"
+#include "../../drivers/include/vga.h"
 
 #ifndef KERNEL_H
 #define KERNEL_H

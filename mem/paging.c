@@ -13,7 +13,7 @@
 #include "../utils/include/printf.h" // my bestie, printf debugging!
 #include "../drivers/include/vga.h"
 #include "include/paging.h"
-#include "../include/kernel.h"
+#include "../kernel/include/kernel.h"
 
 
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
