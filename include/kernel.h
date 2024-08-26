@@ -23,6 +23,12 @@ struct largestSection {
     int bitmapReserved; // in bytes
 };
 
+struct TSS {
+    uint32_t rsvd0;
+    uint64_t rsp0;
+    uint32_t rsvd1[23]; // I *think* that should be 23 elements?
+} __attribute__((packed));
+
 struct GDTEntry {
     uint16_t limit1;
     uint16_t base1;
@@ -78,10 +84,11 @@ typedef struct {
     uint64_t hhdm; // limine higher half direct mapping
     uint64_t memmapEntryCount; // memory map for physical memory manager & memmap command
     struct limine_memmap_entry **memmapEntries;
-    struct GDTEntry GDT[5]; // global descriptor table
+    struct GDTEntry GDT[6]; // global descriptor table
     struct GDTPtr GDTR; // the pointer thingy to the GDT
     struct IDTEntry idt[256]; // the interrupt descriptor table
     struct idtr IDTPtr;
+    struct TSS tss;
     _Alignas(4096) uint64_t pml4[512]; 
     struct limine_kernel_file_response kernelFile;
     struct limine_kernel_address_response kernelAddress;

@@ -9,6 +9,7 @@
 #include <stddef.h>
 
 #include "include/gdt.h"
+#include "include/tss.h"
 #include "../drivers/include/vga.h"
 #include "../include/kernel.h"
 
@@ -17,10 +18,12 @@
 // yeah I didn't know what to call this function lol so it's kinda weird
 // But, why does it not have a base & limit parameter? well this is 64 bit long mode, sooo... it's ignored.
 // It'll just be set to 0.
-struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags, uint32_t limit) {
+struct GDTEntry putEntryTogether(uint64_t base, uint8_t accessByte, uint8_t flags, uint32_t limit) {
     struct GDTEntry toReturn;
     // set stuff that's ignored to 0
-    toReturn.base1 = toReturn.base2 = toReturn.base3 = 0;
+    toReturn.base1 = limit & 0xFFFF;
+    toReturn.base2 = (limit >> 16) & 0xFF; // next 8 bits
+    toReturn.base3 = (limit >> 24) & 0xFF;
     // split the limit into two parts and set it's values
     // I know technically I don't have to because it's ignored but whatever.
     toReturn.limit1 = limit & 0xFFFF; // first 16 bits
@@ -31,8 +34,8 @@ struct GDTEntry putEntryTogether(uint8_t accessByte, uint8_t flags, uint32_t lim
     return toReturn;
 }
 
-void setGate(int gateID, uint8_t accessByte, uint8_t flags, uint32_t limit) {
-    kernel.GDT[gateID] = putEntryTogether(accessByte, flags, limit);
+void setGate(int gateID, uint64_t base, uint8_t accessByte, uint8_t flags, uint32_t limit) {
+    kernel.GDT[gateID] = putEntryTogether(base, accessByte, flags, limit);
 }
 
 // this expects that the global gdt var has already been set
@@ -40,7 +43,7 @@ __attribute__((noinline))
 void loadGDT() {
     // Make a GDTPtr thingy-ma-bob
     writestring("\nSetting GDT pointer...");
-    kernel.GDTR.size = (sizeof(struct GDTEntry) * 5) - 1;
+    kernel.GDTR.size = (sizeof(struct GDTEntry) * 6) - 1;
     kernel.GDTR.offset = (uint64_t) &kernel.GDT;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
     writestring("\nLoading new GDT...");
@@ -63,12 +66,15 @@ void loadGDT() {
 }
 
 void initGDT() {
+    writestring("\nInitialising TSS...");
+    initTSS();
     writestring("\nSetting GDT gates...");
-    setGate(0, 0, 0, 0); // first one's gotta be null
-    setGate(1, 0x9A, 0xA, 0xFFFFF); // kernel mode code segment
-    setGate(2, 0x92, 0xC, 0xFFFFF); // kernel mode data segment
-    setGate(3, 0xFA, 0xA, 0xFFFFF); // user mode code segment
-    setGate(4, 0xF2, 0xC, 0xFFFFF); // user mode data segment
+    setGate(0, 0, 0, 0, 0); // first one's gotta be null
+    setGate(1, 0, 0x9A, 0xA, 0xFFFFF); // kernel mode code segment
+    setGate(2, 0, 0x92, 0xC, 0xFFFFF); // kernel mode data segment
+    setGate(3, 0, 0xFA, 0xA, 0xFFFFF); // user mode code segment
+    setGate(4, 0, 0xF2, 0xC, 0xFFFFF); // user mode data segment
+    setGate(5, (uint64_t)&kernel.tss, 0x89, 0, sizeof(struct TSS) - 1); // TSS
     loadGDT();
 }
 
