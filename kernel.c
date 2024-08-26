@@ -23,6 +23,7 @@
 #include "mem/include/paging.h"
 #include "sys/include/panic.h"
 #include "include/kernel.h"
+#include "utils/include/vector.h"
 
 __attribute__((noreturn))
 void __stack_chk_fail(void) {
@@ -113,6 +114,13 @@ void _start() {
     );
     KERNEL_SWITCH_STACK();
     writestring("Paging successfully enabled!\n");
+    writestring("Testing vector implementation...\n");
+    Vector testVector = newVect(sizeof(uint16_t));
+    printf("Successfully created vector of size %i byte(s), trying to push a value...\n", testVector.elementSize);
+    vectPush(testVector, 13);
+    printf("Successfully appended value, trying to push another value...\n");
+    vectPush(testVector, 69);
+    writestring("No error reported, entering shell.\n");
     asm("sti");
     test_userspace();
     for (;;);

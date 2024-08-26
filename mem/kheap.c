@@ -39,6 +39,7 @@ void* splitPool(Pool *addr, int size) {
     addr->size               = addr->requiredSize;
     addr->nextPool           = (uintptr_t)(addr->size + ((uint64_t)addr));
     *((Pool*)addr->nextPool) = newPool;
+    return (void*)(addr->nextPool);
 }
 
 void* malloc(int size) {
@@ -51,7 +52,7 @@ void* malloc(int size) {
             return (void*)toCheck + sizeof(Pool);
         } else if (toCheck->size > toCheck->requiredSize + size) {
             return splitPool(toCheck, size) + sizeof(Pool);
-        } else if (toCheck) {
+        } else if (toCheck->nextPool == NULL) {
             Pool newPool;
             newPool.requiredSize = size;
             newPool.size = 4096;
