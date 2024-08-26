@@ -68,8 +68,8 @@ void* malloc(int size) {
 
 void free(void* location) {
     Pool* poolAddr         = (Pool*)((uint64_t)location - sizeof(Pool));
-    poolAddr->isFree         = true;
+    poolAddr->isFree       = true;
     poolAddr->requiredSize = sizeof(Pool);
-    memset(poolAddr->data, 0, poolAddr->size);
+    memset(poolAddr->data, 0, poolAddr->size - sizeof(Pool));
     poolAddr->size         = sizeof(Pool);
 }
