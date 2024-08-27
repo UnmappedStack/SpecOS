@@ -14,7 +14,7 @@
 typedef struct {
     uint16_t PID;
     uintptr_t pml4Addr;
-    uintptr_t rip;
+    uintptr_t rsp;
     uint8_t flags;
 } Task;
 

@@ -15,7 +15,7 @@ void initTaskList() {
     Task *tasklist = (Task*)kernel.tasklistAddr;
     tasklist[0].PID = 0;
     tasklist[0].pml4Addr = (uintptr_t)(kernel.pml4);
-    tasklist[0].rip = KERNEL_STACK_PTR;
+    tasklist[0].rsp = KERNEL_STACK_PTR;
     tasklist[0].flags = TASK_PRESENT | TASK_RUNNING;
     kernel.tasklistUpto = 1;
 }
@@ -30,7 +30,7 @@ uint16_t initTask() {
     Task *tasklist = (Task*)kernel.tasklistAddr;
     tasklist[kernel.tasklistUpto].PID = kernel.tasklistUpto;
     tasklist[kernel.tasklistUpto].pml4Addr = 0; // <-|
-    tasklist[kernel.tasklistUpto].rip = 0;      // <-|- will be set by `exec`
+    tasklist[kernel.tasklistUpto].rsp = 0;      // <-|- will be set by `exec`
     tasklist[kernel.tasklistUpto].flags = TASK_PRESENT | TASK_FIRST_EXEC;
     /* look for the next non-present task and set tasklistUpto to it's PID
      * this can't just increment tasklistUpto, because of the way processes are terminated.
