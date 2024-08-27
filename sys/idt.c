@@ -6,20 +6,22 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "../mem/include/pmm.h"
 #include "include/panic.h"
 #include "../drivers/include/keyboard.h"
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
 #include "../utils/include/io.h"
 #include "../kernel/include/kernel.h"
+#include "../utils/include/printf.h"
 
 // and the thingies to make it do stuff
 
 void initIRQ();
 
 // takes: IDT vector number (eg. 0x01 for divide by 0 exception), a pointer to an ISR (aka the function it calls), & the flags
-void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t dpl) {
-    struct IDTEntry* thisEntry = &kernel.idt[vect];
+void idtSetDescriptor(uint8_t vect, void* isrThingy, uint8_t gateType, uint8_t dpl, struct IDTEntry *IDTAddr) {
+    struct IDTEntry* thisEntry = &IDTAddr[vect];
     // set the thingies
     // isr offset
     thisEntry->offset1 = (uint64_t)isrThingy & 0xFFFF; // first 16 bits
@@ -81,42 +83,43 @@ extern void simdFloatingPointException();
 extern void virtualisationException();
 
 // stuff to set it all up
-void initIRQ() {
+void initIRQ(struct IDTEntry *IDTAddr) {
     remapPIC();
     // map some stuff
-    idtSetDescriptor(33, &isr_keyboard, 14, 0); 
+    idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr); 
     outb(0x21, ~(1 << 1)); // unmask keyboard IRQ 
     // all the exceptions
-    idtSetDescriptor(0, &divideException, 15, 0);
-    idtSetDescriptor(1, &debugException, 15, 0);
-    idtSetDescriptor(3, &breakpointException, 15, 0);
-    idtSetDescriptor(4, &overflowException, 15, 0);
-    idtSetDescriptor(5, &boundRangeExceededException, 15, 0);
-    idtSetDescriptor(6, &invalidOpcodeException, 15, 0);
-    idtSetDescriptor(7, &deviceNotAvaliableException, 15, 0);
-    idtSetDescriptor(8, &doubleFaultException, 15, 0);
-    idtSetDescriptor(9, &coprocessorSegmentOverrunException, 15, 0);
-    idtSetDescriptor(10, &invalidTSSException, 15, 0);
-    idtSetDescriptor(11, &segmentNotPresentException, 15, 0);
-    idtSetDescriptor(12, &stackSegmentFaultException, 15, 0);
-    idtSetDescriptor(13, &generalProtectionFaultException, 15, 0);
-    idtSetDescriptor(14, &pageFaultException, 15, 0);
-    idtSetDescriptor(16, &floatingPointException, 15, 0);
-    idtSetDescriptor(17, &alignmentCheckException, 15, 0);
-    idtSetDescriptor(18, &machineCheckException, 15, 0);
-    idtSetDescriptor(19, &simdFloatingPointException, 15, 0);
-    idtSetDescriptor(20, &virtualisationException, 15, 0);
+    idtSetDescriptor(0, &divideException, 15, 0, IDTAddr);
+    idtSetDescriptor(1, &debugException, 15, 0, IDTAddr);
+    idtSetDescriptor(3, &breakpointException, 15, 0, IDTAddr);
+    idtSetDescriptor(4, &overflowException, 15, 0, IDTAddr);
+    idtSetDescriptor(5, &boundRangeExceededException, 15, 0, IDTAddr);
+    idtSetDescriptor(6, &invalidOpcodeException, 15, 0, IDTAddr);
+    idtSetDescriptor(7, &deviceNotAvaliableException, 15, 0, IDTAddr);
+    idtSetDescriptor(8, &doubleFaultException, 15, 0, IDTAddr);
+    idtSetDescriptor(9, &coprocessorSegmentOverrunException, 15, 0, IDTAddr);
+    idtSetDescriptor(10, &invalidTSSException, 15, 0, IDTAddr);
+    idtSetDescriptor(11, &segmentNotPresentException, 15, 0, IDTAddr);
+    idtSetDescriptor(12, &stackSegmentFaultException, 15, 0, IDTAddr);
+    idtSetDescriptor(13, &generalProtectionFaultException, 15, 0, IDTAddr);
+    idtSetDescriptor(14, &pageFaultException, 15, 0, IDTAddr);
+    idtSetDescriptor(16, &floatingPointException, 15, 0, IDTAddr);
+    idtSetDescriptor(17, &alignmentCheckException, 15, 0, IDTAddr);
+    idtSetDescriptor(18, &machineCheckException, 15, 0, IDTAddr);
+    idtSetDescriptor(19, &simdFloatingPointException, 15, 0, IDTAddr);
+    idtSetDescriptor(20, &virtualisationException, 15, 0, IDTAddr);
 }
 
 void initIDT() {
+    struct IDTEntry *IDTAddr = (struct IDTEntry*) (kmalloc() + kernel.hhdm);
     writestring("\nSetting IDT descriptors..."); 
     writestring("\nCreating IDTR (that IDT pointer thingy)...");
-    kernel.IDTPtr.offset = (uintptr_t)&kernel.idt[0];
+    kernel.IDTPtr.offset = (uintptr_t)IDTAddr;
     kernel.IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
     writestring("\nLoading IDTR into the register thingy...");
     asm volatile("lidt %0" : : "m"(kernel.IDTPtr));
     writestring("\nSetting up IRQ hardware thingy...");
-    initIRQ();
+    initIRQ(IDTAddr);
 }
 
 

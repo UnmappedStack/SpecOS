@@ -84,9 +84,7 @@ typedef struct {
     uint64_t hhdm; // limine higher half direct mapping
     uint64_t memmapEntryCount; // memory map for physical memory manager & memmap command
     struct limine_memmap_entry **memmapEntries;
-    struct GDTEntry GDT[6]; // global descriptor table
     struct GDTPtr GDTR; // the pointer thingy to the GDT
-    struct IDTEntry idt[256]; // the interrupt descriptor table
     struct idtr IDTPtr;
     struct TSS tss;
     _Alignas(4096) uint64_t pml4[512]; 

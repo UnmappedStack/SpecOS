@@ -8,9 +8,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "../utils/include/string.h"
+#include "../utils/include/printf.h"
 #include "include/gdt.h"
 #include "include/tss.h"
 #include "../drivers/include/vga.h"
+#include "../mem/include/pmm.h"
 #include "../kernel/include/kernel.h"
 
 // define some shit
@@ -25,6 +28,7 @@ struct GDTEntry putEntryTogether(uint64_t base, uint8_t accessByte, uint8_t flag
     toReturn.base2 = (limit >> 16) & 0xFF; // next 8 bits
     toReturn.base3 = (limit >> 24) & 0xFF;
     // split the limit into two parts and set it's values
+    toReturn.accessByte = accessByte;
     // I know technically I don't have to because it's ignored but whatever.
     toReturn.limit1 = limit & 0xFFFF; // first 16 bits
     toReturn.limit2 = (limit >> 16) & 0xF; // next 4 bits
@@ -34,17 +38,17 @@ struct GDTEntry putEntryTogether(uint64_t base, uint8_t accessByte, uint8_t flag
     return toReturn;
 }
 
-void setGate(int gateID, uint64_t base, uint8_t accessByte, uint8_t flags, uint32_t limit) {
-    kernel.GDT[gateID] = putEntryTogether(base, accessByte, flags, limit);
+void setGate(int gateID, uint64_t base, uint8_t accessByte, uint8_t flags, uint32_t limit, struct GDTEntry *GDTAddr) {
+    GDTAddr[gateID] = putEntryTogether(base, accessByte, flags, limit);
 }
 
 // this expects that the global gdt var has already been set
 __attribute__((noinline))
-void loadGDT() {
+void loadGDT(struct GDTEntry *GDTAddress) {
     // Make a GDTPtr thingy-ma-bob
     writestring("\nSetting GDT pointer...");
     kernel.GDTR.size = (sizeof(struct GDTEntry) * 6) - 1;
-    kernel.GDTR.offset = (uint64_t) &kernel.GDT;
+    kernel.GDTR.offset = (uint64_t) GDTAddress;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
     writestring("\nLoading new GDT...");
     asm volatile("lgdt (%0)" : : "r" (&kernel.GDTR));
@@ -66,16 +70,17 @@ void loadGDT() {
 }
 
 void initGDT() {
+    struct GDTEntry *GDT = (struct GDTEntry*) (kmalloc() + kernel.hhdm);
     writestring("\nInitialising TSS...");
     initTSS();
     writestring("\nSetting GDT gates...");
-    setGate(0, 0, 0, 0, 0); // first one's gotta be null
-    setGate(1, 0, 0x9A, 0xA, 0xFFFFF); // kernel mode code segment
-    setGate(2, 0, 0x92, 0xC, 0xFFFFF); // kernel mode data segment
-    setGate(3, 0, 0xFA, 0xA, 0xFFFFF); // user mode code segment
-    setGate(4, 0, 0xF2, 0xC, 0xFFFFF); // user mode data segment
-    setGate(5, (uint64_t)&kernel.tss, 0x89, 0, sizeof(struct TSS) - 1); // TSS
-    loadGDT();
+    setGate(0, 0, 0, 0, 0, GDT); // first one's gotta be null
+    setGate(1, 0, 0x9A, 0xA, 0xFFFFF, GDT); // kernel mode code segment
+    setGate(2, 0, 0x92, 0xC, 0xFFFFF, GDT); // kernel mode data segment
+    setGate(3, 0, 0xFA, 0xA, 0xFFFFF, GDT); // user mode code segment
+    setGate(4, 0, 0xF2, 0xC, 0xFFFFF, GDT); // user mode data segment
+    setGate(5, (uint64_t)&kernel.tss, 0x89, 0, sizeof(struct TSS) - 1, GDT); // TSS
+    //loadGDT(GDT);
 }
 
 
