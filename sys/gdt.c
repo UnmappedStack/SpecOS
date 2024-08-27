@@ -80,7 +80,7 @@ void initGDT() {
     setGate(3, 0, 0xFA, 0xA, 0xFFFFF, GDT); // user mode code segment
     setGate(4, 0, 0xF2, 0xC, 0xFFFFF, GDT); // user mode data segment
     setGate(5, (uint64_t)&kernel.tss, 0x89, 0, sizeof(struct TSS) - 1, GDT); // TSS
-    //loadGDT(GDT);
+    loadGDT(GDT);
 }
 
 

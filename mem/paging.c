@@ -175,9 +175,9 @@ void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t num
 
 
 uint64_t* initPaging() {
-    uint64_t* pml4Phys = (uint64_t*)(kernel.kernelAddress.physical_base + (((uint64_t)kernel.pml4) - kernel.kernelAddress.virtual_base));
+    kernel.pml4 = (uint64_t*)(kmalloc() + kernel.hhdm);
     mapKernel();
     // return some stuff so the entry point function of the kernel can reload cr3
-    return pml4Phys;
+    return (uint64_t*)(((uint64_t)kernel.pml4) - kernel.hhdm);
     // no need to enable paging, limine already enables it :D
 }

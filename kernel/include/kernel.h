@@ -87,7 +87,7 @@ typedef struct {
     struct GDTPtr GDTR; // the pointer thingy to the GDT
     struct idtr IDTPtr;
     struct TSS tss;
-    _Alignas(4096) uint64_t pml4[512]; 
+    uint64_t* pml4; 
     struct limine_kernel_file_response kernelFile;
     struct limine_kernel_address_response kernelAddress;
     uintptr_t kheapAddr; 

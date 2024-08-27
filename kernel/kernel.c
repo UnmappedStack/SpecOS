@@ -99,10 +99,11 @@ void _start() {
     initKHeap();
     writestring("Trying to initialise GDT...");
     initGDT();
-    writestring("\nTrying to initialise IDT & everything related...");
+    writestring("\nTrying to initialise IDT & IRQs...");
     initIDT();
     writestring("\nInitiating paging...\n");
     uint64_t* pml4Address = initPaging();
+    printf("pml4Address physical: 0x%x\n", pml4Address);
     // allocate & map a couple page frames for the new stack
     writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
     // load a pointer to pml4 into cr3 and change the stack to point elsewhere
@@ -111,7 +112,7 @@ void _start() {
             : : "r" ((uint64_t) pml4Address)
     );
     KERNEL_SWITCH_STACK();
-    writestring("Paging successfully enabled!\n");
+    writestring("Paging successfully enabled.\n");
     asm("sti");
     test_userspace();
     for (;;);

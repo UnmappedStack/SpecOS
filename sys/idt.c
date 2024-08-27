@@ -112,13 +112,9 @@ void initIRQ(struct IDTEntry *IDTAddr) {
 
 void initIDT() {
     struct IDTEntry *IDTAddr = (struct IDTEntry*) (kmalloc() + kernel.hhdm);
-    writestring("\nSetting IDT descriptors..."); 
-    writestring("\nCreating IDTR (that IDT pointer thingy)...");
     kernel.IDTPtr.offset = (uintptr_t)IDTAddr;
     kernel.IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;
-    writestring("\nLoading IDTR into the register thingy...");
     asm volatile("lidt %0" : : "m"(kernel.IDTPtr));
-    writestring("\nSetting up IRQ hardware thingy...");
     initIRQ(IDTAddr);
 }
 
