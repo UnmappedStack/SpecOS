@@ -90,7 +90,9 @@ typedef struct {
     uint64_t* pml4; 
     struct limine_kernel_file_response kernelFile;
     struct limine_kernel_address_response kernelAddress;
-    uintptr_t kheapAddr; 
+    uintptr_t kheapAddr;
+    uintptr_t tasklistAddr;
+    uint16_t tasklistUpto;
 } Kernel;
 
 extern Kernel kernel;
