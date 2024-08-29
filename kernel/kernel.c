@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../tasks/include/exec.h"
 #include "../limine.h"
 #include "../mem/include/kheap.h"
 #include "../drivers/include/serial.h"
@@ -22,6 +23,7 @@
 #include "../mem/include/paging.h"
 #include "../sys/include/panic.h"
 #include "include/kernel.h"
+#include "../tasks/include/tasklist.h"
 
 __attribute__((noreturn))
 void __stack_chk_fail(void) {
@@ -59,7 +61,22 @@ static volatile struct limine_hhdm_request hhdmRequest = {
 __attribute__((used, section(".requests")))
 static volatile struct limine_kernel_address_request kernelAddressRequest = {
     .id = LIMINE_KERNEL_ADDRESS_REQUEST,
-    .revision = 0
+    .revision = 2
+};
+
+static volatile struct limine_internal_module moduleFile = {
+    .path = "../stuff/testapp",
+    .flags = LIMINE_INTERNAL_MODULE_REQUIRED
+};
+
+struct limine_internal_module *moduleFileList = &moduleFile;
+
+__attribute__((used, section(".requests")))
+static volatile struct limine_module_request moduleRequest = {
+    .id = LIMINE_MODULE_REQUEST,
+    .revision = 0,
+    .internal_modules = &moduleFileList,
+    .internal_module_count = 1
 };
 
 void initKernelData() {
@@ -76,6 +93,7 @@ void initKernelData() {
     kernel.memmapEntries = memmapResponse.entries;
     kernel.kernelFile = *kernelElfRequest.response;
     kernel.kernelAddress = *kernelAddressRequest.response;
+    kernel.moduleFiles = *moduleRequest.response;
 }
 
 #define KERNEL_SWITCH_STACK() \
@@ -102,7 +120,7 @@ void _start() {
     writestring("\nTrying to initialise IDT & IRQs...");
     initIDT();
     writestring("\nInitiating paging...\n");
-    uint64_t* pml4Address = initPaging();
+    uint64_t* pml4Address = initPaging(true);
     printf("pml4Address physical: 0x%x\n", pml4Address);
     // allocate & map a couple page frames for the new stack
     writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
@@ -114,6 +132,8 @@ void _start() {
     KERNEL_SWITCH_STACK();
     writestring("Paging successfully enabled.\n");
     asm("sti");
+    //initTaskList();
+    //runModuleElf(0);
     test_userspace();
     for (;;);
 }

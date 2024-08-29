@@ -13,14 +13,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// A couple functions that I'll later put into a utils file but can't bother doing rn until i get this working
-// Function to copy memory
-void memcpy(uint8_t *dest, const char *src, size_t n) {
-    for (size_t i = 0; i < n; i++) {
-        dest[i] = (uint8_t)src[i];
-    }
-}
-
 struct bootRecord readBoot() {
     // Read the first sector of the file system partition (assume it's 2048 because that's what it's set as in the compilation script. Safe? No. Works when not dualbooting with another OS? Hopefully.)
     char* rawBootSect_str = readdisk(2048);

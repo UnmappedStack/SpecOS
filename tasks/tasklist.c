@@ -29,6 +29,7 @@ uint16_t initTask() {
         asm("cli; hlt");
     }
     Task *tasklist = (Task*)kernel.tasklistAddr;
+    printf("Task list up to: %i\n", kernel.tasklistUpto);
     tasklist[kernel.tasklistUpto].PID = kernel.tasklistUpto;
     tasklist[kernel.tasklistUpto].pml4Addr = 0;    // <-|
     tasklist[kernel.tasklistUpto].rsp = 0;         // <-|- will be set by `exec`

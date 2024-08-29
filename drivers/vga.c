@@ -78,7 +78,7 @@ void writeChar(char ch, int colour) {
 void scrollLine();
 
 void newline() {
-    kernel.chY += 16;
+    kernel.chY += 17;
     kernel.chX = 5;
     if (kernel.chY > kernel.screenHeight - 17) scrollLine();
 }

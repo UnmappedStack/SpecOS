@@ -18,6 +18,11 @@ size_t strlen(const char* str)
     return len;
 }
 
+void memcpy(char* dest, char* from, size_t n) {
+    for (int i = 0; i < n; i++)
+        dest[i] = from[i];
+}
+
 bool strcmp(const char* str1, const char* str2) {
     int str1len = strlen(str1);
     int str2len = strlen(str2);

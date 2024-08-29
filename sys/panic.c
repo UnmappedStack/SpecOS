@@ -35,7 +35,7 @@ struct symtabEntry {
     uint16_t shndx;
     uint64_t value;
     uint64_t size;
-};// __attribute__((packed));
+} __attribute__((packed));
 
 void assert(bool condition) {
     if (condition) {

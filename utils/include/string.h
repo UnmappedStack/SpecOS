@@ -10,7 +10,7 @@
 #ifndef STRING_H
 #define STRING_H
 
-
+void memcpy(char* dest, char* from, size_t n);
 void uint64_to_binary_string(uint64_t num, char *buf);
 size_t strlen(const char* str);
 void addCharToString(char *str, char c);

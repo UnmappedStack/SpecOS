@@ -157,10 +157,7 @@ void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t num
                     uint64_t phys = (uint64_t)kmalloc();
                     pml1Addr[pml1Index] = phys | flags;
                     numPages--;
-                    if (numPages == 0) {
-                        printf("Finished mapping section of pages.\n");
-                        return;
-                    }
+                    if (numPages == 0) return;
                 }
                 pml1Index = 0;
             }
@@ -174,10 +171,12 @@ void allocPages(uint64_t pml4[], uint64_t virtAddr, uint64_t flags, uint64_t num
 
 
 
-uint64_t* initPaging() {
-    kernel.pml4 = (uint64_t*)(kmalloc() + kernel.hhdm);
+uint64_t* initPaging(bool changeKrnlPml4) {
+    uintptr_t newPml4 = (uintptr_t)(kmalloc() + kernel.hhdm);
+    if (changeKrnlPml4)
+        kernel.pml4 = (uint64_t*)newPml4;
     mapKernel();
     // return some stuff so the entry point function of the kernel can reload cr3
-    return (uint64_t*)(((uint64_t)kernel.pml4) - kernel.hhdm);
+    return (uint64_t*)(((uint64_t)newPml4) - kernel.hhdm);
     // no need to enable paging, limine already enables it :D
 }

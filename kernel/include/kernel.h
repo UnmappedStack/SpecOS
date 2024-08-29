@@ -93,6 +93,7 @@ typedef struct {
     uintptr_t kheapAddr;
     uintptr_t tasklistAddr;
     uint16_t tasklistUpto;
+    struct limine_module_response moduleFiles;
 } Kernel;
 
 extern Kernel kernel;

@@ -41,11 +41,16 @@ void mapSectionType(int type) {
             mapped++;
         }
     }
-    printf("Mapped %i sections labeled as type %i.\n", mapped, type);
 } 
 
 
 void mapKernel() {
+    // map some of the other memory that's needed
+    mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE);
+    mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER);
+    mapSectionType(LIMINE_MEMMAP_USABLE);
+    mapSectionType(LIMINE_MEMMAP_KERNEL_AND_MODULES);
+    // map the kernel sections
     uint64_t lengthBuffer;
     uint64_t physBuffer;
     /* map from kernel_start to nxe_enabled_start with nothing but `present` (.text section) */
@@ -59,11 +64,7 @@ void mapKernel() {
     /* map from writeallowed_start to writeallowed_end with `present`, `pxd`, and `write` flags */
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_end - writeallowed_start);
     physBuffer = kernel.kernelAddress.physical_base + (writeallowed_start - kernel.kernelAddress.virtual_base);
-    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096);
-    // map some of the other memory that's needed
-    mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE);
-    mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER);
-    mapSectionType(LIMINE_MEMMAP_USABLE);
+    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096); 
     // map the kernel's stack
     allocPages(kernel.pml4, KERNEL_STACK_ADDR, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, KERNEL_STACK_PAGES);
 }

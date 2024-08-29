@@ -60,6 +60,10 @@ fi
 
 make # compile the kernel
 
+# compile the test userspace application
+# ik this really should be done in the makefile but I'm dumb so for now it'll be seperately here.
+gcc userspace/test.c -o bin/testapp -ffreestanding -static
+
 # clone limine repo and build it
 
 git clone https://github.com/limine-bootloader/limine.git --branch=v7.x-binary --depth=1
@@ -129,7 +133,8 @@ cp limine/BOOTX64.EFI /mnt/specos/EFI/BOOT
 
 mkdir /mnt/specos/stuff
 echo "Hey there! This is a test file on a FAT32 file system on SpecOS. Long live the kernel!" >> /mnt/specos/stuff/testfile.txt
-cp fscopy/font.bin /mnt/specos
+
+cp bin/testapp /mnt/specos/stuff
 
 # unmount it
 echo "Unmounting..."

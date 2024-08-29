@@ -21,7 +21,9 @@ void printf(char* format, ...) {
                 buffer[9] = 0;
                 writestring(buffer);
             } else if (format[i] == 'c') {
-                writestring(charToStr(va_arg(args, char)));
+                char character = va_arg(args, int);
+                char *characterStr = charToStr((char)character);
+                writestring(characterStr);
             } else if (format[i] == 'x') {
                 char bufferx[20];
                 bufferx[19] = 0;
