@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "../drivers/include/pit.h"
 #include "../tasks/include/exec.h"
 #include "../limine.h"
 #include "../mem/include/kheap.h"
@@ -130,7 +131,8 @@ void _start() {
             : : "r" ((uint64_t) pml4Address)
     );
     KERNEL_SWITCH_STACK();
-    writestring("Paging successfully enabled.\n");
+    writestring("Paging successfully enabled.\nInitialising PIT driver...\n");
+    initPIT();
     asm("sti");
     //initTaskList();
     //runModuleElf(0);

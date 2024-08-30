@@ -7,4 +7,8 @@
 
 void initIDT();
 
+void unmaskIRQ(int IRQ);
+
+void maskIRQ(int IRQ);
+
 #endif

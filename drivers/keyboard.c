@@ -130,6 +130,7 @@ void scanf(char* inp) {
     shifted = false;
     inScanf = true;
     inputLength = 0;
+    //maskIRQ(0);
     // Reset wholeInput
     int i = 0;
     while (1) {
@@ -144,6 +145,7 @@ void scanf(char* inp) {
         if (inb(0x60) == 0x1C)
             break;
     }
+    //unmaskIRQ(0);
     writestring("\0"); // I'm not really sure why, but if I don't write something to the terminal after the device crashes. 
     strcpy(inp, wholeInput);
     removeNullChars(inp);

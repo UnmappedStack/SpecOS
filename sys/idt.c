@@ -8,6 +8,7 @@
 
 #include "../mem/include/pmm.h"
 #include "include/panic.h"
+#include "../tasks/include/switch.h"
 #include "../drivers/include/keyboard.h"
 #include "include/idt.h"
 #include "../drivers/include/vga.h"
@@ -89,11 +90,20 @@ void unmaskIRQ(int IRQ) {
         outb(0xA1, ~(1 << (IRQ % 8)));
 }
 
+void maskIRQ(int IRQ) {
+    if (IRQ < 8)
+        outb(0x21, (1 << (IRQ % 8)));
+    else
+        outb(0xA1, (1 << (IRQ % 8)));
+}
+
 void initIRQ(struct IDTEntry *IDTAddr) {
     remapPIC();
     // map some stuff
     idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr);
+    idtSetDescriptor(32, &taskSwitchISR, 14, 0, IDTAddr);
     unmaskIRQ(1); // keyboard
+    //unmaskIRQ(0); // pit
     // all the exceptions
     idtSetDescriptor(0, &divideException, 15, 0, IDTAddr);
     idtSetDescriptor(1, &debugException, 15, 0, IDTAddr);
