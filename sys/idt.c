@@ -82,12 +82,18 @@ extern void machineCheckException();
 extern void simdFloatingPointException();
 extern void virtualisationException();
 
-// stuff to set it all up
+void unmaskIRQ(int IRQ) {
+    if (IRQ < 8)
+        outb(0x21, ~(1 << (IRQ % 8)));
+    else
+        outb(0xA1, ~(1 << (IRQ % 8)));
+}
+
 void initIRQ(struct IDTEntry *IDTAddr) {
     remapPIC();
     // map some stuff
-    idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr); 
-    outb(0x21, ~(1 << 1)); // unmask keyboard IRQ 
+    idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr);
+    unmaskIRQ(1); // keyboard
     // all the exceptions
     idtSetDescriptor(0, &divideException, 15, 0, IDTAddr);
     idtSetDescriptor(1, &debugException, 15, 0, IDTAddr);
