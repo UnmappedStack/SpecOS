@@ -18,7 +18,6 @@ uint16_t taskSelect() {
     Task *tasklist = (Task*)kernel.tasklistAddr;
     for (size_t i = kernel.schedulerTurn; i < maxTasks; i++) {
         if (tasklist[i].flags & TASK_PRESENT) {
-            printf("kernel.schedulerTurn = %i\n", kernel.schedulerTurn);
             kernel.schedulerTurn++;
             return i++;
         }
@@ -28,7 +27,6 @@ uint16_t taskSelect() {
      *  - otherwise, fail, as there are no more userspace applications.
      */
     if (kernel.tasklistUpto >= 1) {
-        writestring("Tasklist is larger than one.\n");
         // loop back around
         kernel.schedulerTurn = 2;
         return 1;
