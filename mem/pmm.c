@@ -25,6 +25,7 @@ struct pmemData {
 };
 
 void initPMM() {
+    writestring("\nStarting physical memory manager...\n");
     // get the memmap;
     uint64_t memmapEntriesCount = kernel.memmapEntryCount;
     struct limine_memmap_entry **memmapEntries = kernel.memmapEntries;

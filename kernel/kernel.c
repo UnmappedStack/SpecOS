@@ -95,6 +95,8 @@ void initKernelData() {
     kernel.kernelFile = *kernelElfRequest.response;
     kernel.kernelAddress = *kernelAddressRequest.response;
     kernel.moduleFiles = *moduleRequest.response;
+    // other info
+    kernel.schedulerTurn = 0;
 }
 
 #define KERNEL_SWITCH_STACK() \
@@ -106,36 +108,31 @@ void initKernelData() {
        :  "r" (KERNEL_STACK_PTR)\
     )
 
+#define KERNEL_SWITCH_PAGE_TREE(TREE_ADDRESS) \
+    __asm__ volatile (\
+       "movq %0, %%cr3"\
+       :\
+       :  "r" (TREE_ADDRESS)\
+    )
+
+
+
 void _start() {
     initKernelData();
     init_serial();
-    writeserial("Trying to initiate framebuffer...");
     initVGA();
-    struct limine_framebuffer *framebuffer = kernel.framebufferResponse->framebuffers[0];
-    writestring("\nStarting physical memory manager...\n");
     initPMM();
-    writestring("Initiating kernelspace heap...\n");
     initKHeap();
-    writestring("Trying to initialise GDT...");
     initGDT();
-    writestring("\nTrying to initialise IDT & IRQs...");
     initIDT();
-    writestring("\nInitiating paging...\n");
-    uint64_t* pml4Address = initPaging(true);
-    printf("pml4Address physical: 0x%x\n", pml4Address);
-    // allocate & map a couple page frames for the new stack
-    writeserial("Pages mapped, trying to reload cr3 (and change stack pointer)...\n");
-    // load a pointer to pml4 into cr3 and change the stack to point elsewhere
-    __asm__ volatile(
-        "movq %0, %%cr3"
-            : : "r" ((uint64_t) pml4Address)
-    );
+    KERNEL_SWITCH_PAGE_TREE(initPaging(true));
     KERNEL_SWITCH_STACK();
-    writestring("Paging successfully enabled.\nInitialising PIT driver...\n");
     initPIT();
+    initTaskList();
+    // initialisation is all done, it can now start trying to run a userspace application
+    writestring("Running init application...\n");
+    runModuleElf(0);
     asm("sti");
-    //initTaskList();
-    //runModuleElf(0);
-    test_userspace();
+    // it should never get to the next point.
     for (;;);
 }

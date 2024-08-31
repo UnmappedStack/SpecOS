@@ -46,15 +46,12 @@ void setGate(int gateID, uint64_t base, uint8_t accessByte, uint8_t flags, uint3
 __attribute__((noinline))
 void loadGDT(struct GDTEntry *GDTAddress) {
     // Make a GDTPtr thingy-ma-bob
-    writestring("\nSetting GDT pointer...");
     kernel.GDTR.size = (sizeof(struct GDTEntry) * 6) - 1;
     kernel.GDTR.offset = (uint64_t) GDTAddress;
     // and now for the tidiest type of code in all of ever: inline assembly! yuck.
-    writestring("\nLoading new GDT...");
     asm volatile("lgdt (%0)" : : "r" (&kernel.GDTR));
     // random comment but it feels weird making a pointer to a pointer.
     // now reload it
-    writestring("\nReloading GDT...");
     asm volatile("push $0x08; \
                   lea .reload_CS(%%rip), %%rax; \
                   push %%rax; \
@@ -70,10 +67,10 @@ void loadGDT(struct GDTEntry *GDTAddress) {
 }
 
 void initGDT() {
+    writestring("Trying to initialise GDT...");
     struct GDTEntry *GDT = (struct GDTEntry*) (kmalloc() + kernel.hhdm);
     writestring("\nInitialising TSS...");
     initTSS();
-    writestring("\nSetting GDT gates...");
     setGate(0, 0, 0, 0, 0, GDT); // first one's gotta be null
     setGate(1, 0, 0x9A, 0xA, 0xFFFFF, GDT); // kernel mode code segment
     setGate(2, 0, 0x92, 0xC, 0xFFFFF, GDT); // kernel mode data segment

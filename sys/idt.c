@@ -97,13 +97,19 @@ void maskIRQ(int IRQ) {
         outb(0xA1, (1 << (IRQ % 8)));
 }
 
+__attribute__((interrupt))
+void syscallISR(void*) {
+    writestring("\nThis message was printed through a syscall from userspace. IT FINALLY WORKS!!!\n");
+}
+
 void initIRQ(struct IDTEntry *IDTAddr) {
     remapPIC();
     // map some stuff
+    idtSetDescriptor(0x80, &syscallISR, 14, 0, IDTAddr);
     idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr);
     idtSetDescriptor(32, &taskSwitchISR, 14, 0, IDTAddr);
     unmaskIRQ(1); // keyboard
-    //unmaskIRQ(0); // pit
+    unmaskIRQ(0); // pit
     // all the exceptions
     idtSetDescriptor(0, &divideException, 15, 0, IDTAddr);
     idtSetDescriptor(1, &debugException, 15, 0, IDTAddr);
@@ -127,6 +133,7 @@ void initIRQ(struct IDTEntry *IDTAddr) {
 }
 
 void initIDT() {
+    writestring("\nTrying to initialise IDT & IRQs...");
     struct IDTEntry *IDTAddr = (struct IDTEntry*) (kmalloc() + kernel.hhdm);
     kernel.IDTPtr.offset = (uintptr_t)IDTAddr;
     kernel.IDTPtr.size = ((uint16_t)sizeof(struct IDTEntry) *  256) - 1;

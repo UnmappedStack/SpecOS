@@ -94,6 +94,7 @@ typedef struct {
     uintptr_t tasklistAddr;
     uint16_t tasklistUpto;
     struct limine_module_response moduleFiles;
+    uint16_t schedulerTurn;
 } Kernel;
 
 extern Kernel kernel;

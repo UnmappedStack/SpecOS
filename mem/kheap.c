@@ -4,7 +4,7 @@
  */
 
 #include "include/kheap.h"
-#include "../utils/include/printf.h"
+#include "../drivers/include/vga.h"
 #include "../kernel/include/kernel.h"
 #include "../utils/include/string.h"
 #include "include/pmm.h"
@@ -21,6 +21,7 @@ typedef struct {
 } Pool;
 
 void initKHeap() {
+    writestring("Initiating kernelspace heap...\n");
     kernel.kheapAddr = (uintptr_t)kmalloc() + kernel.hhdm;
     Pool initPool;
     initPool.isFree = true;

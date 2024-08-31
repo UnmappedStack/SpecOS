@@ -28,6 +28,7 @@ void pushBackLastString(char* newStr) {
 }
 
 void initVGA() {
+    writeserial("Trying to initiate framebuffer...");
     // I swear, this had better be the right version!
     if (LIMINE_BASE_REVISION_SUPPORTED == false)
         __asm__("cli; hlt");

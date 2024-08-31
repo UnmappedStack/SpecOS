@@ -62,7 +62,6 @@ bool checkValidExecutable(struct elfFileHeader fileHeader) {
         printf("\nFailed to run executable: Elf must be 64 bit, but appears to be a 32 bit program.\n");
         return false;
     }
-    printf("\nValid executable.\n");
     return true;
 }
 
@@ -103,12 +102,6 @@ int exec(uintptr_t elfAddr) {
     if (!checkValidExecutable(fileHeader)) return 1;
     struct elfProgramHeader *programHeaderEntries = (struct elfProgramHeader*)(fileHeader.programHeaderOffset + elfAddr);
     size_t numProgramHeaderEntries = fileHeader.programHeaderEntryCount;
-    for (size_t i = 0; i < numProgramHeaderEntries; i++) {
-        if (programHeaderEntries[i].type == 1) {// loadable
-            printf("Section %i | Data offset: 0x%x | Load to vaddr: 0x%x | Size (file): 0x%x | Size (memory): 0x%x | Type: %i\n",
-                i, programHeaderEntries[i].offset, programHeaderEntries[i].virtualAddress, programHeaderEntries[i].sizeInFile, programHeaderEntries[i].sizeInMemory, programHeaderEntries[i].type);
-        }
-    }
     struct elfProgramHeader firstSegment = programHeaderEntries[firstLoadableSegment(programHeaderEntries, numProgramHeaderEntries)];
     struct elfProgramHeader lastSegment  = programHeaderEntries[lastLoadableSegment(programHeaderEntries, numProgramHeaderEntries)];
     uint64_t pagesToMap = PAGE_ALIGN_UP((lastSegment.virtualAddress + lastSegment.sizeInMemory) - firstSegment.virtualAddress) / 4096;
@@ -141,9 +134,7 @@ int exec(uintptr_t elfAddr) {
 void runModuleElf(int moduleNum) {
     struct limine_file **modules = kernel.moduleFiles.modules;
     struct limine_file module1 = (*modules)[moduleNum];
-    printf("\nRunning elf file: %s\n", module1.path);
     int status = exec((uintptr_t)(module1.address));
-    printf("Process returned with status %i.\n", status);
 }
 
 
