@@ -36,10 +36,11 @@ uint16_t taskSelect() {
     return 0; // meaningless return value to make the compiler happy
 }
 
+extern void pushAllRegisters();
+
 void taskSwitch() {
-    writeserial("\nTask switch\n");
     uint16_t task = taskSelect();
-    printf("\nTask selected: %i\n", task);
+    pushAllRegisters();
 }
 
 __attribute__((interrupt))

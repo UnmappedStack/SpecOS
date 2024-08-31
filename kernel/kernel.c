@@ -133,6 +133,7 @@ void _start() {
     writestring("Running init application...\n");
     runModuleElf(0);
     asm("sti");
+    test_userspace();
     // it should never get to the next point.
     for (;;);
 }

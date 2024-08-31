@@ -44,7 +44,7 @@ void mapSectionType(int type) {
 } 
 
 
-void mapKernel() {
+void mapKernel(uint64_t *pml4) {
     // map some of the other memory that's needed
     mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE);
     mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER);
@@ -56,15 +56,15 @@ void mapKernel() {
     /* map from kernel_start to nxe_enabled_start with nothing but `present` (.text section) */
     lengthBuffer = PAGE_ALIGN_UP(nxe_enabled_start - kernel_start);
     physBuffer = kernel.kernelAddress.physical_base + (kernel_start - kernel.kernelAddress.virtual_base);
-    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(kernel_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
+    mapPages(pml4, PAGE_ALIGN_DOWN(kernel_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
     /* map from nxe_enabled_start to writeallowed_start with `present` and `pxd` */
     physBuffer = kernel.kernelAddress.physical_base + (nxe_enabled_start - kernel.kernelAddress.virtual_base);
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_start - nxe_enabled_start);
-    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(nxe_enabled_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
+    mapPages(pml4, PAGE_ALIGN_DOWN(nxe_enabled_start), physBuffer, KERNEL_PFLAG_PRESENT, lengthBuffer / 4096);
     /* map from writeallowed_start to writeallowed_end with `present`, `pxd`, and `write` flags */
     lengthBuffer = PAGE_ALIGN_UP(writeallowed_end - writeallowed_start);
     physBuffer = kernel.kernelAddress.physical_base + (writeallowed_start - kernel.kernelAddress.virtual_base);
-    mapPages(kernel.pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096); 
+    mapPages(pml4, PAGE_ALIGN_DOWN(writeallowed_start), physBuffer, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, lengthBuffer / 4096); 
     // map the kernel's stack
-    allocPages(kernel.pml4, KERNEL_STACK_ADDR, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, KERNEL_STACK_PAGES);
+    allocPages(pml4, KERNEL_STACK_ADDR, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, KERNEL_STACK_PAGES);
 }

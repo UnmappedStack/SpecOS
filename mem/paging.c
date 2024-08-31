@@ -177,7 +177,7 @@ uint64_t* initPaging(bool changeKrnlPml4) {
         writestring("\nInitiating paging...\n");
         kernel.pml4 = (uint64_t*)newPml4;
     }
-    mapKernel();
+    mapKernel((uint64_t*)newPml4);
     // return some stuff so the entry point function of the kernel can reload cr3
     return (uint64_t*)(((uint64_t)newPml4) - kernel.hhdm);
     // no need to enable paging, limine already enables it :D
