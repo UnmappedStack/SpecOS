@@ -29,7 +29,7 @@ uint64_t writeallowed_end = (uint64_t)p_writeallowed_end;
 
 // void mapPages(uint64_t pml4[], uint64_t virtAddr, uint64_t physAddr, uint64_t flags, uint64_t numPages)
 
-void mapSectionType(int type) {
+void mapSectionType(int type, uint64_t *pml4) {
     // get the stuff from limine
     uint64_t memmapEntriesCount = kernel.memmapEntryCount;
     struct limine_memmap_entry **memmapEntries = kernel.memmapEntries;
@@ -37,7 +37,7 @@ void mapSectionType(int type) {
     int mapped = 0;
     for (int i = 0; i < memmapEntriesCount; i++) {
         if (memmapEntries[i]->type == type) {
-            mapPages(kernel.pml4, memmapEntries[i]->base + kernel.hhdm, memmapEntries[i]->base, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, memmapEntries[i]->length / 4096);
+            mapPages(pml4, memmapEntries[i]->base + kernel.hhdm, memmapEntries[i]->base, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE, memmapEntries[i]->length / 4096);
             mapped++;
         }
     }
@@ -46,10 +46,10 @@ void mapSectionType(int type) {
 
 void mapKernel(uint64_t *pml4) {
     // map some of the other memory that's needed
-    mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE);
-    mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER);
-    mapSectionType(LIMINE_MEMMAP_USABLE);
-    mapSectionType(LIMINE_MEMMAP_KERNEL_AND_MODULES);
+    mapSectionType(LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE, pml4);
+    mapSectionType(LIMINE_MEMMAP_FRAMEBUFFER, pml4);
+    mapSectionType(LIMINE_MEMMAP_USABLE, pml4);
+    mapSectionType(LIMINE_MEMMAP_KERNEL_AND_MODULES, pml4);
     // map the kernel sections
     uint64_t lengthBuffer;
     uint64_t physBuffer;

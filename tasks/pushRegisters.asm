@@ -8,6 +8,8 @@ section .text
 
 global pushAllRegisters
 
+extern taskSwitchPart2
+
 pushAllRegisters:
     push rax
     push rbx
@@ -24,4 +26,5 @@ pushAllRegisters:
     push r13
     push r14
     push r15
-    ret
+    ; call part 2
+    jmp taskSwitchPart2

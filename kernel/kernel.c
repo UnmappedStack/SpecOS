@@ -108,14 +108,6 @@ void initKernelData() {
        :  "r" (KERNEL_STACK_PTR)\
     )
 
-#define KERNEL_SWITCH_PAGE_TREE(TREE_ADDRESS) \
-    __asm__ volatile (\
-       "movq %0, %%cr3"\
-       :\
-       :  "r" (TREE_ADDRESS)\
-    )
-
-
 
 void _start() {
     initKernelData();
@@ -133,7 +125,7 @@ void _start() {
     writestring("Running init application...\n");
     runModuleElf(0);
     asm("sti");
-    test_userspace();
+    //test_userspace();
     // it should never get to the next point.
     for (;;);
 }

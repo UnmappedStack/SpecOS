@@ -193,6 +193,5 @@ void kpanic(char* exception, struct IDTEFrame registers) {
     for (int i = 0; i < 10; i++)
         writestring(kernel.last10[i]);
     */
-     
     asm("cli; hlt");
 }

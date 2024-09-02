@@ -109,7 +109,7 @@ void initIRQ(struct IDTEntry *IDTAddr) {
     idtSetDescriptor(33, &isr_keyboard, 14, 0, IDTAddr);
     idtSetDescriptor(32, &taskSwitchISR, 14, 0, IDTAddr);
     unmaskIRQ(1); // keyboard
-    //unmaskIRQ(0); // pit
+    unmaskIRQ(0); // pit
     // all the exceptions
     idtSetDescriptor(0, &divideException, 15, 0, IDTAddr);
     idtSetDescriptor(1, &debugException, 15, 0, IDTAddr);

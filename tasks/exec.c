@@ -117,17 +117,12 @@ int exec(uintptr_t elfAddr) {
     // create new pml4 & map into vmem
     uint64_t *newPageTree = initPaging(false);
     mapPages((uint64_t*)(((uint64_t)(newPageTree)) + kernel.hhdm), firstSegment.virtualAddress, (uint64_t)physFirstPage, KERNEL_PFLAG_WRITE | KERNEL_PFLAG_USER | KERNEL_PFLAG_PRESENT, pagesToMap);
-    // set up a new stack
-    int numUserspaceStackPages = 2;
-    uintptr_t userspaceStackBase = kernel.hhdm - 4096;
-    uintptr_t userspaceStackAddr = userspaceStackBase - numUserspaceStackPages;
-    allocPages((uint64_t*)(((uint64_t)(newPageTree)) + kernel.hhdm), userspaceStackAddr, KERNEL_PFLAG_PRESENT | KERNEL_PFLAG_WRITE | KERNEL_PFLAG_USER, numUserspaceStackPages);
     // create a new task list entry
     size_t taskIndex = initTask();
     Task *tasklist = (Task*)kernel.tasklistAddr;
     tasklist[taskIndex].pml4Addr   = (uintptr_t)newPageTree;
     tasklist[taskIndex].entryPoint = (uintptr_t)fileHeader.entry;
-    tasklist[taskIndex].rsp        =            userspaceStackAddr;
+    tasklist[taskIndex].rsp        =            KERNEL_STACK_PTR;
     return 0;
 }
 

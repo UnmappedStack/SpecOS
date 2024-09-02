@@ -19,8 +19,19 @@
 #define KERNEL_STACK_PTR 0xFFFFFFFFFFFFF000LL
 #define KERNEL_STACK_ADDR KERNEL_STACK_PTR-(KERNEL_STACK_PAGES*PAGE_SIZE)
 
+#define USER_STACK_PAGES 2LL
+#define USER_STACK_ADDR (USER_STACK_PTR - USER_STACK_PAGES*PAGE_SIZE)
+#define USER_STACK_PTR 0x700000000000LL
+
 #define PAGE_ALIGN_DOWN(addr) ((addr / 4096) * 4096) // works cos of integer division
 #define PAGE_ALIGN_UP(x) ((((x) + 4095) / 4096) * 4096)
+
+#define KERNEL_SWITCH_PAGE_TREE(TREE_ADDRESS) \
+    __asm__ volatile (\
+       "movq %0, %%cr3"\
+       :\
+       :  "r" (TREE_ADDRESS)\
+    )
 
 uint64_t* initPaging(bool changeKrnlPml4);
 
