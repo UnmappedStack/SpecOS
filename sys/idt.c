@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "../drivers/include/serial.h"
 #include "../mem/include/pmm.h"
 #include "include/panic.h"
 #include "../tasks/include/switch.h"
@@ -100,6 +101,11 @@ void maskIRQ(int IRQ) {
 __attribute__((interrupt))
 void syscallISR(void*) {
     writestring("\nThis message was printed through a syscall from userspace. IT FINALLY WORKS!!!\n");
+}
+
+__attribute__((interrupt))
+void mouseMoveISR(void*) {
+    writeserial("Mouse moved.\n");
 }
 
 void initIRQ(struct IDTEntry *IDTAddr) {

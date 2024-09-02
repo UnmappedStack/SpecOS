@@ -60,13 +60,26 @@ uint16_t taskSelect() {
     return 0; // meaningless return value to make the compiler happy
 }
 
-extern void pushAllRegisters();
-
 void taskSwitch() {
-    pushAllRegisters();
-}
-
-void taskSwitchPart2() {
+    // push registers of current task
+    asm volatile(
+        "push %%rax\n"
+        "push %%rbx\n"
+        "push %%rcx\n"
+        "push %%rdx\n"
+        "push %%rsi\n"
+        "push %%rdi\n"
+        "push %%rbp\n"
+        "push %%r8\n"
+        "push %%r9\n"
+        "push %%r10\n"
+        "push %%r11\n"
+        "push %%r12\n"
+        "push %%r13\n"
+        "push %%r14\n"
+        "push %%r15\n"
+        : : : "memory"
+    );
     uint16_t taskIndex = taskSelect();
     Task task = ((Task*) kernel.tasklistAddr)[taskIndex];
     if (task.flags & TASK_FIRST_EXEC)
@@ -78,21 +91,21 @@ void taskSwitchPart2() {
         asm volatile(
             "movq $0, %%rbp\n"
             "push $0\npush $0\n" // push zero on the stack twice
-            "push $0\n" // rax
-            "push $0\n" // rbx
-            "push $0\n" // rcx
-            "push $0\n" // rdx
-            "push $0\n" // rsi
-            "push $0\n" // rdi
-            "push $0\n" // rbp
-            "push $0\n" // r8
-            "push $0\n"
-            "push $0\n"
-            "push $0\n" // ...
-            "push $0\n"
-            "push $0\n"
-            "push $0\n"
-            "push $0\n" // r15
+            "xor %%rax, %%rax\n"
+            "xor %%rbx, %%rbx\n"
+            "xor %%rcx, %%rcx\n"
+            "xor %%rdx, %%rdx\n"
+            "xor %%rsi, %%rsi\n"
+            "xor %%rdi, %%rdi\n"
+            "xor %%rbp, %%rbp\n"
+            "xor %%r8, %%r8\n"
+            "xor %%r9, %%r9\n"
+            "xor %%r10, %%r10\n"
+            "xor %%r11, %%r11\n"
+            "xor %%r12, %%r12\n"
+            "xor %%r13, %%r13\n"
+            "xor %%r14, %%r14\n"
+            "xor %%r15, %%r15\n"
             "push %0\n" // rip
             "push %1\n" // cs (offset for user code segment in GDT)
             "push $0\n" // rflags

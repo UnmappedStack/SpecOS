@@ -127,5 +127,6 @@ void _start() {
     asm("sti");
     //test_userspace();
     // it should never get to the next point.
+    writestring("\n\n[Nucleus]: All userspace components stopped execution. Halting machine.\n");
     for (;;);
 }
