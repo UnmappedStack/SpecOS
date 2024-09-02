@@ -6,6 +6,10 @@
 
 An x86-64 OS kernel from scratch.
 
+> **☠️ WOW, IT'S DEAD!
+>
+> SpecOS is very broken. I've archived this project and will be working on a new, better kernel. Until it's open-sourced, cya!
+
 > **NOTE**
 > 
 > This project is still in very early stages, and should NOT be used on real hardware. The code is quite messy and is currently a series of messy C files. Seriously, don't learn anything from this project.
