@@ -6,9 +6,9 @@
 
 An x86-64 OS kernel from scratch.
 
-> **☠️ WOW, IT'S DEAD!
+> **☠️ WOW, IT'S DEAD!**
 >
-> SpecOS is very broken. I've archived this project and will be working on a new, better kernel. Until it's open-sourced, cya!
+> SpecOS is very broken. I've archived this project and will be working on a new, better kernel, [PotatOS](https://github.com/jakeSteinburger/PotatOS).
 
 > **NOTE**
 > 
